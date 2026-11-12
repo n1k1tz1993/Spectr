@@ -448,7 +448,7 @@ const finishFight = () => { while (!F.done) fightStep(0.1); };
 
 function bureauFight(kind) {
   if (!spend()) return;
-  const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком';
+  const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с Элитным Спектром';
   let opp, name;
   if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55
     const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 20)));
@@ -459,7 +459,8 @@ function bureauFight(kind) {
     name = f.name; opp = fighter(f.name, f.p, f.rating, false, f.abil, f.face);
   }
   startFight(title, opp, won => {
-    const d = kind === 'ladder' ? (won ? 75 : -75) : (won ? 100 : -100);
+    const big = (S.ladderGames || 0) < 10;   // первые 10 лестничных матчей — по 150: десять побед подряд дают золото
+    const d = kind === 'ladder' ? (won ? (big ? 150 : 75) : (big ? -150 : -75)) : (won ? 100 : -100);
     if (kind === 'ladder') S.ladderGames = (S.ladderGames || 0) + 1;
     S.rating = Math.max(0, S.rating + d);
     histAdd(title + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
@@ -925,9 +926,9 @@ function viewBureau() {
     ${lgCardHtml(S.region)}
     <div class="card">
       <button class="btn" data-a="tour" ${S.actions <= 0 ? 'disabled' : ''}>Участвовать в местном турнире (1 действие)</button>
-      <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с случайным про-игроком региона (1 действие)</button>
+      <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с Элитным Спектром региона (1 действие)</button>
       <button class="btn" data-a="fight" data-v="ladder" ${S.actions <= 0 ? 'disabled' : ''}>Лестничный матч на рейтинг (1 действие)</button>
-      <div class="dim" style="margin-top:6px">Лестничный матч: соперник по твоему рейтингу (±200), +75 или −75. Бой с про-игроком региона: +100 или −100.</div>
+      <div class="dim" style="margin-top:6px">Лестничный матч: соперник по твоему рейтингу (±200). Первые 10 матчей +150 или −150, дальше +75 или −75. Бой с Элитным Спектром региона: +100 или −100.</div>
     </div>${logHtml()}${back}`);
 }
 function viewFlight() {
@@ -1103,7 +1104,7 @@ function lgCardHtml(r) {
   if (L.phase === 'draft') {
     if (S.league != null) h += `<div class="dim" style="margin-top:8px">Ты уже играешь в лиге ${LSHORT[S.league]}.</div>`;
     else if (S.draft === r) h += `<button class="btn here" data-a="ldraft" data-v="${r}">✓ Ты в драфте — выйти</button>`;
-    else h += `<button class="btn gold" data-a="ldraft" data-v="${r}">Встать в драфт${S.draft != null ? ' (вместо ' + LSHORT[S.draft] + ')' : ''}</button><div class="dim" style="margin-top:4px">Твой рейтинг: ${S.rating}. Чтобы пройти, нужно обойти про-игроков по рейтингу.</div>`;
+    else h += `<button class="btn gold" data-a="ldraft" data-v="${r}">Встать в драфт${S.draft != null ? ' (вместо ' + LSHORT[S.draft] + ')' : ''}</button><div class="dim" style="margin-top:4px">Твой рейтинг: ${S.rating}. Чтобы пройти, нужно обойти Элитных Спектров по рейтингу.</div>`;
   } else {
     const t = lgTable(L).slice(0, 5);
     h += `<table class="tbl" style="margin-top:6px">${t.map((x, k) => `<tr><td>${k + 1}</td><td>${esc(lgTeamName(L, x.i))}</td><td style="text-align:right">${x.pts}</td></tr>`).join('')}</table>`;
@@ -1115,7 +1116,7 @@ function viewLTable() {
   const r = S.sel, L = G.leagues[r];
   let h = `<div class="card"><h2><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h2><div class="dim">${lgStatus(L)}</div></div>`;
   if (!L.teams) {
-    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Про-игроки региона:</div><table class="tbl">${lgPool(r).slice(0, PRO_COUNT).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
+    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Элитные Спектры региона:</div><table class="tbl">${lgPool(r).slice(0, PRO_COUNT).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
       ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${esc(H.nick)} ${flagOf(H.country)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
   } else {
     const t = lgTable(L);
