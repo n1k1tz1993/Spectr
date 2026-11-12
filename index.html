@@ -465,9 +465,9 @@ const GL = ['A', 'B', 'C', 'D'];
 function playTour(t) {
   const T = TIERS[t], r = S.region;
   if (t > S.tiers[r] || !S.tourPass) return;
-  const inv = (S.tourInv || []).filter(h => h !== G.cur && G.players[h]);
-  if (S.actions < inv.length) { logMsg('Не хватает действий, чтобы позвать всех выбранных игроков.'); return; }
-  S.actions -= inv.length;                 // каждый приглашённый — ещё 1 действие
+  const inv = (S.tourInv || []).filter(h => h !== G.cur && G.players[h] && G.players[h].region === S.region);   // только игроки в этом регионе
+  if (inv.length && S.actions < 1) { logMsg('Не хватает действия, чтобы позвать игроков.'); return; }
+  if (inv.length) S.actions -= 1;          // позвать любое число игроков — одно действие
   S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
   const fmt = Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
   const hums = [G.cur, ...inv];            // живые игроки: тот, чья неделя, и приглашённые
@@ -726,10 +726,15 @@ function viewRest() {
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Отдых</div>
     <h2>Отдых</h2><div style="text-align:left">${TEXT}</div><div class="bonus plus">Бонус!</div></div>${back}`);
 }
-function inviteHtml() {   // совместная игра: позвать других игроков в турнир, каждый — ещё 1 действие
-  const inv = S.tourInv || [];
-  return `<div class="card"><h3>Позвать игроков</h3><div class="dim">Каждый приглашённый — ещё 1 действие. Осталось действий: ${S.actions - inv.length}.</div>
-    <div class="row" style="margin-top:6px">${G.players.map((H, i) => i === G.cur ? '' : `<button class="btn ${inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinv" data-v="${i}" ${!inv.includes(i) && inv.length >= S.actions ? 'disabled' : ''}>${inv.includes(i) ? '✓ ' : ''}${esc(H.nick)} ${flagOf(H.country)}</button>`).join('')}</div></div>`;
+function inviteHtml() {   // совместная игра: позвать игроков из этого же региона — одно действие на всех
+  const inv = S.tourInv || [], here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
+  const away = G.players.filter((H, i) => i !== G.cur && H.region !== S.region);
+  return `<div class="card"><h3>Позвать игроков</h3>
+    <div class="dim">Позвать можно только тех, кто сейчас в регионе ${REGIONS[S.region].name}. Сколько бы игроков ты ни позвал — это 1 действие.${inv.length ? '' : ' Осталось действий: ' + S.actions + '.'}</div>
+    ${here.length ? `<div class="row" style="margin-top:6px">${here.map(i => `<button class="btn ${inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinv" data-v="${i}" ${!inv.includes(i) && S.actions < 1 ? 'disabled' : ''}>${inv.includes(i) ? '✓ ' : ''}${esc(G.players[i].nick)} ${flagOf(G.players[i].country)}</button>`).join('')}</div>`
+      : '<div class="dim" style="margin-top:6px">В этом регионе других игроков нет.</div>'}
+    ${away.length ? `<div class="dim" style="margin-top:6px;font-size:12px">В других регионах: ${away.map(H => esc(H.nick) + ' (' + REGIONS[H.region].city + ')').join(', ')}</div>` : ''}
+    ${inv.length ? '<div class="gold" style="margin-top:6px;font-size:13px">Приглашение спишет 1 действие при старте турнира.</div>' : ''}</div>`;
 }
 function viewTour() {
   const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n), lg = leagueOf(S.rating);
@@ -779,7 +784,7 @@ function viewMenu() {
       <button class="btn" data-a="mnew" data-v="solo">Новая карьера</button>
       ${solo ? '<div class="dim" style="margin-top:6px">Новая карьера заменит сохранённую.</div>' : ''}</div>
     <div class="card"><h2>Совместная игра</h2>
-      <div class="dim">До 6 игроков на одном телефоне. Недели идут по очереди: сыграл свою — передай телефон. В турнир можно позвать других игроков, каждый приглашённый стоит ещё 1 действие.</div>
+      <div class="dim">До 6 игроков на одном телефоне. Недели идут по очереди: сыграл свою — передай телефон. В турнир можно позвать всех игроков из своего региона за 1 действие.</div>
       ${coop ? `<button class="btn gold" data-a="mcont" data-v="coop">Продолжить: ${coop.players.map(H => esc(H.nick)).join(', ')}</button>` : ''}
       <div class="dim" style="margin-top:10px">Новая игра — сколько игроков?</div>
       <div class="row" style="margin-top:6px">${[2, 3, 4, 5, 6].map(n => `<button class="btn" style="flex:1;text-align:center;width:auto" data-a="mnew" data-v="coop${n}">${n}</button>`).join('')}</div>
@@ -975,7 +980,7 @@ function act(a, v) {
       startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, tFighter(R, L), tFighter(R, Rr), won => { tGame(m, won ? L : Rr); tRun(R, false); S.view = 'trun'; });
       break;
     }
-    case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (a2.length < S.actions) a2.push(h); break; }
+    case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (S.actions >= 1 && G.players[h].region === S.region) a2.push(h); break; }
     case 'tauto': if (S.trun) tRun(S.trun, true); break;
     case 'tfinish': finishTour(); break;
     case 'fspeed': if (F) F.speed = +v; return;
