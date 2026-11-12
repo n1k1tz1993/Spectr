@@ -98,7 +98,9 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .acd{font-size:11px;color:var(--dim);min-height:14px}
 .abil.cd .aic{filter:grayscale(1) brightness(.6)}
 .ff{min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:#04070F}
-.ffbox{position:relative;width:min(100%,calc(100vh * 908 / 1536));aspect-ratio:908/1536;background:url(img/fight_bg.webp) center/100% 100% no-repeat;container-type:inline-size;font-size:3.6cqw}
+.ffwrap{width:100%;max-width:520px}
+.ffbox{position:relative;width:100%;aspect-ratio:908/906;background:url(img/fight_bg.webp) top center/100% auto no-repeat;container-type:inline-size;font-size:3.6cqw}
+.ffbot{container-type:inline-size;padding:0 1.5% 16px;display:flex;flex-direction:column;gap:8px;background:#04070F}
 .ffbox>*{position:absolute}
 .ff-back{background:transparent;border:0;cursor:pointer}
 .ff-face{display:flex;align-items:center;justify-content:center}
@@ -152,6 +154,22 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .abrow{display:flex;gap:12px;align-items:flex-start}
 .iconone{padding:0;border:2px solid var(--gold);border-radius:12px;background:none;cursor:pointer;flex:0 0 76px;width:76px;height:76px;overflow:hidden}
 .iconone .aic{width:100%;height:100%;border-radius:10px}
+.ff-ab{position:relative;display:flex;align-items:center;gap:3cqw;padding:1.4cqw 2.5cqw 1.4cqw 1.4cqw;background:#071425;border:2px solid #22D3EE;border-radius:2.2cqw;box-shadow:0 0 2.5cqw rgba(34,211,238,.35),inset 0 0 2cqw rgba(34,211,238,.12);color:var(--txt);text-align:left;cursor:pointer;font-family:inherit}
+.ff-ab>.aic{width:19.4cqw;height:19.4cqw;border-radius:1.8cqw;flex:0 0 auto;border:2px solid rgba(34,211,238,.55)}
+.ff-ab.cd>.aic{filter:grayscale(1) brightness(.5)}
+.ff-ab.cd{border-color:#1C4C63;box-shadow:none}
+.ff-abt{display:flex;flex-direction:column;gap:.6cqw;min-width:0;flex:1}
+.ff-abt em{font-style:normal;font-size:2.7cqw;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.ff-abt b{font-size:4.2cqw;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ff-abt i{font-style:normal;font-size:3.1cqw;line-height:1.25;color:#B8C2DC;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ff-abt span{font-size:2.9cqw;color:var(--gold)}
+.ff-head{position:relative;padding:1cqw 0 1.5cqw;display:flex;align-items:center;justify-content:space-between;gap:2cqw;border-bottom:1px solid rgba(34,211,238,.4)}
+.ff-head .ff-title{position:static;font-weight:700;font-size:3.4cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0;display:block}
+.ff-head .ff-ctl{display:flex;gap:1.5cqw;flex:0 0 auto}
+.ff-head .ff-ctl button{background:#16213A;color:var(--txt);border:1px solid #2A3A60;border-radius:1.5cqw;padding:1cqw 2.4cqw;font-size:3cqw;font-family:inherit;cursor:pointer}
+.ff-log{position:relative}
+.ff-log .flog{font-size:3.3cqw;line-height:1.45;padding:0 1cqw;overflow:hidden;background:transparent;margin:0;min-height:0}
+.ff-log #fend .btn{margin-top:1.5cqw;padding:2.2cqw}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -346,7 +364,7 @@ function rollHit(x, y) {
   if (r <= 6) return { kind: 'block', dmg: 0 };
   return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)) };
 }
-const fev = (m) => { F.ev.unshift(m); F.ev = F.ev.slice(0, 7); };
+const fev = (m) => { F.ev.unshift(m); F.ev = F.ev.slice(0, 5); };
 const fxPush = (who, text, cls, layer) => { F.fx.push({ who: who === F.a ? 'fa' : 'fb', text, cls, layer }); };
 function useAbility(x, y) {
   // 5 ударов: каждый может критануть или не попасть; урон проходит одним ударом, вне очереди
@@ -729,7 +747,7 @@ function viewSetup() {
 }
 
 // экран боя: фон img/fight_bg.webp (908×1536), элементы по координатам макета
-const FW = 908, FH = 1536;
+const FW = 908, FH = 906;   // верхняя часть макета 908×1536: до панелей HP/Цы включительно
 const fpos = (x0, y0, x1, y1) => `left:${pc(x0, FW)};top:${pc(y0, FH)};width:${pc(x1 - x0, FW)};height:${pc(y1 - y0, FH)}`;
 const FL = {   // левый и правый боец: портрет, плашка имени, полосы HP/Цы, квадрат иконки, поле названия
   fa: { face: [40, 250, 415, 615], plate: [22, 632, 432, 762], hp: [102, 801, 424, 832], qi: [102, 855, 424, 886], icon: [33, 933, 121, 1022], name: [140, 925, 432, 1030] },
@@ -742,23 +760,23 @@ function fside(x, id) {
     <div class="ff-plate" style="${fpos(...L.plate)}"><b>${esc(x.name)}</b>${rateHtml(x.rating, 'rf')}</div>
     <div class="ff-bar hp" style="${fpos(...L.hp)}"><i id="${id}-hp"></i></div>
     <div class="ff-bar qi" style="${fpos(...L.qi)}"><i id="${id}-qi"></i></div>
-    <button class="ff-icon" id="${id}-ab" data-a="fabil" data-v="${id}" style="${fpos(...L.icon)}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}</button>
-    <div class="ff-name" style="${fpos(...L.name)}"><b>${esc(x.abil.name)}</b><span id="${id}-acd"></span></div>`;
+`;
 }
+// способность бойца: кнопка на всю ширину, иконка вдвое больше, описание в 2 строки
+const fabRow = (x, id) => `<button class="ff-ab" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">
+  ${abilIcon(x.abil.icon)}<span class="ff-abt"><em>${esc(x.name)}</em><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><span id="${id}-acd"></span></span></button>`;
 function viewFight() {
   if (!F) { S.view = S.trun ? 'trun' : 'main'; return S.trun ? viewTRun() : viewMain(); }
-  return `<div class="ff"><div class="ffbox">
+  return `<div class="ff"><div class="ffwrap"><div class="ffbox">
     <button class="ff-back" data-a="fback" style="${fpos(18, 112, 131, 190)}" aria-label="Назад"></button>
     ${fside(F.a, 'fa')}${fside(F.b, 'fb')}
-    <div class="ff-title" style="${fpos(250, 1062, 660, 1124)}">${esc(F.title)}</div>
-    <div class="ff-log" style="${fpos(30, 1135, 878, 1500)}">
-      <div class="flog" id="flog"></div>
-      <div id="fend"></div>
-      <div class="ff-ctl" id="fctl">
-        <button class="btn" data-a="fspeed" data-v="1">×1</button><button class="btn" data-a="fspeed" data-v="3">×3</button><button class="btn" data-a="fskip">Досчитать</button>
-      </div>
-    </div>
-  </div></div>`;
+  </div>
+  <div class="ffbot">
+    ${fabRow(F.a, 'fa')}${fabRow(F.b, 'fb')}
+    <div class="ff-head"><span class="ff-title">${esc(F.title)}</span>
+      <span class="ff-ctl" id="fctl"><button data-a="fspeed" data-v="1">×1</button><button data-a="fspeed" data-v="3">×3</button><button data-a="fskip">Досчитать</button></span></div>
+    <div class="ff-log"><div class="flog" id="flog"></div><div id="fend"></div></div>
+  </div></div></div>`;
 }
 function fightPaint() {
   if (!F) return;
@@ -779,7 +797,7 @@ function fightPaint() {
   document.getElementById('flog').innerHTML = F.ev.map(e => `<div>${esc(e)}</div>`).join('');
   if (F.done && !document.getElementById('fend').innerHTML) {
     document.getElementById('fend').innerHTML = `<div class="bonus ${F.won ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
-    document.getElementById('fctl').style.display = 'none';
+    document.getElementById('fctl').style.display = 'none'; document.getElementById('flog').style.display = 'none';
   }
 }
 function fightLoop() {
