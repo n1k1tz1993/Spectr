@@ -149,6 +149,9 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .ser.mine{background:rgba(245,197,66,.08);border-radius:6px}
 .tvs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:8px;margin:12px 0 6px;font-weight:700}
 .tsc{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:34px;color:var(--gold)}
+.abrow{display:flex;gap:12px;align-items:flex-start}
+.iconone{padding:0;border:2px solid var(--gold);border-radius:12px;background:none;cursor:pointer;flex:0 0 76px;width:76px;height:76px;overflow:hidden}
+.iconone .aic{width:100%;height:100%;border-radius:10px}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -712,13 +715,15 @@ function viewSetup() {
     <div class="row">${Object.keys(COUNTRIES).map(k => `<button class="btn ${k === setupFlag ? 'here' : ''}" style="width:auto;flex:1 0 auto;text-align:center;font-size:22px;padding:8px 12px" data-a="flag" data-v="${k}">${flagOf(k)}</button>`).join('')}</div>
     <div class="dim" style="margin-top:6px">${COUNTRIES[setupFlag]}</div>
     <h2 style="margin-top:20px">Придумай свой сильнейший удар!</h2>
-    <div class="dim">Иконка</div>
-    <div class="iconsgrid">${[...Array(ABIL_ICON_COUNT).keys()].map(i => `<button class="iconpick ${i === setupIcon ? 'on' : ''}" data-a="sicon" data-v="${i}">${abilIcon(i)}</button>`).join('')}</div>
-    <div class="dim" style="margin-top:10px">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
+    <div class="abrow">
+      <button class="iconone" data-a="sicon" aria-label="Сменить иконку">${abilIcon(setupIcon)}</button>
+      <div style="flex:1;min-width:0"><div class="dim">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
+        <div class="dim" style="margin-top:4px;font-size:12px">Нажми на иконку, чтобы сменить её (${setupIcon + 1} из ${ABIL_ICON_COUNT})</div></div>
+    </div>
     <div class="dim" style="margin-top:10px">Что делает твой сильнейший удар?</div><textarea id="adesc" maxlength="120" rows="2" placeholder="Например: обрушивает на врага огненный молот">${esc(setupADesc)}</textarea>
     <div class="dim" style="margin-top:4px">Эта фраза появится в журнале боя, когда ты применишь удар.</div>
     <div class="dim" style="margin-top:6px">Способность — серия из 5 ударов одним броском. Применяется сама, когда Цы опускается до половины.</div>
-    <button class="btn gold" data-a="start" style="margin-top:16px">Начать</button>
+    <button class="btn gold" data-a="start" style="margin-top:16px">Создать героя</button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
   </div>`;
 }
@@ -834,7 +839,7 @@ function act(a, v) {
   if (!S && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
   switch (a) {
     case 'flag': setupFlag = v; setupErr = ''; break;
-    case 'sicon': setupIcon = +v; break;
+    case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
     case 'start': {
       const nick = setupNick.trim();
       if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
