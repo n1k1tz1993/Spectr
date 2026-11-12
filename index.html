@@ -69,6 +69,8 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 img.pic{object-fit:cover;padding:0;background:#fff}
 .bigpic{display:block;width:200px;height:276px;object-fit:cover;border-radius:10px;margin:0 auto}
 .bigpic.tall{width:220px;height:auto}
+.beastmark{display:inline-flex;vertical-align:middle;margin-left:6px}
+.beastmark .aic{width:26px;height:26px;border-radius:6px}
 .ctteams{display:flex;justify-content:center;gap:8px;margin-bottom:6px}
 .ctteams img{width:56px;height:56px;border-radius:10px;opacity:.55}
 .ctteams img.my{opacity:1;outline:2px solid var(--gold)}
@@ -414,14 +416,7 @@ const SPECIAL = [
   { t: 'Контракт от команды', k: 'contract', desc: 'Полупрофессиональная команда предлагает контракт на турнир: 16 игроков, 4 команды. Ты выступаешь под её флагом.' }
 ];
 const BEAST = { lo: 1, hi: 25, win: 250 };
-const BEASTS = [   // дикие Спектры: img/beast/<i>.webp
-  ['Дикий волк', 'Разрывающий вой', 'Волк бросается в горло, высекая искры руды.'],
-  ['Дикий медведь', 'Сокрушающая лапа', 'Удар лапы, усиленной кристаллами, ломает защиту.'],
-  ['Дикая рысь', 'Прыжок из тени', 'Рысь исчезает и обрушивается сверху.'],
-  ['Дикий кабан', 'Кристальный таран', 'Кабан несётся напролом, вспарывая землю клыками.'],
-  ['Дикий ворон', 'Ливень перьев', 'Ворон осыпает арену острыми кристальными перьями.'],
-  ['Дикий олень', 'Рога шторма', 'Кристальные рога вспыхивают и бьют разрядом.']
-];
+const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'ворон', 'олень'];   // обезумевшие звери: img/beast/<i>.webp
 const DUEL_WIN = 50, CONTRACT_WIN = 250;
 SPECIAL.forEach((c, i) => { IMGBY[c.t] = `img/act/sp_${i}.webp`; });
 const SEMI_TEAMS = ['Rift Foxes', 'Neon Rooks', 'Iron Moths', 'Static Fangs', 'Night Circuit'];   // логотипы img/team/semi_<i>.webp
@@ -572,7 +567,8 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
   let opp, title, win;
   if (kind === 'beast') {
     const p = rnd(BEAST.lo, BEAST.hi), b = rnd(0, BEASTS.length - 1); title = 'Вызов от Бюро'; win = BEAST.win;
-    opp = fighter(BEASTS[b][0], p, npcRating(p), false, { name: BEASTS[b][1], desc: BEASTS[b][2], icon: rnd(0, ABIL_ICON_COUNT - 1) }, `img/beast/${b}.webp`);
+    opp = fighter('Обезумевший зверь', p, npcRating(p), false, { name: 'Яростный натиск', desc: 'Зверь бросается в бешеную атаку, не зная ни страха, ни боли!', icon: 10 }, `img/beast/${b}.webp`);
+    opp.beast = true;
   } else {
     const p = Math.max(10, effPower() - 20); title = 'Дуэль'; win = DUEL_WIN;
     opp = fighter(NAMES[rnd(0, NAMES.length - 1)], p, npcRating(p), false);
@@ -1328,7 +1324,7 @@ function fside(x, id) {
   const L = FL[id];
   return `<div class="ff-face" style="${fpos(...L.pic)}">${faceImg(x.face)}</div>
     <div class="ff-fx" id="${id}-fx" style="${fpos(...L.face)}"></div><div class="ff-fx ff-fx2" id="${id}-fx2" style="${fpos(...L.face)}"></div>
-    <div class="ff-plate" style="${fpos(...L.plate)}"><b>${esc(x.name)}</b>${rateHtml(x.rating, 'rf')}</div>
+    <div class="ff-plate" style="${fpos(...L.plate)}"><b${x.beast ? ' style="font-size:.82em"' : ''}>${esc(x.name)}</b>${x.beast ? `<span class="beastmark">${abilIcon(30)}</span>` : rateHtml(x.rating, 'rf')}</div>
     <div class="ff-bar hp" style="${fpos(...L.hp)}"><i id="${id}-hp"></i></div>
     <div class="ff-bar qi" style="${fpos(...L.qi)}"><i id="${id}-qi"></i></div>
 `;
