@@ -118,7 +118,7 @@ const MAPW = 1254;
 const MAPSPOTS = [
   { box: [67, 569, 262, 615], pin: [176, 464], label: 'USA' },
   { box: [335, 292, 533, 339], pin: [634, 374], label: 'LCS' },
-  { box: [864, 258, 1066, 305], pin: [774, 357], label: 'СКЛС' },
+  { box: [864, 258, 1066, 305], pin: [774, 357], label: 'Северная Лига', fs: 1.8 },
   { box: [813, 520, 1006, 567], pin: [1085, 466], label: 'ASL' },
   { box: [1023, 638, 1228, 685], pin: [1157, 501], label: 'SSS' }
 ];
@@ -249,7 +249,7 @@ const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
   return `<div class="map"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
-    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPW)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPW)}">${m.label}</div>
+    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="${m.fs ? `font-size:${m.fs}cqw;` : ''}left:${pc(x0, MAPW)};top:${pc(y0, MAPW)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPW)}">${m.label}</div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPW)}"></div>`;
   }).join('')}</div>`;
 }
