@@ -61,7 +61,8 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .mbox.cur{color:var(--gold);text-shadow:0 0 6px rgba(245,197,66,.7)}
 .mpin{position:absolute;width:7cqw;height:7cqw;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer}
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:12px;z-index:10}
-.lpanel{position:relative;width:min(100%,calc((100vh - 24px)*2/3));aspect-ratio:2/3;background-size:100% 100%;container-type:inline-size}
+.lwrap{width:min(100%,calc((100vh - 90px)*2/3))}
+.lpanel{position:relative;width:100%;aspect-ratio:2/3;background-size:100% 100%;container-type:inline-size}
 .lrow{position:absolute;display:flex;align-items:center;padding:0 4cqw;color:#E8ECF8;font-size:3.4cqw;line-height:1.1;overflow:hidden}
 .lped{position:absolute;transform:translate(-50%,-100%);color:var(--gold);font-weight:700;font-size:3cqw;text-align:center;white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.9)}
 .lclose{position:absolute;top:0;right:0;width:15%;height:10%;background:transparent;border:0;cursor:pointer}
@@ -177,6 +178,13 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .ff-vs{display:flex;align-items:center;justify-content:center;font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:8cqw;color:#FFD54A;text-shadow:0 0 2cqw rgba(255,180,0,.8),0 .4cqw 0 #8A5A00,0 0 .6cqw #000;pointer-events:none}
 .ff-fx{font-size:8cqw !important;-webkit-text-stroke:.25cqw rgba(0,0,0,.65)}
 .ff-fx.ff-fx2{font-size:5.4cqw !important}
+.tlogo{width:28px;height:28px;border-radius:6px;object-fit:contain;vertical-align:middle;background:#0B0F1C;flex:0 0 auto}
+.tl0{display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold)}
+.tcell{display:inline-flex;align-items:center;gap:6px;text-align:left;line-height:1.15}
+.tcell .dim{font-size:11px}
+.ltbl td{vertical-align:middle}
+.ltbl tr.z1 td:first-child{color:var(--gold);font-weight:700}
+.ltbl tr.z2 td:first-child{color:#7DE8FF}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -289,6 +297,7 @@ function loadGame(mode) {
     if (v.v === 2 && v.nick) return { v: 3, mode: 'solo', players: [fixHero(v)], cur: 0, handoff: false };   // одиночная карьера до совместной игры
     if (v.v !== 3 || !v.players || !v.players.length) return null;
     v.players.forEach(fixHero);
+    if (!v.week) v.week = Math.max(...v.players.map(H => H.turn || 1));
     return v;
   } catch (e) { return null; }
 }
@@ -318,7 +327,9 @@ function endTurn() {
   S.hand = drawHand();
   S.view = 'main'; S.sel = null;
   logMsg('Неделя ' + S.turn + '.');
-  if (G && G.mode === 'coop') { G.cur = (G.cur + 1) % G.players.length; S = G.players[G.cur]; G.handoff = true; }   // передать телефон
+  let roundDone = true;
+  if (G && G.mode === 'coop') { G.cur = (G.cur + 1) % G.players.length; S = G.players[G.cur]; G.handoff = true; roundDone = G.cur === 0; }   // передать телефон
+  if (G && roundDone) lgStartTurn();   // все сходили — играют лиги
   save();
 }
 function useCard(i) {
@@ -449,6 +460,139 @@ function bureauFight(kind) {
     S.view = 'bureau';
   });
 }
+
+// ---------- лиги ----------
+// Лига региона: 12 команд (в Корее 14). Драфт открыт 5 недель, в нём 20 мест: про-игроки региона и все, кто встал в драфт;
+// команды разбирают сильнейших по рейтингу. Дальше два круга Bo2 (3/1/0), 3 матча лиги в неделю.
+// Топ-2 — сразу в полуфинал; 3–10 места — плей-ин Bo3 (3–10, 4–9, 5–8, 6–7, затем победители между собой) за 2 места.
+// Полуфинал и финал Bo5, каждая серия — один матч лиги. Топ-3 лиги едут на чемпионат мира.
+const LDB = {"teams":[[0,"Cloud9","t101",4],[0,"CLG","t102",4],[0,"Team Curse","t103",4],[0,"Dignitas","t104",1],[0,"Evil Geniuses","t105",2],[0,"Team Liquid","t106",6],[0,"Lyon","t107",4],[0,"MYM","t108",4],[0,"Complexity","t109c",4],[0,"TSM","t110",3],[1,"Alliance","t201",5],[1,"ALTERNATE aTTaX","t202",1],[1,"Fnatic","t203",6],[1,"G2 Esports","t204",5],[1,"MOUZ","t205m",4],[1,"Karmine Corp","t206",1],[1,"Ninjas in Pyjamas","t207n",4],[1,"Dark Passage","t208e",3],[1,"SK Gaming","t209",6],[1,"Beşiktaş Esports","t210b",3],[2,"Team Empire","t301",3],[2,"Зенит","t314",4],[2,"M19","t303",3],[2,"Moscow Five","t304",3],[2,"OneBreatch Gaming","t305",4],[2,"RoX","t306",4],[2,"ЦСКА","t313",3],[2,"Team Spirit","t308",4],[2,"Vega Squadron","t309",3],[2,"Virtus.pro","t310",1],[3,"ahq e-Sports Club","t401",2],[3,"EDG","t402",4],[3,"EHOME","t403",4],[3,"DetonatioN FocusMe","t404d",4],[3,"Invictus Gaming","t405",6],[3,"LGD Gaming","t406",1],[3,"Sentinels Singapore","t407",4],[3,"AZUBU Taipei Assassins","t4ta",3],[3,"Vici Gaming","t409",3],[3,"Team WE","t410",3],[4,"CJ Entus Blaze","t501",4],[4,"CJ Entus Frost","t502",6],[4,"Longzhu Gaming IM","t5lz",1],[4,"Jin Air Falcons","t504",3],[4,"Jin Air Stealths","t505",4],[4,"KT Rolster A","t506",4],[4,"KT Rolster B","t507",6],[4,"Najin Sword","t508",3],[4,"Najin Shield","t509",4],[4,"Samsung Galaxy","t510",3],[4,"SK Telecom T1","t511",3],[1,"SUPERMASSIVE","t211",4],[0,"INTZ","t111",2],[0,"CNB eSports Club","t112",1],[1,"Astralis","t212",5],[2,"Спартак","t312",3],[2,"NaVi","t57navi",4],[3,"AZUBU Taipei Snipers","t411",2],[3,"PENTAGRAM","t412",2],[4,"Newbee","t512",4]],"players":[[0,"IdRa",65,"US","Молниеносный рывок"],[0,"Meteos",61,"US","Яростный щит"],[0,"Oddie",57,"AR","Неистовый клинок"],[0,"Sneaky",61,"US","Молниеносный взрыв"],[0,"Bjergsen",61,"DK","Яростный клинок"],[0,"Hai",69,"US","Яростный взрыв"],[0,"Miracle-",65,"US","Теневой взрыв"],[0,"Revolta",57,"BR","Призрачный выпад"],[0,"Svenskeren",61,"DK","Ледяной вихрь"],[0,"jockster",55,"BR","Огненный шар"],[0,"Dyrus",62,"CA","Огненный щит"],[0,"NieN",62,"US","Ледяной щит"],[0,"fNb",52,"BR","Огненный залп"],[0,"WildTurtle",58,"US","Стальной залп"],[0,"MaCaO",54,"AR","Мощный удар"],[0,"DoubleLift",70,"US","Ледяной взрыв"],[0,"Tyler",68,"US","Мощный выпад"],[0,"Voyboy",65,"CA","Громовой взрыв"],[0,"Scarra",62,"US","Стальной удар"],[0,"BrTT",60,"BR","Ледяной клинок"],[1,"Froggen",70,"DK","Молниеносный щит"],[1,"MadFroG",62,"DE","Неистовый щит"],[1,"ZveN",68,"DK","Громовой клинок"],[1,"Reckless",72,"DK","Неистовый шар"],[1,"Kev1N",62,"DE","Теневой удар"],[1,"MickyX",55,"SK","Призрачный шар"],[1,"Shock",58,"SE","Стальной прыжок"],[1,"Araneae",55,"ES","Мощный взрыв"],[1,"YellowStar",60,"FR","Неистовый вихрь"],[1,"EdoBoy",52,"DE","Мощный прыжок"],[1,"xLord",70,"DE","Теневой клинок"],[1,"xPeke",67,"ES","Огненный удар"],[1,"Hjarnan",57,"SE","Яростный прыжок"],[1,"ForellenLord",63,"DE","Огненный прыжок"],[1,"Snoopeh",66,"GB","Молниеносный вихрь"],[1,"Nukeduck",68,"NL","Молниеносный клинок"],[1,"Jankos",61,"PL","Стальной выпад"],[1,"Wh1teL0tuS",56,"TR","Ледяной прыжок"],[1,"HollyPhoenix",52,"TR","Громовой залп"],[1,"k0u",59,"NO","Теневой прыжок"],[2,"Dendi",65,"UA","Огненный рывок"],[2,"Dread",60,"BY","Призрачный залп"],[2,"RamzessZ",61,"RU","Мощный рывок"],[2,"Save",57,"MD","Теневой шар"],[2,"TORONTOTOKYO",62,"KZ","Громовой прыжок"],[2,"KreoX",65,"RU","Теневой щит"],[2,"Happy",71,"RU","Яростный удар"],[2,"Solo",65,"RU","Громовой вихрь"],[2,"Dise",62,"RU","Молниеносный шар"],[2,"ZaKCanFly",58,"RU","Стальной рывок"],[2,"Hawk",60,"RU","Стальной вихрь"],[2,"Max",53,"BY","Теневой рывок"],[2,"Cash",67,"RU","Неистовый рывок"],[2,"Smurf",56,"RU","Ледяной рывок"],[2,"Inspired",52,"UZ","Неистовый прыжок"],[2,"Darien",65,"RU","Призрачный вихрь"],[2,"AlexIch",70,"RU","Громовой выпад"],[2,"FlashInTheNight",56,"RU","Огненный выпад"],[2,"Edward",65,"AM","Мощный щит"],[2,"TiTaN",57,"RU","Громовой щит"],[3,"ClearLove",72,"CN","Неистовый взрыв"],[3,"HaRleLuYaR",51,"SG","Мощный клинок"],[3,"Toyz",66,"TW","Стальной взрыв"],[3,"Misaya",72,"CN","Громовой рывок"],[3,"Doinb",67,"KR","Яростный выпад"],[3,"eer0",72,"CN","Призрачный клинок"],[3,"Fortitude",67,"CN","Яростный шар"],[3,"SwordArt",70,"TW","Теневой залп"],[3,"Dendy",70,"KR","Призрачный рывок"],[3,"infi",75,"CN","Призрачный удар"],[3,"Sky",72,"CN","Ледяной удар"],[3,"ColourFull",70,"CN","Неистовый залп"],[3,"TH000",70,"CN","Призрачный прыжок"],[3,"Life",58,"CN","Огненный вихрь"],[3,"Maple",59,"TW","Ледяной шар"],[3,"MiSTaKe",58,"TW","Молниеносный прыжок"],[3,"Ceros",68,"JP","Призрачный взрыв"],[3,"PawN",70,"KR","Стальной клинок"],[3,"kid",58,"TW","Молниеносный удар"],[3,"Sok",68,"KR","Неистовый выпад"],[4,"Faker",75,"KR","Молниеносный выпад"],[4,"Watch",66,"KR","Неистовый удар"],[4,"Reach",68,"KR","Мощный вихрь"],[4,"MC",65,"KR","Яростный вихрь"],[4,"Peanut",68,"KR","Ледяной выпад"],[4,"Moon",72,"KR","Яростный рывок"],[4,"Deft",67,"KR","Громовой удар"],[4,"KaKaO",65,"KR","Громовой шар"],[4,"inSec",65,"KR","Огненный клинок"],[4,"Flash",70,"KR","Огненный взрыв"],[4,"Lyn",72,"KR","Стальной щит"],[4,"Lawliet",66,"KR","Ледяной залп"],[4,"FoCuS",62,"KR","Молниеносный залп"],[4,"Flame",61,"KR","Призрачный щит"],[4,"Jaedong",75,"KR","Мощный шар"],[4,"Crown",68,"KR","Теневой выпад"],[4,"Ambition",70,"KR","Стальной шар"],[4,"MadLife",66,"KR","Мощный залп"],[4,"LustBoy",62,"KR","Яростный залп"],[4,"Imp",70,"KR","Теневой вихрь"]]};
+const LG_SIZE = r => r === 4 ? 14 : 12;
+const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [['Seoul Phoenix', null, 2], ['Busan Titans', null, 1]];
+const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
+const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал' };
+const proPower = pw => Math.round(70 + (pw - 50) * 1.2);          // сила 50–75 из старой базы → 70–100
+function lgPool(r) {   // все 20 бойцов региона из базы, сильнейшие сверху
+  return LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2]).map(({ x, i }) => {
+    const p = proPower(x[2]), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
+    return { name: x[1], p, rating: npcRating(p), country: x[3], face: (i * 7 + r * 5) % FACE_COUNT, abil: { name: x[4] || an, desc: ad, icon: (i * 11 + r * 13) % ABIL_ICON_COUNT } };
+  });
+}
+const newSeason = (r, week, prev) => ({ r, season: prev ? prev.season + 1 : 1, phase: 'draft', draftEnd: week + DRAFT_WEEKS - 1, teams: null, M: [], sched: null, ri: 0, left: 0, champ: null, worlds: [] });
+const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues = REGIONS.map((_, r) => newSeason(r, 1)); };
+const heroIdx = H => G.players.indexOf(H);
+function lgDraft(L) {
+  const r = L.r, n = LG_SIZE(r);
+  const humans = G.players.map((H, h) => ({ h, H })).filter(o => o.H.draft === r);
+  const pool = lgPool(r).slice(0, 20 - Math.min(humans.length, 8)).map(f => ({ f, rating: f.rating }))
+    .concat(humans.map(o => ({ h: o.h, rating: o.H.rating })));
+  pool.sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
+  const picked = pool.slice(0, n);
+  const teams = LDB.teams.filter(t => t[0] === r).map(t => [t[1], t[2], t[3]]).concat(r === 4 ? LG_EXTRA : []).sort((a, b) => b[2] - a[2]).slice(0, n);
+  L.teams = teams.map((t, i) => ({ name: t[0], logo: t[1], bonus: t[2] * 3, h: picked[i].h != null ? picked[i].h : null, f: picked[i].f || null }));   // сильная команда берёт сильнейшего
+  for (const o of humans) {
+    const ti = L.teams.findIndex(T => T.h === o.h);
+    o.H.draft = null;
+    if (ti >= 0) { o.H.league = r; logTo(o.H, `Драфт: тебя взяла команда ${L.teams[ti].name}! Лига ${LSHORT[r]} стартует со следующей недели.`); histTo(o.H, r, 'Драфт: команда ' + L.teams[ti].name); }
+    else logTo(o.H, `Драфт ${LSHORT[r]}: не хватило рейтинга. Подними рейтинг в бюро и попробуй в следующем сезоне.`);
+  }
+  // два круга по системе «по кругу»
+  const ids = [...Array(n).keys()], R1 = [];
+  for (let k = 0; k < n - 1; k++) {
+    const rd = []; for (let i = 0; i < n / 2; i++) rd.push(k % 2 ? [ids[n - 1 - i], ids[i]] : [ids[i], ids[n - 1 - i]]);
+    R1.push(rd); ids.splice(1, 0, ids.pop());
+  }
+  L.sched = R1.concat(R1.map(rd => rd.map(([a, b]) => [b, a])));
+  L.phase = 'RR'; L.ri = 0;
+}
+const lgTeamName = (L, i) => { const T = L.teams[i]; return T.h != null ? G.players[T.h].nick : T.f.name; };
+const lgRating = (L, i) => { const T = L.teams[i]; return T.h != null ? G.players[T.h].rating : T.f.rating; };
+const lgHum = (L, i) => L.teams[i].h != null;
+function lgFighter(L, i) {
+  const T = L.teams[i];
+  if (T.h != null) { const H = G.players[T.h]; return fighter(H.nick, heroPower(H) + T.bonus, H.rating, true, H.ability, H.face); }
+  return fighter(T.f.name, T.f.p + T.bonus, T.f.rating, false, T.f.abil, T.f.face);
+}
+function lgTable(L) {
+  const t = L.teams.map((T, i) => ({ i, pts: 0, w: 0, d: 0, l: 0, gw: 0, gl: 0, pl: 0 }));
+  for (const m of L.M) {
+    if (m.st !== 'RR' || !m.done) continue;
+    const wa = m.g.filter(x => x === m.a).length, wb = m.g.length - wa, A = t[m.a], B = t[m.b];
+    A.pl++; B.pl++; A.gw += wa; A.gl += wb; B.gw += wb; B.gl += wa;
+    if (m.w === null) { A.d++; B.d++; A.pts++; B.pts++; } else { const W = t[m.w], Ls = t[m.w === m.a ? m.b : m.a]; W.w++; Ls.l++; W.pts += 3; }
+  }
+  return t.sort((x, y) => y.pts - x.pts || (y.gw - y.gl) - (x.gw - x.gl) || lgRating(L, y.i) - lgRating(L, x.i));
+}
+const lgStage = (L, st) => L.M.filter(m => m.st === st);
+const lgAdd = (L, st, a, b, bo, label) => { const m = { st, a, b, bo, g: [], done: false, w: null, wk: G.week, label: label || '' }; L.M.push(m); return m; };
+function lgNextRound(L) {   // создать следующий «матч лиги» (тур или стадию плей-офф); null — сезон закончен
+  const win = st => lgStage(L, st).map(m => m.w);
+  if (L.phase === 'RR') {
+    if (L.ri < L.sched.length) { const rd = L.sched[L.ri++]; return rd.map(([a, b]) => lgAdd(L, 'RR', a, b, 2, 'Тур ' + L.ri)); }
+    const t = lgTable(L).map(x => x.i); L.top = t.slice(0, 2); L.final10 = t;
+    L.phase = 'PI1'; return [[2, 9], [3, 8], [4, 7], [5, 6]].map(([x, y]) => lgAdd(L, 'PI1', t[x], t[y], 3, `${x + 1}-е против ${y + 1}-го`));
+  }
+  if (L.phase === 'PI1') { const w = win('PI1'); L.phase = 'PI2'; return [lgAdd(L, 'PI2', w[0], w[3], 3), lgAdd(L, 'PI2', w[1], w[2], 3)]; }
+  if (L.phase === 'PI2') { const w = win('PI2'); L.phase = 'SF'; return [lgAdd(L, 'SF', L.top[0], w[1], 5), lgAdd(L, 'SF', L.top[1], w[0], 5)]; }
+  if (L.phase === 'SF') { const w = win('SF'); L.phase = 'F'; return [lgAdd(L, 'F', w[0], w[1], 5)]; }
+  if (L.phase === 'F') { lgFinish(L); return null; }
+  return null;
+}
+function lgFinish(L) {
+  const f = lgStage(L, 'F')[0], champ = f.w, second = f.w === f.a ? f.b : f.a;
+  const sfl = lgStage(L, 'SF').map(m => m.w === m.a ? m.b : m.a), order = lgTable(L).map(x => x.i);
+  const third = sfl.sort((a, b) => order.indexOf(a) - order.indexOf(b))[0];
+  L.champ = champ; L.worlds = [champ, second, third]; L.phase = 'done';
+  L.past = { season: L.season, champ: lgTeamName(L, champ), team: L.teams[champ].name };
+  L.teams.forEach((T, i) => {
+    if (T.h == null) return;
+    const H = G.players[T.h], place = i === champ ? 'чемпион' : i === second ? '2-е место' : i === third ? '3-е место' : 'сезон окончен';
+    if (i === champ) {
+      if (!H.troph.some(y => y.r === L.r && y.n === 'Кубок лиги')) { H.troph.push({ r: L.r, n: 'Кубок лиги' }); H.power = Math.min(120, H.power + 5); }
+      logTo(H, `Ты чемпион лиги ${LSHORT[L.r]}! Кубок в коллекции.`);
+    } else logTo(H, `Лига ${LSHORT[L.r]}: ${place}.`);
+    if (L.worlds.includes(i)) logTo(H, 'Ты в топ-3 и едешь на чемпионат мира!');
+    histTo(H, L.r, `Лига ${LSHORT[L.r]} · сезон ${L.season}: ${place}`);
+    H.league = null;
+  });
+}
+const lgSimMatch = (L, m) => { while (!m.done) tGame(m, simAB(lgFighter(L, m.a), lgFighter(L, m.b)) ? m.a : m.b); };
+const lgPending = L => (L.cur || []).find(m => !m.done && (lgHum(L, m.a) || lgHum(L, m.b)));
+function lgStartTurn() {   // ход лиг: после того как все игроки сыграли неделю
+  ensureLeagues();
+  for (const L of G.leagues) {
+    if (L.phase === 'draft' && G.week >= L.draftEnd) lgDraft(L);     // драфт — в конце последней недели; матчи со следующей
+    else if (L.phase !== 'draft' && L.phase !== 'done') L.left = LG_PER_WEEK;
+  }
+  G.lq = G.leagues.filter(L => L.left > 0).map(L => L.r);
+  G.lann = null;
+  lgProcess();
+}
+function lgProcess() {
+  while (G.lq && G.lq.length) {
+    const L = G.leagues[G.lq[0]];
+    const pend = lgPending(L);
+    if (pend) { G.lview = G.lann === L.r ? 'match' : 'ann'; return; }
+    if (L.left <= 0) { G.lq.shift(); continue; }
+    L.left--;
+    L.cur = lgNextRound(L);
+    if (!L.cur) { L.left = 0; continue; }
+    for (const m of L.cur) if (!lgHum(L, m.a) && !lgHum(L, m.b)) lgSimMatch(L, m);
+  }
+  // неделя закончилась: у завершённых лиг открывается новый драфт
+  G.leagues.forEach((L, r) => { if (L.phase === 'done') G.leagues[r] = Object.assign(newSeason(r, G.week + 1, L), { past: L.past, prevWorlds: L.worlds.map(i => lgTeamName(L, i)) }); });
+  G.lq = null; G.lview = null; G.lann = null; G.week++;
+}
+function lgAfterGame(L, m) {
+  const done = m.done;
+  if (done) for (const i of [m.a, m.b]) if (lgHum(L, i)) {
+    const H = G.players[L.teams[i].h], wa = m.g.filter(x => x === m.a).length;
+    histTo(H, L.r, `${LSHORT[L.r]} · ${lgTeamName(L, m.a)} ${wa}:${m.g.length - wa} ${lgTeamName(L, m.b)}`);
+  }
+  if (!lgPending(L)) G.lview = 'match';
+  lgProcess();
+}
+
 // ---------- турниры ----------
 // Любой турнир играется по случайному формату из четырёх.
 const NAMES = [...NICKS, 'Kira', 'Ronin', 'Jinx', 'Axel', 'Luna', 'Rex', 'Zane', 'Ivy', 'Onyx', 'Sable'];
@@ -509,13 +653,14 @@ function tGame(m, w) {   // записать бой серии; Bo2 — всег
   else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
 }
 function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil, x.face); const H = G.players[h]; return fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face); }
-function tSimGame(R, a, b) {   // бой без показа — тем же движком, что и живой бой
+function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
   const keep = F;
-  F = { a: tFighter(R, a), b: tFighter(R, b), t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
+  F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;
   finishFight();
-  const w = F.won ? a : b; F = keep; return w;
+  const w = F.won; F = keep; return w;
 }
+function tSimGame(R, a, b) { return simAB(tFighter(R, a), tFighter(R, b)) ? a : b; }
 function tTable(R, ids, k) {   // таблица группы: Bo2 — очки 3/1/0, Bo1 — очко за победу
   const t = {}; ids.forEach(id => { t[id] = { id, pts: 0, w: 0, d: 0, l: 0, gw: 0, gl: 0 }; });
   for (const m of tStage(R, k)) {
@@ -648,7 +793,18 @@ const back = `<button class="btn" data-a="back">Назад</button>`;
 const wrap = inner => `${topBar()}${inner}`;
 
 // ближайший матч недели: лиги и расписание ещё не сделаны, поэтому пока список пуст
-const nextMatchText = () => { const m = (S.sched || []).filter(x => x.week === S.turn && !x.played)[0]; return m ? esc(m.title) : 'Нет'; };
+const nextMatchText = () => {
+  if (!G || !G.leagues) return 'Нет';
+  const hi = heroIdx(S);
+  if (S.draft != null) return 'Драфт ' + LSHORT[S.draft];
+  for (const L of G.leagues) {
+    if (!L.teams) continue;
+    const ti = L.teams.findIndex(T => T.h === hi); if (ti < 0 || L.phase === 'done') continue;
+    if (L.phase === 'RR' && L.ri < L.sched.length) { const pr = L.sched[L.ri].find(p => p.includes(ti)); if (pr) return 'против ' + esc(lgTeamName(L, pr[0] === ti ? pr[1] : pr[0])); }
+    return LSHORT[L.r] + ' · ' + (LG_STAGE[L.phase] || '');
+  }
+  return 'Нет';
+};
 const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
   return `<div class="map"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
@@ -663,7 +819,8 @@ function viewLeague() {
   const rows = P.rows.map(([a, b], i) => `<div class="lrow" style="top:${pc(a, 1536)};height:${pc(b - a, 1536)};left:${pc(P.x[0], 1024)};width:${pc(P.x[1] - P.x[0], 1024)}">${hist[i] ? esc(hist[i].t) : ''}</div>`).join('');
   const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '');
   const peds = P.ped.map((cx, i) => won[i] ? `<div class="lped" style="left:${pc(cx, 1024)};top:${pc(P.pedY, 1536)}">${won[i]}</div>` : '').join('');
-  return viewMain() + `<div class="ovl" data-a="back"><div class="lpanel" data-a="noop" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div></div>`;
+  return viewMain() + `<div class="ovl" data-a="back"><div class="lwrap" data-a="noop"><div class="lpanel" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div>
+    <div class="row" style="flex-wrap:nowrap;margin-top:8px"><button class="btn" data-a="ltable" data-v="${r}" style="text-align:center;margin:0">Таблица</button><button class="btn" data-a="lhist" data-v="${r}" style="text-align:center;margin:0">История</button></div></div></div>`;
 }
 function viewMain() {
   const done = S.actions <= 0;
@@ -752,16 +909,12 @@ function viewTour() {
 }
 function viewBureau() {
   const lg = leagueOf(S.rating);
-  const rows = ['Команда A', 'Команда B', 'Команда C', 'Команда D'].map((n, i) => `<tr><td>${i + 1}</td><td>${n}</td><td>${(4 - i) * 100}</td></tr>`).join('');
   return wrap(`
     <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров"><h2>Бюро</h2>
       <div class="dim">Всемирная организация Спектров: турниры, поединки, рейтинговая система. Рейтинг у игрока ведётся по боям здесь.</div>
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
     </div>
-    <div class="card"><h3>Таблица местной лиги</h3><div class="dim">Заглушка: данные лиги появятся позже.</div>
-      <table class="tbl">${rows}</table>
-      <h3>Ближайшие 3 матча</h3><div class="dim">Заглушка: расписание лиги появится позже.</div>
-    </div>
+    ${lgCardHtml(S.region)}
     <div class="card">
       <button class="btn" data-a="tour" ${S.actions <= 0 ? 'disabled' : ''}>Участвовать в местном турнире (1 действие)</button>
       <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с случайным про-игроком региона (1 действие)</button>
@@ -882,10 +1035,10 @@ function fightPaint() {
 }
 function fightLoop() {
   clearInterval(FT);
-  if (S.view !== 'fight' || !F) return;
+  if (!F) return;
   fightPaint();
   FT = setInterval(() => {
-    if (!F || S.view !== 'fight') { clearInterval(FT); return; }
+    if (!F || !document.getElementById('flog')) { clearInterval(FT); return; }
     for (let i = 0; i < F.speed && !F.done; i++) fightStep(0.1);
     fightPaint();
     if (F.done) clearInterval(FT);
@@ -921,10 +1074,78 @@ function viewTRun() {
   for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
   return wrap(h);
 }
-const VIEWS = { trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+
+function lgTeamCell(L, i, cls = '') {
+  const T = L.teams[i], logo = T.logo ? `<img class="tlogo" src="img/team/${T.logo}.webp" alt="">` : `<span class="tlogo tl0">${esc(T.name[0])}</span>`;
+  const flag = T.h != null ? flagOf(G.players[T.h].country) : flagOf(T.f.country);
+  return `<span class="tcell ${cls}">${logo}<span><b class="${T.h != null ? 'gold' : ''}">${esc(lgTeamName(L, i))}</b> ${flag}<br><span class="dim">${esc(T.name)}</span></span></span>`;
+}
+const lgScore = m => { const wa = m.g.filter(x => x === m.a).length; return `${wa}:${m.g.length - wa}`; };
+const lgSeries = (L, m) => `<div class="ser ${lgHum(L, m.a) || lgHum(L, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${esc(lgTeamName(L, m.a))}</span><b class="ssc">${m.done || m.g.length ? lgScore(m) : '—'}</b><span class="${m.w === m.b ? 'win' : ''}">${esc(lgTeamName(L, m.b))}</span></div>`;
+function lgStatus(L) {
+  if (L.phase === 'draft') return `Драфт открыт до конца недели ${L.draftEnd}${G.week <= L.draftEnd ? ` (осталось недель: ${L.draftEnd - G.week + 1})` : ''}. В драфте 20 мест, в лигу проходят ${LG_SIZE(L.r)} лучших по рейтингу.`;
+  if (L.phase === 'RR') return `Сезон ${L.season} · регулярный сезон, сыграно туров: ${L.ri} из ${L.sched.length}.`;
+  return `Сезон ${L.season} · ${LG_STAGE[L.phase] || ''}`;
+}
+function lgCardHtml(r) {
+  ensureLeagues();
+  const L = G.leagues[r], hi = heroIdx(S);
+  let h = `<div class="card"><h3><img class="tlogo" src="img/logo_${r}.webp" alt=""> Лига ${LSHORT[r]}</h3><div class="dim">${lgStatus(L)}</div>`;
+  if (L.past) h += `<div class="dim" style="margin-top:4px">Прошлый сезон: чемпион ${esc(L.past.champ)} (${esc(L.past.team)}).</div>`;
+  if (L.phase === 'draft') {
+    if (S.league != null) h += `<div class="dim" style="margin-top:8px">Ты уже играешь в лиге ${LSHORT[S.league]}.</div>`;
+    else if (S.draft === r) h += `<button class="btn here" data-a="ldraft" data-v="${r}">✓ Ты в драфте — выйти</button>`;
+    else h += `<button class="btn gold" data-a="ldraft" data-v="${r}">Встать в драфт${S.draft != null ? ' (вместо ' + LSHORT[S.draft] + ')' : ''}</button><div class="dim" style="margin-top:4px">Твой рейтинг: ${S.rating}. Чтобы пройти, нужно обойти про-игроков по рейтингу.</div>`;
+  } else {
+    const t = lgTable(L).slice(0, 5);
+    h += `<table class="tbl" style="margin-top:6px">${t.map((x, k) => `<tr><td>${k + 1}</td><td>${esc(lgTeamName(L, x.i))}</td><td style="text-align:right">${x.pts}</td></tr>`).join('')}</table>`;
+  }
+  h += `<div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="ltable" data-v="${r}" style="text-align:center">Таблица</button><button class="btn" data-a="lhist" data-v="${r}" style="text-align:center">История</button></div></div>`;
+  return h;
+}
+function viewLTable() {
+  const r = S.sel, L = G.leagues[r];
+  let h = `<div class="card"><h2><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h2><div class="dim">${lgStatus(L)}</div></div>`;
+  if (!L.teams) {
+    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Про-игроки региона:</div><table class="tbl">${lgPool(r).slice(0, LG_SIZE(r)).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
+      ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${esc(H.nick)} ${flagOf(H.country)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
+  } else {
+    const t = lgTable(L);
+    h += `<div class="card"><h3>Таблица</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-Н-П</td><td>О</td></tr>${t.map((x, k) => `<tr class="${k < 2 ? 'z1' : k < 10 ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.d}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table>
+      <div class="dim" style="margin-top:6px">1–2 — сразу в полуфинал, 3–10 — плей-ин. Топ-3 по итогам — на чемпионат мира.</div></div>`;
+    for (const st of ['PI1', 'PI2', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
+  }
+  return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
+}
+function viewLHist() {
+  const r = S.sel, L = G.leagues[r], weeks = {};
+  for (const m of L.M) if (m.done) (weeks[m.wk] = weeks[m.wk] || []).push(m);
+  const ks = Object.keys(weeks).map(Number).sort((a, b) => b - a);
+  let h = `<div class="card"><h2>История · ${LSHORT[r]}</h2><div class="dim">Сезон ${L.season}. Все сыгранные матчи по неделям.</div></div>`;
+  h += ks.length ? ks.map(k => `<div class="card"><h3>Неделя ${k}</h3>${weeks[k].map(m => `<div class="dim" style="font-size:12px;margin-top:6px">${LG_STAGE[m.st]}${m.label && m.st !== 'RR' ? ' · ' + esc(m.label) : ''}</div>${lgSeries(L, m)}`).join('')}</div>`).join('')
+    : '<div class="card dim">Матчей пока не было.</div>';
+  return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
+}
+function viewLTurn() {   // ход лиг: объявление и матчи игроков
+  const L = G.leagues[G.lq[0]], m = lgPending(L);
+  if (!m) return '';
+  if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · ход лиг</div>
+    <img src="img/logo_${L.r}.webp" alt="" style="width:120px;height:120px;border-radius:16px;margin:14px auto;display:block">
+    <div class="logo" style="font-size:30px">Играет лига ${LSHORT[L.r]}!</div><div class="dim">${esc(REGIONS[L.r].league)} · ${LG_STAGE[m.st]}</div>
+    <button class="btn gold" data-a="lgo" style="margin-top:14px">Начать</button></div>`;
+  const L1 = lgHum(L, m.a) ? m.a : m.b, R1 = L1 === m.a ? m.b : m.a, mine = m.g.filter(x => x === L1).length;
+  return `<div class="card" style="margin-top:16px"><div class="dim">Неделя ${G.week} · лига ${LSHORT[L.r]} · ${LG_STAGE[m.st]}${m.label ? ' · ' + esc(m.label) : ''}</div>
+    <h3>Матч игрока ${esc(lgTeamName(L, L1))}</h3>
+    <div class="tvs"><div>${lgTeamCell(L, L1)}<br>${rateHtml(lgRating(L, L1), 'mid')}</div><div class="tsc">${mine}:${m.g.length - mine}</div><div>${lgTeamCell(L, R1)}<br>${rateHtml(lgRating(L, R1), 'mid')}</div></div>
+    <div class="dim" style="text-align:center">Bo${m.bo}${m.bo === 2 ? ' · возможна ничья' : ''} · бой ${m.g.length + 1}</div>
+    <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
+    ${lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
+}
+const VIEWS = { ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
+  if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); } lastView = null; return; }
   if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); lastView = null; return; }
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
@@ -939,7 +1160,7 @@ function act(a, v) {
     const inp = document.getElementById('nick');
     if (SETUP && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
     switch (a) {
-      case 'mcont': G = loadGame(v); if (G) S = G.players[G.cur]; break;
+      case 'mcont': G = loadGame(v); if (G) { S = G.players[G.cur]; ensureLeagues(); } break;
       case 'mnew': SETUP = v === 'solo' ? { mode: 'solo', n: 1, made: [] } : { mode: 'coop', n: +v.slice(4), made: [] }; resetSetup(); break;
       case 'mback': SETUP = null; break;
       case 'flag': setupFlag = v; setupErr = ''; break;
@@ -956,7 +1177,8 @@ function act(a, v) {
         H.hand = drawHand(H);
         SETUP.made.push(H);
         if (SETUP.made.length < SETUP.n) { resetSetup(); break; }   // следующий игрок
-        G = { v: 3, mode: SETUP.mode, players: SETUP.made, cur: 0, handoff: SETUP.mode === 'coop' };
+        G = { v: 3, mode: SETUP.mode, players: SETUP.made, cur: 0, handoff: SETUP.mode === 'coop', week: 1 };
+        ensureLeagues();
         S = G.players[0]; SETUP = null; save(); break;
       }
       default: return;
@@ -965,6 +1187,18 @@ function act(a, v) {
   }
   switch (a) {
     case 'hgo': G.handoff = false; break;
+    case 'lgo': G.lann = G.lq[0]; G.lview = 'match'; break;
+    case 'lplay': {
+      const L = G.leagues[G.lq[0]], m = lgPending(L); if (!m) return;
+      const L1 = lgHum(L, m.a) ? m.a : m.b, R1 = L1 === m.a ? m.b : m.a;
+      startFightAB(`Лига ${LSHORT[L.r]} · ${LG_STAGE[m.st]} · бой ${m.g.length + 1}`, lgFighter(L, L1), lgFighter(L, R1), won => { tGame(m, won ? L1 : R1); lgAfterGame(L, m); });
+      break;
+    }
+    case 'lsim': { const L = G.leagues[G.lq[0]], m = lgPending(L); if (!m) return; lgSimMatch(L, m); lgAfterGame(L, m); break; }
+    case 'ldraft': { const r = +v; S.draft = S.draft === r ? null : r; logMsg(S.draft === r ? 'Ты встал в драфт лиги ' + LSHORT[r] + '.' : 'Ты вышел из драфта.'); break; }
+    case 'ltable': S.lret = S.view; S.view = 'ltable'; S.sel = +v; break;
+    case 'lhist': S.lret = S.view; S.view = 'lhist'; S.sel = +v; break;
+    case 'lback': S.view = S.lret === 'league' ? 'league' : S.lret || 'bureau'; if (S.view === 'league') S.sel = S.sel; break;
     case 'menu': save(); G = null; S = null; SETUP = null; F = null; break;
     case 'card': S.view = 'card'; S.sel = +v; break;
     case 'league': S.view = 'league'; S.sel = +v; break;
