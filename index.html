@@ -114,13 +114,13 @@ const GENERIC = [
   C('Звонок семье', 'n'), C('Осмотр метеоритного камня', 'n'), C('Выставка технологий', 'n'), C('Экскурсия по лиге', 'n'), C('Посещение спортзала', 'n'), C('Игра в настолки с командой', 'n')
 ];
 // карта 1254×1254: выноски (x0,y0,x1,y1), точки, короткое имя лиги
-const MAPW = 1254;
+const MAPW = 1254, MAPH = 875;   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
 const MAPSPOTS = [
-  { box: [67, 569, 262, 615], pin: [176, 464], label: 'USA' },
-  { box: [335, 292, 533, 339], pin: [634, 374], label: 'LCS' },
-  { box: [864, 258, 1066, 305], pin: [774, 357], label: 'Северная Лига', fs: 1.8 },
-  { box: [813, 520, 1006, 567], pin: [1085, 466], label: 'ASL' },
-  { box: [1023, 638, 1228, 685], pin: [1157, 501], label: 'SSS' }
+  { box: [67, 444, 262, 490], pin: [176, 339], label: 'USA' },
+  { box: [335, 167, 533, 214], pin: [634, 249], label: 'LCS' },
+  { box: [864, 133, 1066, 180], pin: [774, 232], label: 'Северная Лига', fs: 1.8 },
+  { box: [813, 395, 1006, 442], pin: [1085, 341], label: 'ASL' },
+  { box: [1023, 513, 1228, 560], pin: [1157, 376], label: 'SSS' }
 ];
 // панели лиг 1024×1536: строки «Последние матчи», края строк, центры пьедесталов, низ подписи трофея
 const PANELS = [
@@ -249,8 +249,8 @@ const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
   return `<div class="map"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
-    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="${m.fs ? `font-size:${m.fs}cqw;` : ''}left:${pc(x0, MAPW)};top:${pc(y0, MAPW)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPW)}">${m.label}</div>
-      <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPW)}"></div>`;
+    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="${m.fs ? `font-size:${m.fs}cqw;` : ''}left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}">${m.label}</div>
+      <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
   }).join('')}</div>`;
 }
 function viewLeague() {
