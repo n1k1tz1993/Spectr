@@ -582,7 +582,9 @@ const ELITE_DATA = {
     2: { n: 'Swift', c: 'IT', p: 67, img: 'img/elite/eu_2.webp', a: 'Шквал клинков', d: 'Телепортируясь, закидывает кинжалами с разных сторон!', icon: 24,
          bio: 'Свифт предпочитает держать расстояние при помощи своего навыка телепортироваться на короткие расстояния. Мерзкая способность.' },
     3: { n: 'Ocelote', c: 'ES', p: 65, img: 'img/elite/eu_3.webp', a: 'Ледяной торнадо', d: 'Поле боя засыпает снегом и льдом! Воздух леденеет!', icon: 72,
-         bio: 'Оцелот вызывает ледяного феникса, замораживающего всё, чего он коснётся. Уверен, что это расходует колоссальное количество Цы.' }
+         bio: 'Оцелот вызывает ледяного феникса, замораживающего всё, чего он коснётся. Уверен, что это расходует колоссальное количество Цы.' },
+    4: { n: 'Shock', c: 'NL', p: 73, img: 'img/elite/eu_4.webp', a: 'Удар грома', d: 'Воздух наэлектризовался! Разряд электричества разносит всё вокруг!', icon: 3,
+         bio: 'Управляет электричеством. Частый гость подкастов и обложек женских журналов. Проводит много времени в компании фанаток.' }
   }
 };
 const LPOOL = {};
@@ -592,7 +594,10 @@ function lgPool(r) {   // все 20 бойцов региона, сильней�
     const p = proPower(k, i, r), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
     return { name: x[1], p, rating: npcRating(p), country: x[3], face: (i * 7 + r * 5) % FACE_COUNT, abil: { name: x[4] || an, desc: ad, icon: (i * 11 + r * 13) % ABIL_ICON_COUNT } };
   });
-  for (const [k, e] of Object.entries(ELITE_DATA[r] || {})) base[+k] = { name: e.n, p: e.p, rating: npcRating(e.p), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon }, bio: e.bio, real: true };
+  for (const [k, e] of Object.entries(ELITE_DATA[r] || {})) {
+    const same = base.findIndex(b => !b.real && b.name.toLowerCase() === e.n.toLowerCase());   // однофамилец из старой базы — заменяем его, без дублей
+    base[same >= 0 ? same : +k] = { name: e.n, p: e.p, rating: npcRating(e.p), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon }, bio: e.bio, real: true };
+  }
   const n = proCount(r), pros = base.slice(0, n).sort((a, b) => b.p - a.p);
   return (LPOOL[r] = pros.concat(base.slice(n)));
 }
