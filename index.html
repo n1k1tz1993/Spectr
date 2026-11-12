@@ -284,7 +284,6 @@ function viewMain() {
     <div class="card">
       <h2>Повседневные действия</h2>
       <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Сходить в библиотеку</button>
-      <button class="btn" data-a="tour" ${done ? 'disabled' : ''}>Участвовать в местном турнире</button>
       <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых</button>
       <button class="btn" data-a="bureau" ${done ? 'disabled' : ''}>Сходить в бюро</button>
       <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион</button>
@@ -330,7 +329,7 @@ function viewTour() {
   const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n);
   return wrap(`<div class="card"><h2>Местный турнир · ${REGIONS[r].name}</h2><div class="dim">Открыто уровней: ${S.tiers[r] + 1} из 3</div>
     ${TIERS.map((t, i) => `<button class="btn" data-a="play" data-v="${i}" ${i > S.tiers[r] ? 'disabled' : ''}>${t.name}${i > S.tiers[r] ? ' · закрыт' : ''}${has(t.name) ? ' · трофей есть' : ''}</button>`).join('')}
-    </div>${logHtml()}${back}`);
+    </div>${logHtml()}<button class="btn" data-a="toBureau">Назад в бюро</button>`);
 }
 function viewBureau() {
   const lg = leagueOf(S.rating);
@@ -345,6 +344,7 @@ function viewBureau() {
       <h3>Ближайшие 3 матча</h3><div class="dim">Заглушка: расписание лиги появится позже.</div>
     </div>
     <div class="card">
+      <button class="btn" data-a="tour" ${S.actions <= 0 ? 'disabled' : ''}>Участвовать в местном турнире (1 действие)</button>
       <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с случайным про-игроком региона (1 действие)</button>
       <button class="btn" data-a="fight" data-v="ladder" ${S.actions <= 0 ? 'disabled' : ''}>Лестничный матч на рейтинг (1 действие)</button>
       <div class="dim" style="margin-top:6px">Бой с про-игроком: +20 или −20 рейтинга. Лестничный матч: первые 10 матчей +100 или −100, дальше +20 или −25.</div>
@@ -398,6 +398,7 @@ function act(a, v) {
     case 'tour': if (spend()) { clearJet(); S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
+    case 'toBureau': S.view = 'bureau'; break;
     case 'fight': bureauFight(v); break;
     case 'flight': if (S.actions > 0) S.view = 'flight'; break;
     case 'fly': if (spend()) { S.region = +v; S.jetlag = 1; logMsg('Перелёт в ' + REGIONS[S.region].name + '. Джетлаг до конца хода.'); S.view = 'main'; } break;
