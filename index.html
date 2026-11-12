@@ -190,6 +190,11 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .erow .ava{width:34px;height:34px}
 .erow .chk{width:18px;color:var(--gold);font-weight:700}
 .esllogo{display:block;height:72px;width:auto;margin:0 auto 4px;background:#fff;border-radius:12px;padding:6px}
+.grow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;margin-top:8px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;font-size:12px}
+.grow .dim{grid-column:1/3;font-size:12px}
+.gbar{height:8px;border-radius:4px;background:#0B0F1C;overflow:hidden}
+.gbar i{display:block;height:100%;background:linear-gradient(90deg,#3A7BFF,#2FD7FF)}
+.grow b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:#7DE8FF}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -843,11 +848,17 @@ function finishTour() {
 }
 
 // ---------- виды ----------
+// прогресс прокачки: только путь 30 → 65, силу не показываем; дальше растёт за трофеи и турниры
+const GROW_FROM = 30, GROW_TO = 65;
+const growBar = () => {
+  const pct = Math.max(0, Math.min(1, (S.power - GROW_FROM) / (GROW_TO - GROW_FROM))) * 100, done = pct >= 100;
+  return `<div class="grow"><div class="dim">${done ? 'Прокачка завершена — дальше расти можно только трофеями и турнирами' : 'Прогресс прокачки'}</div><div class="gbar"><i style="width:${pct.toFixed(1)}%"></i></div><b>${Math.floor(pct)}%</b></div>`;
+};
 const topBar = () => {
   const lg = leagueOf(S.rating);
   return `<div class="top"><div class="ava">${faceImg(S.face)}</div>
     <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· игрок ${G.cur + 1}/${G.players.length}</span>` : ''}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
-    <div class="rate">${rateHtml(S.rating, 'big')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div></div>`;
+    <div class="rate">${rateHtml(S.rating, 'big')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div></div>${growBar()}`;
 };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
