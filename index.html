@@ -195,6 +195,11 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .gbar{height:8px;border-radius:4px;background:#0B0F1C;overflow:hidden}
 .gbar i{display:block;height:100%;background:linear-gradient(90deg,#3A7BFF,#2FD7FF)}
 .grow b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:#7DE8FF}
+.coll{display:flex;gap:10px;align-items:flex-start}
+.coll>div:first-child{flex:1}
+.eslmed{flex:0 0 auto;text-align:center}
+.eslmed img{width:46px;height:46px;border-radius:50%;background:#fff;padding:4px;border:2px solid var(--gold);display:block}
+.eslmed b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:var(--gold)}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -284,10 +289,10 @@ const TIERS = [
 ];
 const POWER_TOURNEY_CAP = 65, POWER_MAX = 125, TROPHY_GAIN = 5;
 // Кубки собираются только после прокачки (сила 65). Каждый новый кубок — +5 силы, максимум 125.
-function awardTrophy(H, r, name) {
+function awardTrophy(H, r, name, gain = TROPHY_GAIN) {   // силу дают только кубки турниров трёх уровней
   if (H.power < POWER_TOURNEY_CAP) return 'locked';
   if (H.troph.some(y => y.r === r && y.n === name)) return 'have';
-  H.troph.push({ r, n: name }); H.power = Math.min(POWER_MAX, H.power + TROPHY_GAIN); return 'new';
+  H.troph.push({ r, n: name }); H.power = Math.min(POWER_MAX, H.power + gain); return 'new';
 }
 const LEAGUES = [
   // рейтинг = сила × 30: старт 30 — бронза, 50 — золото, 55–59 — платина, 60–69 — алмаз, 70+ — мастер (сильнейший в мире — 77)
@@ -623,7 +628,7 @@ function lgFinish(L) {
     if (T.h == null) return;
     const H = G.players[T.h], place = i === champ ? 'чемпион' : i === second ? '2-е место' : i === third ? '3-е место' : 'сезон окончен';
     if (i === champ) {
-      const tr = awardTrophy(H, L.r, 'Кубок лиги');
+      const tr = awardTrophy(H, L.r, 'Кубок лиги', 0);   // кубок лиги — в коллекцию, силу не даёт
       logTo(H, `Ты чемпион лиги ${LSHORT[L.r]}!${tr === 'new' ? ' Кубок в коллекции.' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : ''}`);
     } else logTo(H, `Лига ${LSHORT[L.r]}: ${place}.`);
     if (L.worlds.includes(i)) logTo(H, 'Ты в топ-3 и едешь на чемпионат мира!');
@@ -847,8 +852,8 @@ function finishTour() {
         if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) { H.tiers[r] = R.tier + 1; msg += ' Открыт следующий турнир.'; }
         if (H.power < POWER_TOURNEY_CAP) H.power = Math.min(POWER_TOURNEY_CAP, H.power + T.gain);   // до 65 — прокачка
       }
-      const tr = awardTrophy(H, r, T.name);
-      msg += tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
+      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, 'esl') : awardTrophy(H, r, T.name);
+      msg += tr === 'esl' ? ` Медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id)); logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.'); }
   }
@@ -876,7 +881,7 @@ const labelOf = c => {
   return '<div class="bonus nt">Без эффекта</div>';
 };
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
-const trophiesHtml = () => S.troph.length ? `<h2>Коллекция</h2><div>${S.troph.map(t => `<span class="trophy">${esc(REGIONS[t.r].name)} · ${esc(t.n)}</span>`).join('')}</div>` : '';
+const trophiesHtml = () => S.troph.length || S.eslWins ? `<h2>Коллекция</h2><div class="coll"><div>${S.troph.map(t => `<span class="trophy">${esc(REGIONS[t.r].name)} · ${esc(t.n)}</span>`).join('')}</div>${S.eslWins ? `<div class="eslmed"><img src="img/esl.webp" alt="ESL ONE"><b>×${S.eslWins}</b></div>` : ''}</div>` : '';
 const back = `<button class="btn" data-a="back">Назад</button>`;
 const wrap = inner => `${topBar()}${inner}`;
 
