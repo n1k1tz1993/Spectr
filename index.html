@@ -84,6 +84,15 @@ img.pic{object-fit:cover;padding:0;background:#fff}
 .fx.go{animation:fxup .8s ease-out forwards}
 @keyframes fxup{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
 .flog{font-size:13px;line-height:1.5;background:#11162A;border-radius:10px;padding:8px 10px;margin-top:10px;min-height:100px}
+.aic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;font-size:16px;color:#fff;flex:0 0 auto}
+.iconpick{padding:3px;border:2px solid transparent;border-radius:10px;background:none;cursor:pointer}
+.iconpick .aic{width:40px;height:40px;font-size:22px}
+.iconpick.on{border-color:var(--gold)}
+textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#0B0F1C;color:var(--txt);font-size:15px;font-family:inherit;resize:vertical}
+.abil{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;margin-top:6px;min-width:0}
+.abil span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.abil .aic{width:22px;height:22px;font-size:13px}
+.fx{font-size:18px}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -184,13 +193,14 @@ function load() {
     if (!v.tiers) { v.tiers = [0, 0, 0, 0, 0]; v.tiers[v.region || 0] = v.tier || 0; }
     if (!v.troph) v.troph = (v.trophies || []).map(n => ({ r: v.region || 0, n }));
     if (!v.hist) v.hist = [];
+    if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
     return v;
   } catch (e) { return null; }
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
-function newHero(nick, country) {
-  return { v: 2, nick, country, power: 30, rating: 0, ladderGames: 0, region: 0, turn: 1, actions: 3, hand: [], jetlag: 0,
+function newHero(nick, country, ability) {
+  return { v: 2, nick, country, ability, power: 30, rating: 0, ladderGames: 0, region: 0, turn: 1, actions: 3, hand: [], jetlag: 0,
            effects: [], tiers: [0, 0, 0, 0, 0], troph: [], hist: [], read: {}, log: ['Добро пожаловать в Спектр. Неделя 1.'], view: 'main', sel: null, tourCount: 0 };
 }
 
@@ -229,62 +239,70 @@ function useCard(i) {
 // ---------- бой ----------
 // Всё считается от одной характеристики — силы (10–125). Сила игроку не показывается.
 const FIGHT = {
-  hp: p => Math.round(270 + p * 2.5),       // здоровье
-  qi: p => Math.round(55 + p * 0.3),        // запас Цы: хватает на способность (5 ударов) и пару обычных
-  def: p => p * 0.2,                        // защита: урон × 100 / (100 + защита)
-  dmg: p => 25 + p * 0.25,                  // базовый урон удара
-  cost: 10,                                 // Цы за удар
-  regen: 0.04,                              // восстановление Цы в секунду, доля от запаса
+  hp: p => Math.round(650 + p * 2.5),       // здоровье
+  qi: p => Math.round(55 + p * 0.3),        // запас Цы (расход считается в процентах от запаса)
+  def: p => p * 0.1,                        // защита: урон × 100 / (100 + защита)
+  dmg: p => 32 + p * 0.18,                  // базовый урон удара
+  costPct: 0.05,                            // обычный удар: −5% Цы
+  abilPct: 0.20,                            // способность (5 ударов): −20% Цы
+  regen: 0.01,                              // восстановление Цы в секунду, доля от запаса
   cd: 1.0,                                  // скорость атаки одинаковая: удар раз в секунду
   rest: 3,                                  // передышка без Цы, потом Цы полная
-  diceDiv: 25,                              // поправка к броску: разница сил / diceDiv
-  abilityHits: 5,                           // способность: урон и цена как у 5 ударов сразу
-  abilityChance: 0.3                        // шанс применить её, когда Цы хватает
+  diceDiv: 40,                              // поправка к броску: разница сил / diceDiv
+  abilHits: 5,                              // способность = 5 ударов, урон проходит одним ударом
+  abilCrit: 0.2,                            // шанс крита способности
+  thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
 const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
+const ABIL_NAMES = ['Громовой разлом', 'Ледяная спираль', 'Пылающий шквал', 'Теневой рывок', 'Метеоритный кулак', 'Вихрь клинков', 'Пульс бездны', 'Звёздный град', 'Багровая волна', 'Призрачный каскад'];
+// иконки способностей: пока заглушки, заменятся картинками
+const ABIL_ICONS = [['⚡', '#3A7BFF'], ['❄', '#2FD7FF'], ['🔥', '#FF6A3D'], ['🌀', '#8A5CFF'], ['☄', '#F5C542'], ['✦', '#3DDC84']];
+const abilIcon = i => { const [g, c] = ABIL_ICONS[i % ABIL_ICONS.length]; return `<span class="aic" style="background:${c}">${g}</span>`; };
 let F = null, FT = null;
-const fighter = (name, p, rating, me) => ({ name, p, rating, me, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
+const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || { name: ABIL_NAMES[rnd(0, ABIL_NAMES.length - 1)], icon: rnd(0, ABIL_ICONS.length - 1) },
+  thr: me ? FIGHT.thrMe : FIGHT.thrNpc, used: false, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
 function startFight(title, opp, onEnd) {
-  F = { title, a: fighter(S.nick, effPower(), S.rating, true), b: opp, onEnd, t: 0, done: false, won: false, ev: [], speed: 1, last: null };
+  F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], speed: 1, last: null };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
   S.view = 'fight';
 }
-function strike(x, y) {
+function rollHit(x, y) {
   const roll = rnd(1, 20), r = roll + Math.round((x.p - y.p) / FIGHT.diceDiv);  // бросок кубика d20 с поправкой на разницу сил
   const base = FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p));
-  let kind = 'hit', dmg = 0;
-  if (roll === 20 || r >= 19) { kind = 'crit'; dmg = base * 2; }
-  else if (roll === 1 || r <= 3) kind = 'dodge';
-  else if (r <= 6) kind = 'block';
-  else dmg = base * (0.85 + Math.random() * 0.3);
-  dmg = Math.round(dmg);
+  if (roll === 20 || r >= 19) return { kind: 'crit', dmg: Math.round(base * 2) };
+  if (roll === 1 || r <= 3) return { kind: 'dodge', dmg: 0 };
+  if (r <= 6) return { kind: 'block', dmg: 0 };
+  return { kind: 'hit', dmg: Math.round(base * (0.85 + Math.random() * 0.3)) };
+}
+const fev = (m) => { F.ev.unshift(m); F.ev = F.ev.slice(0, 6); };
+function useAbility(x, y) {
+  // 5 ударов: каждый может критануть или не попасть; урон проходит одним ударом, вне очереди
+  let sum = 0, crits = 0, miss = 0;
+  for (let i = 0; i < FIGHT.abilHits; i++) { const r = rollHit(x, y); sum += r.dmg; if (r.kind === 'crit') crits++; if (r.dmg === 0) miss++; }
+  const mult = Math.random() < FIGHT.abilCrit ? 1.1 + Math.random() * 0.9 : 1;
+  const dmg = Math.round(sum * mult);
+  x.qi = Math.max(0, x.qi - x.qiMax * FIGHT.abilPct); x.used = true;
   y.hp = Math.max(0, y.hp - dmg);
-  return { kind, dmg };
+  fev(`${x.name}: «${x.abil.name}»${mult > 1 ? ' — крит ×' + mult.toFixed(1) : ''} · попало ${FIGHT.abilHits - miss} из ${FIGHT.abilHits}${crits ? ', критов ' + crits : ''} · −${dmg}`);
+  F.last = { who: y === F.a ? 'a' : 'b', kind: 'abil', dmg, name: x.abil.name, mult };
+  if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
 }
 function fightStep(dt) {
   for (const [x, y] of [[F.a, F.b], [F.b, F.a]]) {
     if (F.done) return;
-    if (x.rest > 0) { x.rest -= dt; if (x.rest <= 0) { x.rest = 0; x.qi = x.qiMax; x.cd = 0.3; } continue; }
+    if (x.rest > 0) { x.rest -= dt; if (x.rest <= 0) { x.rest = 0; x.qi = x.qiMax; x.used = false; x.cd = 0.3; } continue; }
     x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
     x.cd -= dt;
     if (x.cd > 0) continue;
-    if (x.qi < FIGHT.cost) { x.rest = FIGHT.rest; F.ev.unshift(x.name + ': Цы иссякла, передышка 3 с'); F.ev = F.ev.slice(0, 6); F.last = { who: x === F.a ? 'a' : 'b', kind: 'rest' }; continue; }
-    if (x.qi >= FIGHT.cost * FIGHT.abilityHits && Math.random() < FIGHT.abilityChance) {
-      // способность: автоматически, нельзя заблокировать, урон 5 ударов, цена 5 ударов
-      const dmg = Math.round(FIGHT.abilityHits * FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p)) * (0.9 + Math.random() * 0.2));
-      x.qi -= FIGHT.cost * FIGHT.abilityHits; x.cd = FIGHT.cd;
-      y.hp = Math.max(0, y.hp - dmg);
-      F.ev.unshift(`${x.name}: Спектральный удар! −${dmg}`); F.ev = F.ev.slice(0, 6);
-      F.last = { who: y === F.a ? 'a' : 'b', kind: 'abil', dmg };
-      if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
-      continue;
-    }
-    x.qi -= FIGHT.cost; x.cd = FIGHT.cd;
-    const r = strike(x, y);
-    F.ev.unshift(r.kind === 'crit' ? `${x.name}: критический удар! −${r.dmg}` : r.kind === 'dodge' ? `${y.name} уклоняется` : r.kind === 'block' ? `${y.name} блокирует удар` : `${x.name} бьёт: −${r.dmg}`);
-    F.ev = F.ev.slice(0, 6);
+    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ': Цы иссякла, передышка 3 с'); F.last = { who: x === F.a ? 'a' : 'b', kind: 'rest' }; continue; }
+    x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
+    const r = rollHit(x, y);
+    y.hp = Math.max(0, y.hp - r.dmg);
+    fev(r.kind === 'crit' ? `${x.name}: критический удар! −${r.dmg}` : r.kind === 'dodge' ? `${y.name} уклоняется` : r.kind === 'block' ? `${y.name} блокирует удар` : `${x.name} бьёт: −${r.dmg}`);
     F.last = { who: y === F.a ? 'a' : 'b', kind: r.kind, dmg: r.dmg };
-    if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
+    if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
+    // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
+    if (!x.used && x.qi <= x.qiMax * x.thr && x.qi >= x.qiMax * FIGHT.abilPct) useAbility(x, y);
   }
   F.t += dt;
   if (F.t > 300 && !F.done) { F.done = true; F.won = F.a.hp / F.a.hpMax >= F.b.hp / F.b.hpMax; }
@@ -460,7 +478,7 @@ function viewFlight() {
     ${REGIONS.map((r, i) => `<button class="btn" data-a="fly" data-v="${i}" ${i === S.region ? 'disabled' : ''}>${r.name}</button>`).join('')}
     </div>${back}`);
 }
-let setupNick = '', setupFlag = 'RU', setupErr = '';
+let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0;
 function viewSetup() {
   return `<div class="card" style="margin-top:24px"><h2>Создание персонажа</h2>
     <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
@@ -470,6 +488,12 @@ function viewSetup() {
     <div class="dim" style="margin-top:14px">Флаг</div>
     <div class="row">${Object.keys(COUNTRIES).map(k => `<button class="btn ${k === setupFlag ? 'here' : ''}" style="width:auto;flex:1 0 auto;text-align:center;font-size:22px;padding:8px 12px" data-a="flag" data-v="${k}">${flagOf(k)}</button>`).join('')}</div>
     <div class="dim" style="margin-top:6px">${COUNTRIES[setupFlag]}</div>
+    <h2 style="margin-top:20px">Придумай свой сильнейший удар!</h2>
+    <div class="dim">Иконка</div>
+    <div class="row">${ABIL_ICONS.map((_, i) => `<button class="iconpick ${i === setupIcon ? 'on' : ''}" data-a="sicon" data-v="${i}">${abilIcon(i)}</button>`).join('')}</div>
+    <div class="dim" style="margin-top:10px">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
+    <div class="dim" style="margin-top:10px">Описание</div><textarea id="adesc" maxlength="160" rows="3" placeholder="Как выглядит твой удар">${esc(setupADesc)}</textarea>
+    <div class="dim" style="margin-top:6px">Способность — серия из 5 ударов одним броском. Применяется сама, когда Цы опускается до половины.</div>
     <button class="btn gold" data-a="start" style="margin-top:16px">Начать</button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
   </div>`;
@@ -477,6 +501,7 @@ function viewSetup() {
 
 function fbox(x, id) {
   return `<div class="fbox"><div class="face">${x.me ? 'Лицо' : 'Соперник'}</div><b class="fname">${esc(x.name)}</b><div class="dim">Рейтинг ${x.rating}</div>
+    <div class="abil">${abilIcon(x.abil.icon)}<span>${esc(x.abil.name)}</span></div>
     <div class="bar hp"><i id="${id}-hp"></i></div><div class="bar qi"><i id="${id}-qi"></i></div><div class="frest" id="${id}-rest"></div><div class="fx" id="${id}-fx"></div></div>`;
 }
 function viewFight() {
@@ -503,7 +528,7 @@ function fightPaint() {
   }
   if (F.last) {
     const fx = document.getElementById((F.last.who === 'a' ? 'fa' : 'fb') + '-fx');
-    const t = { crit: ['Крит! −' + F.last.dmg, 'minus'], dodge: ['Уклон!', 'nt'], block: ['Блок!', 'nt'], hit: ['−' + F.last.dmg, 'minus'], rest: ['Нет Цы', 'rand'], abil: ['Спектральный удар! −' + F.last.dmg, 'rand'] }[F.last.kind];
+    const t = { crit: ['Крит! −' + F.last.dmg, 'minus'], dodge: ['Уклон!', 'nt'], block: ['Блок!', 'nt'], hit: ['−' + F.last.dmg, 'minus'], rest: ['Нет Цы', 'rand'], abil: [F.last.name + (F.last.mult > 1 ? ' ×' + F.last.mult.toFixed(1) : '') + '! −' + F.last.dmg, 'rand'] }[F.last.kind];
     fx.textContent = t[0]; fx.className = 'fx show ' + t[1]; void fx.offsetWidth; fx.classList.add('go');
     F.last = null;
   }
@@ -534,15 +559,17 @@ function render() {
 
 // ---------- действия ----------
 function act(a, v) {
-  if (!S && a !== 'start' && a !== 'flag') return;
+  if (!S && a !== 'start' && a !== 'flag' && a !== 'sicon') return;
   const inp = document.getElementById('nick');
-  if (!S && inp) setupNick = inp.value;
+  if (!S && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
   switch (a) {
     case 'flag': setupFlag = v; setupErr = ''; break;
+    case 'sicon': setupIcon = +v; break;
     case 'start': {
       const nick = setupNick.trim();
       if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
-      S = newHero(nick, setupFlag); S.hand = drawHand(); setupErr = ''; save(); break;
+      if (!setupAName.trim()) { setupErr = 'Придумай название своего удара.'; break; }
+      S = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon }); S.hand = drawHand(); setupErr = ''; save(); break;
     }
     case 'card': S.view = 'card'; S.sel = +v; break;
     case 'league': S.view = 'league'; S.sel = +v; break;
