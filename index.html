@@ -136,6 +136,10 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .rt.rf img{height:1.25em}
 .rate{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .rate .lg{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+img.aic{object-fit:cover;background:#0B0F1C;display:block}
+.iconsgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.iconsgrid .iconpick{padding:2px;width:100%}
+.iconsgrid .iconpick .aic{width:100%;height:auto;aspect-ratio:1}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -305,11 +309,11 @@ const FIGHT = {
 };
 const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
 const ABIL_NAMES = ['Громовой разлом', 'Ледяная спираль', 'Пылающий шквал', 'Теневой рывок', 'Метеоритный кулак', 'Вихрь клинков', 'Пульс бездны', 'Звёздный град', 'Багровая волна', 'Призрачный каскад'];
-// иконки способностей: пока заглушки, заменятся картинками
-const ABIL_ICONS = [['⚡', '#3A7BFF'], ['❄', '#2FD7FF'], ['🔥', '#FF6A3D'], ['🌀', '#8A5CFF'], ['☄', '#F5C542'], ['✦', '#3DDC84']];
-const abilIcon = i => { const [g, c] = ABIL_ICONS[i % ABIL_ICONS.length]; return `<span class="aic" style="background:${c}">${g}</span>`; };
+// иконки способностей: img/abil/0..19.webp
+const ABIL_ICON_COUNT = 20;
+const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
-const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || { name: ABIL_NAMES[rnd(0, ABIL_NAMES.length - 1)], icon: rnd(0, ABIL_ICONS.length - 1) },
+const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || { name: ABIL_NAMES[rnd(0, ABIL_NAMES.length - 1)], icon: rnd(0, ABIL_ICON_COUNT - 1) },
   thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
 function startFight(title, opp, onEnd) {
   F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -547,7 +551,7 @@ function viewSetup() {
     <div class="dim" style="margin-top:6px">${COUNTRIES[setupFlag]}</div>
     <h2 style="margin-top:20px">Придумай свой сильнейший удар!</h2>
     <div class="dim">Иконка</div>
-    <div class="row">${ABIL_ICONS.map((_, i) => `<button class="iconpick ${i === setupIcon ? 'on' : ''}" data-a="sicon" data-v="${i}">${abilIcon(i)}</button>`).join('')}</div>
+    <div class="iconsgrid">${[...Array(ABIL_ICON_COUNT).keys()].map(i => `<button class="iconpick ${i === setupIcon ? 'on' : ''}" data-a="sicon" data-v="${i}">${abilIcon(i)}</button>`).join('')}</div>
     <div class="dim" style="margin-top:10px">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
     <div class="dim" style="margin-top:10px">Описание</div><textarea id="adesc" maxlength="160" rows="3" placeholder="Как выглядит твой удар">${esc(setupADesc)}</textarea>
     <div class="dim" style="margin-top:6px">Способность — серия из 5 ударов одним броском. Применяется сама, когда Цы опускается до половины.</div>
