@@ -11,7 +11,10 @@
 body{margin:0;background:var(--bg);color:var(--txt);font-family:Rubik,system-ui,-apple-system,sans-serif;min-height:100vh}
 #app{max-width:520px;margin:0 auto;padding:12px 16px 40px}
 .top{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px}
-.ava{width:40px;height:40px;border-radius:10px;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto}
+.ava{width:44px;height:44px;border-radius:10px;background:#0B0F1C;overflow:hidden;flex:0 0 auto;border:1px solid var(--line)}
+.ava img{width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block}
+.faceone{padding:0;border:2px solid var(--gold);border-radius:12px;background:none;cursor:pointer;width:140px;height:140px;overflow:hidden;display:block}
+.faceone img{width:100%;height:100%;object-fit:cover;display:block}
 .nick{font-weight:700}
 .rate{margin-left:auto;text-align:right}
 .rate b{font-size:20px}
@@ -103,8 +106,8 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .ffbot{container-type:inline-size;padding:0 1.5% 16px;display:flex;flex-direction:column;gap:8px;background:#04070F}
 .ffbox>*{position:absolute}
 .ff-back{background:transparent;border:0;cursor:pointer}
-.ff-face{display:flex;align-items:center;justify-content:center}
-.ff-face span{width:62%;aspect-ratio:1;background:rgba(255,255,255,.92);color:#111;border-radius:2cqw;display:flex;align-items:center;justify-content:center;font-weight:700}
+.ff-face{overflow:hidden;clip-path:polygon(5% 0,95% 0,100% 5%,100% 100%,0 100%,0 5%)}
+.ff-face img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
 .ff-plate{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6cqw}
 .ff-plate b{font-size:4.2cqw;line-height:1.1;max-width:95%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ff-plate span{color:var(--dim);font-size:3.2cqw}
@@ -171,6 +174,9 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .ff-log .flog{font-size:3.3cqw;line-height:1.45;padding:0 1cqw;overflow:hidden;background:transparent;margin:0;min-height:0}
 .ff-log #fend .btn{margin-top:1.5cqw;padding:2.2cqw}
 .logo{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:44px;letter-spacing:.08em;background:linear-gradient(180deg,#FFFFFF,#7DE8FF 60%,#2FD7FF);-webkit-background-clip:text;background-clip:text;color:transparent;padding:6px 0}
+.ff-vs{display:flex;align-items:center;justify-content:center;font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:8cqw;color:#FFD54A;text-shadow:0 0 2cqw rgba(255,180,0,.8),0 .4cqw 0 #8A5A00,0 0 .6cqw #000;pointer-events:none}
+.ff-fx{font-size:8cqw !important;-webkit-text-stroke:.25cqw rgba(0,0,0,.65)}
+.ff-fx.ff-fx2{font-size:5.4cqw !important}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -273,6 +279,7 @@ function fixHero(v) {   // старые сохранения героя
   if (!v.troph) v.troph = (v.trophies || []).map(n => ({ r: v.region || 0, n }));
   if (!v.hist) v.hist = [];
   if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
+  if (v.face == null) v.face = 0;
   return v;
 }
 function loadGame(mode) {
@@ -287,8 +294,8 @@ function loadGame(mode) {
 }
 function save() { if (!G) return; try { localStorage.setItem(SKEY[G.mode], JSON.stringify(G)); } catch (e) {} }
 
-function newHero(nick, country, ability) {
-  return { v: 2, nick, country, ability, power: 30, rating: 0, ladderGames: 0, region: 0, turn: 1, actions: 3, hand: [], jetlag: 0,
+function newHero(nick, country, ability, face) {
+  return { v: 2, nick, country, ability, face, power: 30, rating: 0, ladderGames: 0, region: 0, turn: 1, actions: 3, hand: [], jetlag: 0,
            effects: [], tiers: [0, 0, 0, 0, 0], troph: [], hist: [], read: {}, log: ['Добро пожаловать в Спектр. Неделя 1.'], view: 'main', sel: null, tourCount: 0 };
 }
 
@@ -359,12 +366,14 @@ const ABIL_LIST = [   // способности соперников: назва
   ['Багровая волна', 'накрывает врага багровой волной'], ['Призрачный каскад', 'наносит каскад призрачных ударов']
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
+const FACE_COUNT = 36;   // портреты: img/face/0..35.webp
+const faceImg = (i, cls = '') => `<img class="${cls}" src="img/face/${((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT}.webp" alt="">`;
 const ABIL_ICON_COUNT = 120;   // 0–19 первый набор, 20–119 ещё пять наборов по 20
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
-const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
+const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), lastCrit: false, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
   thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
-function startFight(title, opp, onEnd) { startFightAB(title, fighter(S.nick, effPower(), S.rating, true, S.ability), opp, onEnd); }
+function startFight(title, opp, onEnd) { startFightAB(title, fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
   F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
@@ -390,7 +399,7 @@ function useAbility(x, y) {
   y.hp = Math.max(0, y.hp - dmg);
   // в журнал — что делает удар (фраза, которую придумал игрок), и урон от него
   const what = (x.abil.desc || 'наносит серию из пяти ударов').replace(/[.!\s]+$/, '');
-  fev(`${x.name} · «${x.abil.name}»: ${what}! −${dmg}${mult > 1 ? ' · крит ×' + mult.toFixed(1) : ''} (попало ${FIGHT.abilHits - miss} из ${FIGHT.abilHits}${crits ? ', критов ' + crits : ''})`);
+  fev(`${x.name} · «${x.abil.name}»: ${what}!${mult > 1 ? ' Сокрушительная мощь!' : ''}`);
   fxPush(y, `${x.abil.name}${mult > 1 ? ' ×' + mult.toFixed(1) : ''}! −${dmg}`, 'rand', 1);
   if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
 }
@@ -402,16 +411,20 @@ function fightStep(dt) {
     x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
     x.cd -= dt;
     if (x.cd > 0) continue;
-    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ': Цы иссякла, передышка 3 с'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
+    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ' выдыхается — Цы иссякла!'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
     x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
     const r = rollHit(x, y);
     y.hp = Math.max(0, y.hp - r.dmg);
-    fev(r.kind === 'crit' ? `${x.name}: критический удар! −${r.dmg}` : r.kind === 'dodge' ? `${y.name} уклоняется` : r.kind === 'block' ? `${y.name} блокирует удар` : `${x.name} бьёт: −${r.dmg}`);
+    // в журнал — только яркие моменты; обычные удары видны цифрами на портрете
+    if (r.kind === 'crit') fev(x.lastCrit ? `${x.name} проводит серию разрушительных атак!` : `${x.name} производит разрушительную атаку!`);
+    else if (r.kind === 'dodge') fev(`${y.name} легко уклоняется от атаки!`);
+    else if (r.kind === 'block') fev(`${y.name} блокирует удар!`);
+    x.lastCrit = r.kind === 'crit';
     fxPush(y, { crit: 'Крит! −' + r.dmg, dodge: 'Уклон!', block: 'Блок!', hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
     if (Math.random() < FIGHT.qiProc) {          // шанс как у крита: прилив Цы 5–10%
       const g = FIGHT.qiProcMin + Math.random() * (FIGHT.qiProcMax - FIGHT.qiProcMin);
       x.qi = Math.min(x.qiMax, x.qi + x.qiMax * g);
-      fev(`${x.name}: прилив Цы +${Math.round(g * 100)}%`); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
+      fev(`${x.name} чувствует прилив Цы!`); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
     }
     if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
     // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
@@ -462,7 +475,7 @@ function playTour(t) {
   const names = shuffle(NAMES.filter(x => !taken.includes(x))).slice(0, n - hums.length);
   const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() })).concat(names.map((name, i) => {
     const p = rnd(T.lo, T.hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-    return { id: hums.length + i, name, p, rating: npcRating(p), seed: Math.random(), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
+    return { id: hums.length + i, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
   }));
   const R = { tier: t, region: r, fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, outs: {}, tbOut: {}, tbn: 0 };
   const ids = shuffle(ps.map(x => x.id));
@@ -495,7 +508,7 @@ function tGame(m, w) {   // записать бой серии; Bo2 — всег
   if (m.bo === 2) { if (m.g.length === 2) { m.done = true; m.w = wa === wb ? null : wa > wb ? m.a : m.b; } }
   else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
 }
-function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil); const H = G.players[h]; return fighter(H.nick, heroPower(H), H.rating, true, H.ability); }
+function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil, x.face); const H = G.players[h]; return fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face); }
 function tSimGame(R, a, b) {   // бой без показа — тем же движком, что и живой бой
   const keep = F;
   F = { a: tFighter(R, a), b: tFighter(R, b), t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -618,7 +631,7 @@ function finishTour() {
 // ---------- виды ----------
 const topBar = () => {
   const lg = leagueOf(S.rating);
-  return `<div class="top"><div class="ava">${esc(S.nick.slice(0, 2).toUpperCase())}</div>
+  return `<div class="top"><div class="ava">${faceImg(S.face)}</div>
     <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· игрок ${G.cur + 1}/${G.players.length}</span>` : ''}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
     <div class="rate">${rateHtml(S.rating, 'big')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div></div>`;
 };
@@ -756,8 +769,8 @@ function viewFlight() {
     ${REGIONS.map((r, i) => `<button class="btn" data-a="fly" data-v="${i}" ${i === S.region ? 'disabled' : ''}>${r.name}</button>`).join('')}
     </div>${back}`);
 }
-let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0;
-const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); };
+let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0, setupFace = 0;
+const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupFace = rnd(0, FACE_COUNT - 1); };
 function viewMenu() {
   const solo = loadGame('solo'), coop = loadGame('coop');
   return `<div class="card" style="margin-top:24px;text-align:center"><div class="logo">СПЕКТР</div></div>
@@ -775,7 +788,7 @@ function viewMenu() {
 function viewHandoff() {
   const n = G.players.length;
   return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Совместная игра · неделя ${S.turn}</div>
-    <div class="ava" style="width:72px;height:72px;margin:14px auto;font-size:26px">${esc(S.nick.slice(0, 2).toUpperCase())}</div>
+    <div class="ava" style="width:96px;height:96px;margin:14px auto">${faceImg(S.face)}</div>
     <h2>Ход игрока ${G.cur + 1} из ${n}: ${esc(S.nick)} ${flagOf(S.country)}</h2>
     <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
     <button class="btn gold" data-a="hgo" style="margin-top:14px">Начать неделю</button></div>
@@ -786,7 +799,7 @@ function viewSetup() {
   const who = SETUP && SETUP.mode === 'coop' ? `<div class="dim">Игрок ${SETUP.made.length + 1} из ${SETUP.n}</div>` : '';
   return `<div class="card" style="margin-top:24px">${who}<h2>Создание персонажа</h2>
     <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
-      <div class="sq" style="width:140px;height:140px;font-size:18px;flex:0 0 140px">Лицо</div>
+      <div style="flex:0 0 140px;text-align:center"><button class="faceone" data-a="sface" aria-label="Сменить портрет">${faceImg(setupFace)}</button><div class="dim" style="font-size:12px;margin-top:4px">Нажми, чтобы сменить (${setupFace + 1} из ${FACE_COUNT})</div></div>
       <div style="flex:1"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}"></div>
     </div>
     <div class="dim" style="margin-top:14px">Флаг</div>
@@ -811,12 +824,12 @@ function viewSetup() {
 const FW = 908, FH = 906;   // верхняя часть макета 908×1536: до панелей HP/Цы включительно
 const fpos = (x0, y0, x1, y1) => `left:${pc(x0, FW)};top:${pc(y0, FH)};width:${pc(x1 - x0, FW)};height:${pc(y1 - y0, FH)}`;
 const FL = {   // левый и правый боец: портрет, плашка имени, полосы HP/Цы, квадрат иконки, поле названия
-  fa: { face: [40, 250, 415, 615], plate: [22, 632, 432, 762], hp: [102, 801, 424, 832], qi: [102, 855, 424, 886], icon: [33, 933, 121, 1022], name: [140, 925, 432, 1030] },
-  fb: { face: [498, 250, 873, 615], plate: [480, 632, 890, 762], hp: [558, 801, 880, 832], qi: [558, 855, 880, 886], icon: [481, 933, 569, 1022], name: [588, 925, 880, 1030] }
+  fa: { pic: [19, 225, 436, 630], face: [40, 250, 415, 615], plate: [22, 632, 432, 762], hp: [102, 801, 424, 832], qi: [102, 855, 424, 886], icon: [33, 933, 121, 1022], name: [140, 925, 432, 1030] },
+  fb: { pic: [477, 225, 894, 630], face: [498, 250, 873, 615], plate: [480, 632, 890, 762], hp: [558, 801, 880, 832], qi: [558, 855, 880, 886], icon: [481, 933, 569, 1022], name: [588, 925, 880, 1030] }
 };
 function fside(x, id) {
   const L = FL[id];
-  return `<div class="ff-face" style="${fpos(...L.face)}"><span>${x.me ? 'Лицо' : 'Соперник'}</span></div>
+  return `<div class="ff-face" style="${fpos(...L.pic)}">${faceImg(x.face)}</div>
     <div class="ff-fx" id="${id}-fx" style="${fpos(...L.face)}"></div><div class="ff-fx ff-fx2" id="${id}-fx2" style="${fpos(...L.face)}"></div>
     <div class="ff-plate" style="${fpos(...L.plate)}"><b>${esc(x.name)}</b>${rateHtml(x.rating, 'rf')}</div>
     <div class="ff-bar hp" style="${fpos(...L.hp)}"><i id="${id}-hp"></i></div>
@@ -831,6 +844,7 @@ function viewFight() {
   return `<div class="ff"><div class="ffwrap"><div class="ffbox">
     <button class="ff-back" data-a="fback" style="${fpos(18, 112, 131, 190)}" aria-label="Назад"></button>
     ${fside(F.a, 'fa')}${fside(F.b, 'fb')}
+    <div class="ff-vs" style="${fpos(404, 430, 504, 520)}">VS</div>
   </div>
   <div class="ffbot">
     ${fabRow(F.a, 'fa')}${fabRow(F.b, 'fb')}
@@ -916,6 +930,7 @@ function render() {
 // ---------- действия ----------
 function act(a, v) {
   if (!G) {   // главное меню и создание героев
+    if (a === 'sface' && !SETUP) return;
     const inp = document.getElementById('nick');
     if (SETUP && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
     switch (a) {
@@ -924,6 +939,7 @@ function act(a, v) {
       case 'mback': SETUP = null; break;
       case 'flag': setupFlag = v; setupErr = ''; break;
       case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
+      case 'sface': setupFace = (setupFace + 1) % FACE_COUNT; break;       // нажатие — следующий портрет
       case 'start': {
         if (!SETUP) return;
         const nick = setupNick.trim();
@@ -931,7 +947,7 @@ function act(a, v) {
         if (SETUP.made.some(H => H.nick.toLowerCase() === nick.toLowerCase())) { setupErr = 'Такой ник уже занят другим игроком.'; break; }
         if (!setupAName.trim()) { setupErr = 'Придумай название своего удара.'; break; }
         if (!setupADesc.trim()) { setupErr = 'Напиши, что делает твой удар.'; break; }
-        const H = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon });
+        const H = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon }, setupFace);
         H.hand = drawHand(H);
         SETUP.made.push(H);
         if (SETUP.made.length < SETUP.n) { resetSetup(); break; }   // следующий игрок
