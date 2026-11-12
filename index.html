@@ -176,7 +176,7 @@ function playTour(t) {
 }
 
 // ---------- виды ----------
-const top = () => {
+const topBar = () => {
   const lg = leagueOf(S.rating);
   return `<div class="top"><div class="ava">${esc(S.nick.slice(0, 2).toUpperCase())}</div>
     <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
@@ -192,7 +192,7 @@ const labelOf = c => {
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
 const trophiesHtml = () => S.trophies.length ? `<h2>Коллекция</h2><div>${S.trophies.map(t => `<span class="trophy">${esc(t)}</span>`).join('')}</div>` : '';
 const back = `<button class="btn" data-a="back">Назад</button>`;
-const wrap = inner => `${top()}${inner}`;
+const wrap = inner => `${topBar()}${inner}`;
 
 function viewMain() {
   const done = S.actions <= 0;
@@ -279,12 +279,19 @@ function viewFlight() {
     ${REGIONS.map((r, i) => `<button class="btn" data-a="fly" data-v="${i}" ${i === S.region ? 'disabled' : ''}>${r.name}</button>`).join('')}
     </div>${back}`);
 }
+let setupNick = '', setupFlag = 'RU', setupErr = '';
 function viewSetup() {
-  return `<div class="card" style="margin-top:40px"><h2>Новый герой</h2>
-    <div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Ник">
-    <div class="dim" style="margin-top:10px">Страна</div>
-    <select id="country">${Object.entries(COUNTRIES).map(([k, v]) => `<option value="${k}">${flagOf(k)} ${v}</option>`).join('')}</select>
-    <button class="btn gold" data-a="start" style="margin-top:14px">Начать</button></div>`;
+  return `<div class="card" style="margin-top:24px"><h2>Создание персонажа</h2>
+    <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
+      <div class="sq" style="width:140px;height:140px;font-size:18px;flex:0 0 140px">Лицо</div>
+      <div style="flex:1"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}"></div>
+    </div>
+    <div class="dim" style="margin-top:14px">Флаг</div>
+    <div class="row">${Object.keys(COUNTRIES).map(k => `<button class="btn ${k === setupFlag ? 'here' : ''}" style="width:auto;flex:1 0 auto;text-align:center;font-size:22px;padding:8px 12px" data-a="flag" data-v="${k}">${flagOf(k)}</button>`).join('')}</div>
+    <div class="dim" style="margin-top:6px">${COUNTRIES[setupFlag]}</div>
+    <button class="btn gold" data-a="start" style="margin-top:16px">Начать</button>
+    <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
+  </div>`;
 }
 
 const VIEWS = { main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
@@ -296,13 +303,15 @@ function render() {
 
 // ---------- действия ----------
 function act(a, v) {
-  if (!S && a !== 'start') return;
+  if (!S && a !== 'start' && a !== 'flag') return;
+  const inp = document.getElementById('nick');
+  if (!S && inp) setupNick = inp.value;
   switch (a) {
+    case 'flag': setupFlag = v; setupErr = ''; break;
     case 'start': {
-      const nick = (document.getElementById('nick').value || '').trim();
-      if (!nick) return;
-      const country = document.getElementById('country').value;
-      S = newHero(nick, country); S.hand = drawHand(); save(); break;
+      const nick = setupNick.trim();
+      if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
+      S = newHero(nick, setupFlag); S.hand = drawHand(); setupErr = ''; save(); break;
     }
     case 'card': S.view = 'card'; S.sel = +v; break;
     case 'use': useCard(S.sel); break;
@@ -327,6 +336,7 @@ document.addEventListener('click', e => {
   if (!t || t.disabled || t.dataset.a === 'noop') return;
   act(t.dataset.a, t.dataset.v);
 });
+window.addEventListener('error', e => { app.insertAdjacentHTML('afterbegin', '<pre style="color:#FF5A5A;white-space:pre-wrap;font-size:12px">Ошибка: ' + esc(e.message) + ' (' + (e.lineno || '?') + ')</pre>'); });
 S = load();
 render();
 </script></body></html>
