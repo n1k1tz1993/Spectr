@@ -62,6 +62,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .lclose{position:absolute;top:0;right:0;width:15%;height:10%;background:transparent;border:0;cursor:pointer}
 img.pic{object-fit:cover;padding:0;background:#fff}
 .bigpic{display:block;width:200px;height:276px;object-fit:cover;border-radius:10px;margin:0 auto}
+.scene{display:block;width:100%;border-radius:10px;margin-bottom:4px}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -344,7 +345,7 @@ function viewBureau() {
   const lg = leagueOf(S.rating);
   const rows = ['Команда A', 'Команда B', 'Команда C', 'Команда D'].map((n, i) => `<tr><td>${i + 1}</td><td>${n}</td><td>${(4 - i) * 100}</td></tr>`).join('');
   return wrap(`
-    <div class="card"><h2>Бюро</h2>
+    <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров"><h2>Бюро</h2>
       <div class="dim">Всемирная организация Спектров: турниры, поединки, рейтинговая система. Рейтинг у игрока ведётся по боям здесь.</div>
       <div class="dim" style="margin-top:6px">Твой рейтинг: <b>${S.rating}</b> · <span style="color:${lg.c}">${lg.n}</span></div>
     </div>
