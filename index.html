@@ -95,6 +95,36 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .fx{font-size:18px}
 .acd{font-size:11px;color:var(--dim);min-height:14px}
 .abil.cd .aic{filter:grayscale(1) brightness(.6)}
+.ff{min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:#04070F}
+.ffbox{position:relative;width:min(100%,calc(100vh * 908 / 1536));aspect-ratio:908/1536;background:url(img/fight_bg.webp) center/100% 100% no-repeat;container-type:inline-size;font-size:3.6cqw}
+.ffbox>*{position:absolute}
+.ff-back{background:transparent;border:0;cursor:pointer}
+.ff-face{display:flex;align-items:center;justify-content:center}
+.ff-face span{width:62%;aspect-ratio:1;background:rgba(255,255,255,.92);color:#111;border-radius:2cqw;display:flex;align-items:center;justify-content:center;font-weight:700}
+.ff-plate{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6cqw}
+.ff-plate b{font-size:4.6cqw;max-width:95%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ff-plate span{color:var(--dim);font-size:3.2cqw}
+.ff-plate em{font-style:normal;color:var(--gold);font-size:3cqw;min-height:3.6cqw}
+.ff-bar{border-radius:3cqw;overflow:hidden}
+.ff-bar i{display:block;height:100%;transition:width .1s linear;border-radius:3cqw}
+.ff-bar.hp i{background:linear-gradient(90deg,#FF4D5E,#FF8A5A)}
+.ff-bar.qi i{background:linear-gradient(90deg,#2FD7FF,#3A7BFF)}
+.ff-icon{background:transparent;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ff-icon .aic{width:78%;height:78%;font-size:8cqw;border-radius:1.6cqw}
+.ff-icon.cd .aic{filter:grayscale(1) brightness(.55)}
+.ff-name{display:flex;flex-direction:column;justify-content:center;padding-left:1.5cqw;gap:.8cqw;min-width:0}
+.ff-name b{font-size:3.6cqw;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ff-name span{font-size:2.9cqw;color:var(--dim)}
+.ff-title{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:3.6cqw;padding:0 3cqw;line-height:1.1}
+.ff-log{display:flex;flex-direction:column;gap:2cqw}
+.ff-log .flog{flex:1;margin:0;background:transparent;font-size:3.4cqw;min-height:0;overflow:hidden;padding:1cqw 2cqw}
+.ff-ctl{display:flex;gap:2cqw}
+.ff-ctl .btn{margin:0;text-align:center;padding:2.2cqw;font-size:3.6cqw}
+#fend .btn{margin-top:2cqw;text-align:center}
+.ff-fx{display:flex;align-items:center;justify-content:center;text-align:center;font-size:6cqw;font-weight:800;text-shadow:0 2px 6px #000;opacity:0;pointer-events:none;padding:0 2cqw}
+.ff-fx2{align-items:flex-end;padding-bottom:4cqw;font-size:4.6cqw}
+.ff-fx.go{animation:fxup .9s ease-out forwards}
+.ff-fx.qi{color:#2FD7FF}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -257,6 +287,7 @@ const FIGHT = {
   abilHits: 5,                              // способность = 5 ударов, урон проходит одним ударом
   abilCrit: 0.2,                            // шанс крита способности
   abilCd: 3,                                // перезарядка способности, секунд
+  qiProc: 0.02, qiProcMin: 0.05, qiProcMax: 0.10,   // 2% за удар: прилив Цы 5–10%
   thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
 const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
@@ -268,7 +299,7 @@ let F = null, FT = null;
 const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || { name: ABIL_NAMES[rnd(0, ABIL_NAMES.length - 1)], icon: rnd(0, ABIL_ICONS.length - 1) },
   thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
 function startFight(title, opp, onEnd) {
-  F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], speed: 1, last: null };
+  F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
   S.view = 'fight';
 }
@@ -280,7 +311,8 @@ function rollHit(x, y) {
   if (r <= 6) return { kind: 'block', dmg: 0 };
   return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)) };
 }
-const fev = (m) => { F.ev.unshift(m); F.ev = F.ev.slice(0, 6); };
+const fev = (m) => { F.ev.unshift(m); F.ev = F.ev.slice(0, 7); };
+const fxPush = (who, text, cls, layer) => { F.fx.push({ who: who === F.a ? 'fa' : 'fb', text, cls, layer }); };
 function useAbility(x, y) {
   // 5 ударов: каждый может критануть или не попасть; урон проходит одним ударом, вне очереди
   let sum = 0, crits = 0, miss = 0;
@@ -290,7 +322,7 @@ function useAbility(x, y) {
   x.qi = Math.max(0, x.qi - x.qiMax * FIGHT.abilPct); x.acd = FIGHT.abilCd;
   y.hp = Math.max(0, y.hp - dmg);
   fev(`${x.name}: «${x.abil.name}»${mult > 1 ? ' — крит ×' + mult.toFixed(1) : ''} · попало ${FIGHT.abilHits - miss} из ${FIGHT.abilHits}${crits ? ', критов ' + crits : ''} · −${dmg}`);
-  F.last = { who: y === F.a ? 'a' : 'b', kind: 'abil', dmg, name: x.abil.name, mult };
+  fxPush(y, `${x.abil.name}${mult > 1 ? ' ×' + mult.toFixed(1) : ''}! −${dmg}`, 'rand', 1);
   if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
 }
 function fightStep(dt) {
@@ -301,12 +333,17 @@ function fightStep(dt) {
     x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
     x.cd -= dt;
     if (x.cd > 0) continue;
-    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ': Цы иссякла, передышка 3 с'); F.last = { who: x === F.a ? 'a' : 'b', kind: 'rest' }; continue; }
+    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ': Цы иссякла, передышка 3 с'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
     x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
     const r = rollHit(x, y);
     y.hp = Math.max(0, y.hp - r.dmg);
     fev(r.kind === 'crit' ? `${x.name}: критический удар! −${r.dmg}` : r.kind === 'dodge' ? `${y.name} уклоняется` : r.kind === 'block' ? `${y.name} блокирует удар` : `${x.name} бьёт: −${r.dmg}`);
-    F.last = { who: y === F.a ? 'a' : 'b', kind: r.kind, dmg: r.dmg };
+    fxPush(y, { crit: 'Крит! −' + r.dmg, dodge: 'Уклон!', block: 'Блок!', hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
+    if (Math.random() < FIGHT.qiProc) {          // шанс как у крита: прилив Цы 5–10%
+      const g = FIGHT.qiProcMin + Math.random() * (FIGHT.qiProcMax - FIGHT.qiProcMin);
+      x.qi = Math.min(x.qiMax, x.qi + x.qiMax * g);
+      fev(`${x.name}: прилив Цы +${Math.round(g * 100)}%`); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
+    }
     if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
     // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
     if (x.acd <= 0 && x.qi <= x.qiMax * x.thr && x.qi >= x.qiMax * FIGHT.abilPct) useAbility(x, y);
@@ -506,44 +543,58 @@ function viewSetup() {
   </div>`;
 }
 
-function fbox(x, id) {
-  return `<div class="fbox"><div class="face">${x.me ? 'Лицо' : 'Соперник'}</div><b class="fname">${esc(x.name)}</b><div class="dim">Рейтинг ${x.rating}</div>
-    <div class="abil" id="${id}-ab">${abilIcon(x.abil.icon)}<span>${esc(x.abil.name)}</span></div><div class="acd" id="${id}-acd"></div>
-    <div class="bar hp"><i id="${id}-hp"></i></div><div class="bar qi"><i id="${id}-qi"></i></div><div class="frest" id="${id}-rest"></div><div class="fx" id="${id}-fx"></div></div>`;
+// экран боя: фон img/fight_bg.webp (908×1536), элементы по координатам макета
+const FW = 908, FH = 1536;
+const fpos = (x0, y0, x1, y1) => `left:${pc(x0, FW)};top:${pc(y0, FH)};width:${pc(x1 - x0, FW)};height:${pc(y1 - y0, FH)}`;
+const FL = {   // левый и правый боец: портрет, плашка имени, полосы HP/Цы, квадрат иконки, поле названия
+  fa: { face: [40, 250, 415, 615], plate: [22, 632, 432, 762], hp: [102, 801, 424, 832], qi: [102, 855, 424, 886], icon: [33, 933, 121, 1022], name: [140, 925, 432, 1030] },
+  fb: { face: [498, 250, 873, 615], plate: [480, 632, 890, 762], hp: [558, 801, 880, 832], qi: [558, 855, 880, 886], icon: [481, 933, 569, 1022], name: [588, 925, 880, 1030] }
+};
+function fside(x, id) {
+  const L = FL[id];
+  return `<div class="ff-face" style="${fpos(...L.face)}"><span>${x.me ? 'Лицо' : 'Соперник'}</span></div>
+    <div class="ff-fx" id="${id}-fx" style="${fpos(...L.face)}"></div><div class="ff-fx ff-fx2" id="${id}-fx2" style="${fpos(...L.face)}"></div>
+    <div class="ff-plate" style="${fpos(...L.plate)}"><b>${esc(x.name)}</b><span>Рейтинг ${x.rating}</span><em id="${id}-rest"></em></div>
+    <div class="ff-bar hp" style="${fpos(...L.hp)}"><i id="${id}-hp"></i></div>
+    <div class="ff-bar qi" style="${fpos(...L.qi)}"><i id="${id}-qi"></i></div>
+    <button class="ff-icon" id="${id}-ab" data-a="fabil" data-v="${id}" style="${fpos(...L.icon)}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}</button>
+    <div class="ff-name" style="${fpos(...L.name)}"><b>${esc(x.abil.name)}</b><span id="${id}-acd"></span></div>`;
 }
 function viewFight() {
   if (!F) { S.view = 'main'; return viewMain(); }
-  return wrap(`<div class="card fight"><h2>${esc(F.title)}</h2>
-    <div class="frow">${fbox(F.a, 'fa')}<div class="vs">VS</div>${fbox(F.b, 'fb')}</div>
-    <div class="dim" style="margin-top:6px">Красная полоса — здоровье, голубая — Цы.</div>
-    <div class="flog" id="flog"></div>
-    <div id="fend"></div>
-    <div class="row" id="fctl" style="margin-top:8px;flex-wrap:nowrap">
-      <button class="btn" data-a="fspeed" data-v="1" style="text-align:center">×1</button>
-      <button class="btn" data-a="fspeed" data-v="3" style="text-align:center">×3</button>
-      <button class="btn" data-a="fskip" style="text-align:center">Досчитать</button>
-    </div></div>`);
+  return `<div class="ff"><div class="ffbox">
+    <button class="ff-back" data-a="fback" style="${fpos(18, 112, 131, 190)}" aria-label="Назад"></button>
+    ${fside(F.a, 'fa')}${fside(F.b, 'fb')}
+    <div class="ff-title" style="${fpos(250, 1062, 660, 1124)}">${esc(F.title)}</div>
+    <div class="ff-log" style="${fpos(30, 1135, 878, 1500)}">
+      <div class="flog" id="flog"></div>
+      <div id="fend"></div>
+      <div class="ff-ctl" id="fctl">
+        <button class="btn" data-a="fspeed" data-v="1">×1</button><button class="btn" data-a="fspeed" data-v="3">×3</button><button class="btn" data-a="fskip">Досчитать</button>
+      </div>
+    </div>
+  </div></div>`;
 }
 function fightPaint() {
   if (!F) return;
   for (const [x, id] of [[F.a, 'fa'], [F.b, 'fb']]) {
-    const hp = document.getElementById(id + '-hp'), qi = document.getElementById(id + '-qi'), rs = document.getElementById(id + '-rest');
+    const hp = document.getElementById(id + '-hp');
     if (!hp) return;
     hp.style.width = (x.hp / x.hpMax * 100) + '%';
-    qi.style.width = (x.qi / x.qiMax * 100) + '%';
-    rs.textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : '';
-    document.getElementById(id + '-acd').textContent = x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : '';
-    document.getElementById(id + '-ab').classList.toggle('cd', x.acd > 0);
+    document.getElementById(id + '-qi').style.width = (x.qi / x.qiMax * 100) + '%';
+    document.getElementById(id + '-rest').textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : '';
+    const ready = !F.done && x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct;
+    document.getElementById(id + '-acd').textContent = x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово — нажми' : 'Мало Цы';
+    document.getElementById(id + '-ab').classList.toggle('cd', !ready);
   }
-  if (F.last) {
-    const fx = document.getElementById((F.last.who === 'a' ? 'fa' : 'fb') + '-fx');
-    const t = { crit: ['Крит! −' + F.last.dmg, 'minus'], dodge: ['Уклон!', 'nt'], block: ['Блок!', 'nt'], hit: ['−' + F.last.dmg, 'minus'], rest: ['Нет Цы', 'rand'], abil: [F.last.name + (F.last.mult > 1 ? ' ×' + F.last.mult.toFixed(1) : '') + '! −' + F.last.dmg, 'rand'] }[F.last.kind];
-    fx.textContent = t[0]; fx.className = 'fx show ' + t[1]; void fx.offsetWidth; fx.classList.add('go');
-    F.last = null;
+  for (const e of F.fx) {
+    const el = document.getElementById(e.who + (e.layer === 2 ? '-fx2' : '-fx'));
+    el.textContent = e.text; el.className = 'ff-fx' + (e.layer === 2 ? ' ff-fx2 ' : ' ') + e.cls; void el.offsetWidth; el.classList.add('go');
   }
+  F.fx = [];
   document.getElementById('flog').innerHTML = F.ev.map(e => `<div>${esc(e)}</div>`).join('');
   if (F.done && !document.getElementById('fend').innerHTML) {
-    document.getElementById('fend').innerHTML = `<div class="bonus ${F.won ? 'plus' : 'minus'}" style="font-size:20px;text-align:center">${F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
+    document.getElementById('fend').innerHTML = `<div class="bonus ${F.won ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
     document.getElementById('fctl').style.display = 'none';
   }
 }
@@ -559,10 +610,12 @@ function fightLoop() {
   }, 100);
 }
 const VIEWS = { fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+let lastView = null;
 function render() {
   if (!S) { app.innerHTML = viewSetup(); return; }
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
+  if (S.view !== lastView) { window.scrollTo(0, 0); lastView = S.view; }   // новый экран всегда с верха
   fightLoop();
 }
 
@@ -590,6 +643,13 @@ function act(a, v) {
     case 'play': playTour(+v); break;
     case 'fspeed': if (F) F.speed = +v; return;
     case 'fskip': if (F) { finishFight(); fightPaint(); } return;
+    case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); fightPaint(); } return;
+    case 'fabil': {   // нажатие на квадрат с иконкой: способность этого бойца, если готова
+      if (!F || F.done) return;
+      const x = v === 'fa' ? F.a : F.b, y = v === 'fa' ? F.b : F.a;
+      if (x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct) { useAbility(x, y); fightPaint(); }
+      return;
+    }
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
