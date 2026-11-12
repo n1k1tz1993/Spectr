@@ -291,29 +291,29 @@ REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${
 GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
 IMGBY['DreamHack'] = 'img/act/dh.webp';
 const picOf = c => IMGBY[c.t] || '';
-// ---------- инвентарь: 20 артефактов, открываются за рейтинг (тратится один раз), надет один; дают +1…+10 к силе сверх потолка ----------
-// Иконка артефакта i — img/art/i.webp. Самый престижный — часы AUREON «Абсолют» (+10).
+// ---------- инвентарь: 20 артефактов, открываются за рейтинг (тратится один раз), надет один; дают +1…+20 к силе сверх потолка ----------
+// Иконка артефакта i — img/art/i.webp. Самый престижный — часы AUREON «Абсолют» (+20).
 const ITEMS = [
   { n: 'Кольцо «Трещина»', d: 'Грубое кольцо с трещиной, сквозь которую сочится свет руды. С него начинают все.', b: 1, cost: 100 },
-  { n: 'Кулон «Осколок»', d: 'Осколок метеорита на простом шнурке. Слабый, но послушный.', b: 1, cost: 150 },
-  { n: 'Браслет «Первый импульс»', d: 'Кожаный браслет, который впервые учит чувствовать ток Цы.', b: 2, cost: 200 },
-  { n: 'Серьга «Искра»', d: 'Крошечная искра у самого уха — помогает услышать собственную Цы.', b: 2, cost: 300 },
-  { n: 'Булавка «Зацеп»', d: 'Самодельная булавка с куском руды. Держится крепко, как и её хозяин.', b: 3, cost: 400 },
-  { n: 'Кольцо «Фокус»', d: 'Огранённый камень собирает Цы в одну точку.', b: 3, cost: 500 },
-  { n: 'Браслет «Связь»', d: 'Плетёный браслет, связывающий дыхание и удар.', b: 4, cost: 600 },
-  { n: 'Подвеска «Призма»', d: 'Треугольная призма раскладывает поток Цы на чистые лучи.', b: 4, cost: 700 },
-  { n: 'Запонка «Дипломат»', d: 'Строгая запонка для тех, кто побеждает спокойно.', b: 5, cost: 800 },
-  { n: 'Зажим «Контроль»', d: 'Зажим, который не даёт Цы вырваться раньше времени.', b: 5, cost: 900 },
-  { n: 'Перстень «Монолит»', d: 'Тяжёлый перстень — сила, высеченная из цельного камня.', b: 6, cost: 1000 },
-  { n: 'Часы «Пульсар»', d: 'Кристаллы на безеле пульсируют в ритме боя.', b: 6, cost: 1100 },
-  { n: 'Кафф «Шёпот»', d: 'Кристаллы на ухе шепчут о следующем движении соперника.', b: 7, cost: 1200 },
-  { n: 'Брошь «Сияние»', d: 'Сияющая брошь, которую носят на больших сценах.', b: 7, cost: 1350 },
-  { n: 'Пряжка «Ядро»', d: 'В пряжке спрятано плотное ядро метеоритной руды.', b: 8, cost: 1500 },
-  { n: 'Кулон «Слеза Атлантики»', d: 'Камень в бриллиантовой оправе. Говорят, его подняли со дна океана.', b: 8, cost: 1650 },
-  { n: 'Браслет «Созвездие»', d: 'Звенья с кристаллами, как звёзды на ночном небе.', b: 9, cost: 1800 },
-  { n: 'Перстень «Суверен»', d: 'Золото и руда — знак того, кто правит своим регионом.', b: 9, cost: 2000 },
-  { n: 'Карманные часы «Вечность»', d: 'Старинный механизм, в котором время будто застыло.', b: 9, cost: 2200 },
-  { n: 'Часы AUREON «Абсолют»', d: 'Вершина мастерства вымышленного бренда AUREON. Роскошь отражает качество исполнения артефакта; эффективность в бою по-прежнему зависит от контроля Цы.', b: 10, cost: 2500 }
+  { n: 'Кулон «Осколок»', d: 'Осколок метеорита на простом шнурке. Слабый, но послушный.', b: 2, cost: 150 },
+  { n: 'Браслет «Первый импульс»', d: 'Кожаный браслет, который впервые учит чувствовать ток Цы.', b: 3, cost: 200 },
+  { n: 'Серьга «Искра»', d: 'Крошечная искра у самого уха — помогает услышать собственную Цы.', b: 4, cost: 300 },
+  { n: 'Булавка «Зацеп»', d: 'Самодельная булавка с куском руды. Держится крепко, как и её хозяин.', b: 5, cost: 400 },
+  { n: 'Кольцо «Фокус»', d: 'Огранённый камень собирает Цы в одну точку.', b: 6, cost: 500 },
+  { n: 'Браслет «Связь»', d: 'Плетёный браслет, связывающий дыхание и удар.', b: 7, cost: 600 },
+  { n: 'Подвеска «Призма»', d: 'Треугольная призма раскладывает поток Цы на чистые лучи.', b: 8, cost: 700 },
+  { n: 'Запонка «Дипломат»', d: 'Строгая запонка для тех, кто побеждает спокойно.', b: 9, cost: 800 },
+  { n: 'Зажим «Контроль»', d: 'Зажим, который не даёт Цы вырваться раньше времени.', b: 10, cost: 900 },
+  { n: 'Перстень «Монолит»', d: 'Тяжёлый перстень — сила, высеченная из цельного камня.', b: 11, cost: 1000 },
+  { n: 'Часы «Пульсар»', d: 'Кристаллы на безеле пульсируют в ритме боя.', b: 12, cost: 1100 },
+  { n: 'Кафф «Шёпот»', d: 'Кристаллы на ухе шепчут о следующем движении соперника.', b: 13, cost: 1200 },
+  { n: 'Брошь «Сияние»', d: 'Сияющая брошь, которую носят на больших сценах.', b: 14, cost: 1350 },
+  { n: 'Пряжка «Ядро»', d: 'В пряжке спрятано плотное ядро метеоритной руды.', b: 15, cost: 1500 },
+  { n: 'Кулон «Слеза Атлантики»', d: 'Камень в бриллиантовой оправе. Говорят, его подняли со дна океана.', b: 16, cost: 1650 },
+  { n: 'Браслет «Созвездие»', d: 'Звенья с кристаллами, как звёзды на ночном небе.', b: 17, cost: 1800 },
+  { n: 'Перстень «Суверен»', d: 'Золото и руда — знак того, кто правит своим регионом.', b: 18, cost: 2000 },
+  { n: 'Карманные часы «Вечность»', d: 'Старинный механизм, в котором время будто застыло.', b: 19, cost: 2200 },
+  { n: 'Часы AUREON «Абсолют»', d: 'Вершина мастерства вымышленного бренда AUREON. Роскошь отражает качество исполнения артефакта; эффективность в бою по-прежнему зависит от контроля Цы.', b: 20, cost: 2500 }
 ];
 const ART_ICONS = 20;
 const artImg = i => `<img class="aic" src="img/art/${(i | 0) % ART_ICONS}.webp" alt="">`;
@@ -1049,7 +1049,7 @@ function viewMain() {
     </div>
     ${trophiesHtml()}
     ${logHtml()}
-    <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="inv" style="text-align:center">Инвентарь</button></div>
+    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" data-a="shop" style="text-align:center">Магазин</button><button class="btn" data-a="inv" style="text-align:center">Инвентарь</button></div>
     <button class="btn" data-a="menu">Главное меню</button>`);
 }
 function viewCard() {
@@ -1078,16 +1078,23 @@ function viewLib() {
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>${back}`);
 }
 
-function viewInv() {
+function itemCard(it, i, act, on) {
+  const top = i === ITEMS.length - 1;
+  return `<div class="card item ${on ? 'on' : ''} ${top ? 'prestige' : ''}"><div class="abrow" style="align-items:center">${artImg(i)}<div style="flex:1"><b>${esc(it.n)}</b>${on ? ' <span class="gold">· надет</span>' : ''}${top ? '<div class="gold" style="font-size:12px">★ Самый престижный артефакт</div>' : ''}<div class="dim">${esc(it.d)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
+}
+function viewShop() {   // магазин: артефакты открываются за рейтинг (один раз)
   const own = S.items || [];
-  let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">Украшения с метеоритной рудой усиливают Спектра. Каждый открывается один раз за рейтинг. Надеть можно один.</div>
+  let h = `<div class="card"><h2>Магазин</h2><div class="dim">Украшения с метеоритной рудой. Каждое открывается один раз за рейтинг, затем его можно надеть в инвентаре.</div>
     <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>`;
-  h += ITEMS.map((it, i) => {
-    const has = own.includes(i), on = S.equip === i, top = i === ITEMS.length - 1;
-    const act = has ? `<button class="btn ${on ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${on ? 'Снять' : 'Надеть'}</button>`
-      : `<button class="btn" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Открыть за ${it.cost} рейтинга</button>`;
-    return `<div class="card item ${on ? 'on' : ''} ${top ? 'prestige' : ''}"><div class="abrow" style="align-items:center">${artImg(i)}<div style="flex:1"><b>${esc(it.n)}</b>${on ? ' <span class="gold">· надет</span>' : ''}${top ? '<div class="gold" style="font-size:12px">★ Самый престижный артефакт</div>' : ''}<div class="dim">${esc(it.d)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
-  }).join('');
+  h += ITEMS.map((it, i) => itemCard(it, i, own.includes(i) ? `<div class="dim" style="text-align:center;margin-top:8px">✓ Открыт — надеть можно в инвентаре</div>`
+    : `<button class="btn" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Открыть за ${it.cost} рейтинга</button>`, false)).join('');
+  return wrap(h + back);
+}
+function viewInv() {    // инвентарь: открытые артефакты, надет один
+  const own = (S.items || []).slice().sort((a, b) => b - a);
+  let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
+  h += own.map(i => itemCard(ITEMS[i], i, `<button class="btn ${S.equip === i ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${S.equip === i ? 'Снять' : 'Надеть'}</button>`, S.equip === i)).join('');
+  if (!own.length) h += `<button class="btn gold" data-a="shop" style="text-align:center">В магазин</button>`;
   return wrap(h + back);
 }
 function viewDossier() {
@@ -1374,7 +1381,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { inv: viewInv, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
@@ -1465,6 +1472,7 @@ function act(a, v) {
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
     case 'inv': S.view = 'inv'; break;
+    case 'shop': S.view = 'shop'; break;
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
       if (S.items.includes(i) || S.rating < it.cost) return;
