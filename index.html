@@ -281,15 +281,17 @@ const TIER_SHORT = ['Новички', 'Любители', 'Полупро'];
 const IMGBY = {};
 REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${ri}_${i}.webp`; }));
 GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
+IMGBY['DreamHack'] = 'img/act/dh.webp';
 const picOf = c => IMGBY[c.t] || '';
 const TIERS = [
   { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
   { name: 'Любительский турнир', lo: 22, hi: 37, gain: 2 },
   { name: 'Полупрофессиональный турнир', lo: 40, hi: 55, gain: 5 }
 ];
-const POWER_TOURNEY_CAP = 65, POWER_MAX = 125, TROPHY_GAIN = 5;
-// Кубки собираются только после прокачки (сила 65). Каждый новый кубок — +5 силы, максимум 125.
-function awardTrophy(H, r, name, gain = TROPHY_GAIN) {   // силу дают только кубки турниров трёх уровней
+const POWER_TOURNEY_CAP = 65, POWER_MAX = 100, TROPHY_GAIN = 1, DH_GAIN = 5;
+// До 65 — прокачка турнирами. Дальше: каждый новый кубок +1 (3 турнира + лига × 5 регионов = +20 → 85),
+// чемпионат мира +5, Wild Card +5, DreamHack +5 — максимум 100.
+function awardTrophy(H, r, name, gain = TROPHY_GAIN) {
   if (H.power < POWER_TOURNEY_CAP) return 'locked';
   if (H.troph.some(y => y.r === r && y.n === name)) return 'have';
   H.troph.push({ r, n: name }); H.power = Math.min(POWER_MAX, H.power + gain); return 'new';
@@ -331,7 +333,8 @@ function newHero(nick, country, ability, face) {
 }
 
 // ---------- механика ----------
-const drawHand = (H = S) => shuffle([...REGIONS[H.region].cards, ...GENERIC]).slice(0, 3).map(c => ({ ...c }));
+const DH_CARD = { t: 'DreamHack', k: 'dh' }, DH_CHANCE = 0.12;
+const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
 const heroPower = H => { let p = H.power; for (const e of H.effects) if (e.from <= H.turn && H.turn <= e.to) p += e.v; if (H.jetlag) p -= 5; return p; };
 const effPower = () => heroPower(S);
 const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: from }); };
@@ -361,6 +364,7 @@ function useCard(i) {
   let msg;
   if (c.k === 'p' || c.k === 'm') { addEff(c.v, c.d); msg = c.k === 'p' ? 'Бонус!' : 'Эффект!'; }
   else if (c.k === 'r') { const v = Math.random() < 0.5 ? 5 : -5; addEff(v, 'turn'); msg = v > 0 ? 'Бонус!' : 'Эффект!'; }
+  else if (c.k === 'dh') { S.hand.splice(i, 1); dhStart(); save(); return; }
   else if (c.k === 'cond') {
     if (S.power > 65) { S.rating += 20; msg = 'Бонус! +20 рейтинга.'; } else msg = 'Ничего не произошло: нужна сила выше 65.';
   } else msg = 'Без эффекта.';
@@ -538,6 +542,16 @@ function viewEsl() {
   return wrap(h + `<button class="btn" data-a="toBureau">Назад в бюро</button>`);
 }
 
+// ---------- DreamHack: выпадает среди трёх действий недели; играют все игроки; 32 бойца; победа — +5 силы, кубка нет ----------
+function dhStart() {
+  const hums = G.players.map((H, h) => h);
+  const elite = []; for (let r = 0; r < REGIONS.length; r++) lgPool(r).slice(0, PRO_COUNT).forEach(f => elite.push(f));
+  elite.sort((a, b) => b.p - a.p);
+  const bots = elite.slice(0, 32 - hums.length);
+  const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() }))
+    .concat(bots.map((b, i) => ({ id: hums.length + i, name: b.name, p: b.p, rating: b.rating, seed: Math.random(), face: b.face, abil: b.abil, country: b.country })));
+  tStart({ kind: 'dh', tier: null, region: S.region }, 'dh32', ps);
+}
 // ---------- лиги ----------
 // Лига региона: 12 команд (в Корее 14). Драфт открыт 5 недель, в нём 20 мест: про-игроки региона и все, кто встал в драфт;
 // команды разбирают сильнейших по рейтингу. Дальше два круга Bo2 (3/1/0), 3 матча лиги в неделю.
@@ -628,7 +642,7 @@ function lgFinish(L) {
     if (T.h == null) return;
     const H = G.players[T.h], place = i === champ ? 'чемпион' : i === second ? '2-е место' : i === third ? '3-е место' : 'сезон окончен';
     if (i === champ) {
-      const tr = awardTrophy(H, L.r, 'Кубок лиги', 0);   // кубок лиги — в коллекцию, силу не даёт
+      const tr = awardTrophy(H, L.r, 'Кубок лиги');
       logTo(H, `Ты чемпион лиги ${LSHORT[L.r]}!${tr === 'new' ? ' Кубок в коллекции.' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : ''}`);
     } else logTo(H, `Лига ${LSHORT[L.r]}: ${place}.`);
     if (L.worlds.includes(i)) logTo(H, 'Ты в топ-3 и едешь на чемпионат мира!');
@@ -680,11 +694,12 @@ const FMT = {
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
   g16: { n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
+  dh32: { n: 32, name: 'DreamHack', desc: '32 бойца, 8 групп по 4. В группе двойное выбывание (бои Bo1), выходит только победитель группы. Плей-офф Bo3, финал Bo5.' },
   sw20: { n: 20, name: 'Турнир на 20 бойцов', desc: 'Швейцарская система, 5 раундов Bo1. Двое лучших — сразу в полуфинал, 3–6 места играют плей-ин Bo3. Полуфинал и финал Bo5.' }
 };
 const STAGE_NAMES = { QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал', GS: 'Групповой этап', DEC: 'Серия за выход из группы', PI: 'Плей-ин' };
-const stageName = k => STAGE_NAMES[k] || (k.startsWith('SW') ? 'Швейцарская система · раунд ' + k.slice(2) : k.startsWith('TB') ? 'Решающие бои' : k);
-const GL = ['A', 'B', 'C', 'D'];
+const stageName = k => ({ DH1: 'Группы · первый бой', DH2: 'Группы · верхняя и нижняя сетка', DH3: 'Группы · финал нижней сетки', DH4: 'Группы · финал группы' })[k] || STAGE_NAMES[k] || (k.startsWith('SW') ? 'Швейцарская система · раунд ' + k.slice(2) : k.startsWith('TB') ? 'Решающие бои' : k);
+const GL = ['A', 'B', 'C', 'D'], DHG = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
 function playTour(t) {
   const T = TIERS[t], r = S.region;
@@ -714,6 +729,10 @@ function tStart(meta, fmt, ps) {   // сетка любого формата и�
   if (fmt === 'g16') {
     R.groups = { A: ids.slice(0, 4), B: ids.slice(4, 8), C: ids.slice(8, 12), D: ids.slice(12, 16) }; tBegin(R, 'GS');
     for (const g of GL) tRR(R, R.groups[g], 1, 'Группа ' + g, 2);
+  }
+  if (fmt === 'dh32') {
+    R.groups = {}; DHG.forEach((g, i) => { R.groups[g] = ids.slice(i * 4, i * 4 + 4); });
+    tBegin(R, 'DH1'); for (const g of DHG) { const q = R.groups[g]; tAdd(R, q[0], q[1], 1, 'Группа ' + g, g); tAdd(R, q[2], q[3], 1, 'Группа ' + g, g); }
   }
   if (fmt === 'sw20') { tBegin(R, 'SW1'); for (let i = 0; i < 20; i += 2) tAdd(R, ids[i], ids[i + 1], 1); }
   S.trun = R;
@@ -782,6 +801,17 @@ function tAdvance(R) {
   const finalStage = () => { tBegin(R, 'F'); const w = win('SF'); tAdd(R, w[0], w[1], 5); };
   if (k === 'F') { knock('F'); R.done = true; R.winner = tStage(R, 'F')[0].w; return; }
   if (k === 'SF') { knock('SF'); finalStage(); return; }
+  if (f === 'dh32' && k.startsWith('DH')) {
+    const byG = (st, g) => tStage(R, st).filter(m => m.grp === g);
+    if (k === 'DH1') { tBegin(R, 'DH2'); for (const g of DHG) { const [m1, m2] = byG('DH1', g); tAdd(R, m1.w, m2.w, 1, 'Группа ' + g + ' · верхняя сетка', g).up = true; tAdd(R, tLoser(m1), tLoser(m2), 1, 'Группа ' + g + ' · нижняя сетка', g); } return; }
+    if (k === 'DH2') {
+      for (const g of DHG) { const lo = byG('DH2', g).find(m => !m.up); R.alive = R.alive.filter(x => x !== tLoser(lo)); }
+      tBegin(R, 'DH3'); for (const g of DHG) { const ms = byG('DH2', g), up = ms.find(m => m.up), lo = ms.find(m => !m.up); tAdd(R, tLoser(up), lo.w, 1, 'Группа ' + g + ' · финал нижней сетки', g); } return;
+    }
+    if (k === 'DH3') { knock('DH3'); tBegin(R, 'DH4'); for (const g of DHG) { const up = byG('DH2', g).find(m => m.up), lf = byG('DH3', g)[0]; tAdd(R, up.w, lf.w, 1, 'Группа ' + g + ' · финал группы', g); } return; }
+    if (k === 'DH4') { knock('DH4'); const q = DHG.map(g => byG('DH4', g)[0].w); R.alive = q.slice(); tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, q[i], q[i + 1], 3); return; }
+  }
+  if (f === 'dh32' && k === 'QF') { knock('QF'); const w = win('QF'); tBegin(R, 'SF'); tAdd(R, w[0], w[1], 3); tAdd(R, w[2], w[3], 3); return; }
   if (f === 'se8' || f === 'g16') {
     if (k === 'QF') { knock('QF'); const w = win('QF'); tBegin(R, 'SF'); tAdd(R, w[0], w[1], 3); tAdd(R, w[2], w[3], 3); return; }
   }
@@ -842,22 +872,25 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
 const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
-  const T = R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
+  const T = R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
   for (const x of R.ps) {   // награды и история — каждому живому участнику
     const h = humOf(R, x.id); if (h == null) continue;
     const H = G.players[h];
     if (R.winner === x.id) {
       let msg = T.name + ': победа!';
-      if (R.kind !== 'esl') {
+      if (R.kind == null) {
         if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) { H.tiers[r] = R.tier + 1; msg += ' Открыт следующий турнир.'; }
         if (H.power < POWER_TOURNEY_CAP) H.power = Math.min(POWER_TOURNEY_CAP, H.power + T.gain);   // до 65 — прокачка
       }
-      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, 'esl') : awardTrophy(H, r, T.name);
+      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, 'esl')
+        : R.kind === 'dh' ? (H.dhWon ? 'dhagain' : (H.dhWon = true, H.power = Math.min(POWER_MAX, H.power + DH_GAIN), 'dh'))
+        : awardTrophy(H, r, T.name);
+      if (tr === 'dh') msg += ' Ты достиг вершины силы!';
       msg += tr === 'esl' ? ` Медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id)); logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.'); }
   }
-  S.view = S.trun.kind === 'esl' ? 'bureau' : 'tour'; S.trun = null;
+  S.view = S.trun.kind === 'esl' ? 'bureau' : S.trun.kind === 'dh' ? 'main' : 'tour'; S.trun = null;
 }
 
 // ---------- виды ----------
@@ -877,6 +910,7 @@ const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
   if (c.k === 'm') return '<div class="bonus minus">Эффект!</div>';
   if (c.k === 'r') return '<div class="bonus rand">Случайно: бонус или эффект</div>';
+  if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — +5 к силе.</div>';
   if (c.k === 'cond') return '<div class="bonus nt">Условие: сила выше 65</div>';
   return '<div class="bonus nt">Без эффекта</div>';
 };
@@ -910,7 +944,7 @@ function viewLeague() {
   const r = S.sel, P = PANELS[r];
   const hist = S.hist.filter(h => h.r === r).slice(0, 3);
   const rows = P.rows.map(([a, b], i) => `<div class="lrow" style="top:${pc(a, 1536)};height:${pc(b - a, 1536)};left:${pc(P.x[0], 1024)};width:${pc(P.x[1] - P.x[0], 1024)}">${hist[i] ? esc(hist[i].t) : ''}</div>`).join('');
-  const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '');
+  const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '').concat(S.troph.some(x => x.r === r && x.n === 'Кубок лиги') ? ['Лига'] : ['']);
   const peds = P.ped.map((cx, i) => won[i] ? `<div class="lped" style="left:${pc(cx, 1024)};top:${pc(P.pedY, 1536)}">${won[i]}</div>` : '').join('');
   return viewMain() + `<div class="ovl" data-a="back"><div class="lwrap" data-a="noop"><div class="lpanel" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div>
     <div class="row" style="flex-wrap:nowrap;margin-top:8px"><button class="btn" data-a="ltable" data-v="${r}" style="text-align:center;margin:0">Таблица</button><button class="btn" data-a="lhist" data-v="${r}" style="text-align:center;margin:0">История</button></div></div></div>`;
@@ -1145,12 +1179,12 @@ function viewTRun() {
   const nm = id => isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b>` : esc(R.ps[id].name);
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
-  let h = `<div class="card">${R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2>`}<div class="dim">${f.desc}</div>
+  let h = `<div class="card">${R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2>`}<div class="dim">${f.desc}</div>
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div></div>`;
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? 'Трофей отправится в коллекцию.' : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <button class="btn gold" data-a="tfinish">Завершить</button></div>`;
   } else if (me) {
@@ -1163,9 +1197,9 @@ function viewTRun() {
   if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
-  const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
+  const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW') || m.st.startsWith('DH')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
   if (myGroup.length) h += `<div class="card"><h3>${hums.length > 1 ? 'Бои игроков в группе' : 'Твои бои в группе'}</h3>${myGroup.map(series).join('')}</div>`;
-  for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
+  for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW') && !k.startsWith('DH')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
   return wrap(h);
 }
 
@@ -1299,7 +1333,7 @@ function act(a, v) {
     case 'use': useCard(S.sel); break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
-    case 'rest': if (spend()) { clearJet(); S.power += 5; logMsg('Отдых: бонус.'); S.view = 'rest'; } break;
+    case 'rest': if (spend()) { clearJet(); addEff(5, 'turn'); logMsg('Отдых: бонус до конца недели.'); S.view = 'rest'; } break;
     case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.tourInv = []; S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
     case 'tplay': {   // живой бой: игрок слева; если встретились два игрока — оба живые
