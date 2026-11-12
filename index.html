@@ -68,6 +68,10 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .lclose{position:absolute;top:0;right:0;width:15%;height:10%;background:transparent;border:0;cursor:pointer}
 img.pic{object-fit:cover;padding:0;background:#fff}
 .bigpic{display:block;width:200px;height:276px;object-fit:cover;border-radius:10px;margin:0 auto}
+.bigpic.tall{width:220px;height:auto}
+.ctteams{display:flex;justify-content:center;gap:8px;margin-bottom:6px}
+.ctteams img{width:56px;height:56px;border-radius:10px;opacity:.55}
+.ctteams img.my{opacity:1;outline:2px solid var(--gold)}
 .scene{display:block;width:100%;border-radius:10px;margin-bottom:4px}
 .tierbtn{position:relative;display:block;width:100%;padding:0;border:0;background:none;border-radius:10px;overflow:hidden;cursor:pointer;margin-top:8px}
 .tierbtn:first-child{margin-top:0}
@@ -398,7 +402,28 @@ function newHero(nick, country, ability, face) {
 
 // ---------- механика ----------
 const DH_CARD = { t: 'DreamHack', k: 'dh' }, DH_CHANCE = 0.12;
-const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
+// особые действия — выпадают среди трёх случайных вместе с общими и региональными
+const SPECIAL = [
+  { t: 'Вызов от Бюро', k: 'beast', desc: 'Животные тоже становятся Спектрами, а их дикий нрав делает их крайне опасными. Бюро привлекает Спектров, чтобы разобраться с ними.' },
+  { t: 'Вызов на дуэль', k: 'duel', desc: 'Вызов на дуэль — отличный способ решить все разногласия. Или положить копеечку в карман.' },
+  { t: 'Письма от фанатов', k: 'fans', desc: 'Порой приятно почитать добрые слова от хрен пойми кого.' },
+  { t: 'Письмо от поклонницы', k: 'fanp', v: 1, desc: 'Эта милая девочка ловила твои взгляды на прошлом турнире.' },
+  { t: 'Письмо от поклонника', k: 'fanp', v: 1, desc: 'Что-то в тебе зацепило этого парня.' },
+  { t: 'Контракт от команды', k: 'contract', desc: 'Полупрофессиональная команда предлагает контракт на турнир: 16 игроков, 4 команды. Ты выступаешь под её флагом.' }
+];
+const BEAST = { lo: 1, hi: 25, win: 250 };
+const BEASTS = [   // дикие Спектры: img/beast/<i>.webp
+  ['Дикий волк', 'Разрывающий вой', 'Волк бросается в горло, высекая искры руды.'],
+  ['Дикий медведь', 'Сокрушающая лапа', 'Удар лапы, усиленной кристаллами, ломает защиту.'],
+  ['Дикая рысь', 'Прыжок из тени', 'Рысь исчезает и обрушивается сверху.'],
+  ['Дикий кабан', 'Кристальный таран', 'Кабан несётся напролом, вспарывая землю клыками.'],
+  ['Дикий ворон', 'Ливень перьев', 'Ворон осыпает арену острыми кристальными перьями.'],
+  ['Дикий олень', 'Рога шторма', 'Кристальные рога вспыхивают и бьют разрядом.']
+];
+const DUEL_WIN = 50, CONTRACT_WIN = 100;
+SPECIAL.forEach((c, i) => { IMGBY[c.t] = `img/act/sp_${i}.webp`; });
+const SEMI_TEAMS = ['Rift Foxes', 'Neon Rooks', 'Iron Moths', 'Static Fangs', 'Night Circuit'];   // логотипы img/team/semi_<i>.webp
+const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
 const heroPower = H => { let p = H.power + itemBonus(H); for (const e of H.effects) if (e.from <= H.turn && H.turn <= e.to) p += e.v; if (H.jetlag) p -= 5; return p; };
 const effPower = () => heroPower(S);
 const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: from }); };
@@ -430,6 +455,10 @@ function useCard(i) {
   if (c.k === 'p' || c.k === 'm') { addEff(c.v, c.d); msg = c.k === 'p' ? 'Бонус!' : 'Эффект!'; }
   else if (c.k === 'r') { const v = Math.random() < 0.5 ? 5 : -5; addEff(v, 'turn'); msg = v > 0 ? 'Бонус!' : 'Эффект!'; }
   else if (c.k === 'dh') { S.hand.splice(i, 1); dhStart(); save(); return; }
+  else if (c.k === 'beast' || c.k === 'duel') { S.hand.splice(i, 1); specialFight(c.k); save(); return; }
+  else if (c.k === 'contract') { S.hand.splice(i, 1); contractStart(); save(); return; }
+  else if (c.k === 'fanp') { addEff(c.v, 'turn'); msg = 'Бонус! +' + c.v + ' к силе до конца недели.'; }
+  else if (c.k === 'fans') msg = 'Приятно.';
   else if (c.k === 'cond') {
     if (S.power > 65) { S.rating += 20; msg = 'Бонус! +20 рейтинга.'; } else msg = 'Ничего не произошло: нужна сила выше 65.';
   } else msg = 'Без эффекта.';
@@ -537,6 +566,33 @@ function fightStep(dt) {
 }
 const finishFight = () => { while (!F.done) fightStep(0.1); };
 
+function specialFight(kind) {   // зверь от Бюро (сила 1–25, +250) или дуэль (сила игрока −20, не ниже 10; +50)
+  let opp, title, win;
+  if (kind === 'beast') {
+    const p = rnd(BEAST.lo, BEAST.hi), b = rnd(0, BEASTS.length - 1); title = 'Вызов от Бюро'; win = BEAST.win;
+    opp = fighter(BEASTS[b][0], p, npcRating(p), false, { name: BEASTS[b][1], desc: BEASTS[b][2], icon: rnd(0, ABIL_ICON_COUNT - 1) }, `img/beast/${b}.webp`);
+  } else {
+    const p = Math.max(10, effPower() - 20); title = 'Дуэль'; win = DUEL_WIN;
+    opp = fighter(NAMES[rnd(0, NAMES.length - 1)], p, npcRating(p), false);
+  }
+  startFight(title, opp, won => {
+    if (won) S.rating += win;
+    histAdd(title + ' · ' + (won ? 'победа · +' + win : 'поражение'));
+    logMsg(title + ' против ' + opp.name + ': ' + (won ? 'победа (+' + win + ' рейтинга).' : 'поражение.'));
+    S.view = 'main';
+  });
+}
+function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
+  const teams = shuffle([0, 1, 2, 3, 4]).slice(0, 4), my = teams[0];
+  const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
+  const taken = G.players.map(H => H.nick), names = shuffle(NAMES.filter(x => !taken.includes(x))).slice(0, 15);
+  names.forEach((name, i) => {
+    const p = rnd(TIERS[2].lo, TIERS[2].hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
+    ps.push({ id: i + 1, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } });
+  });
+  logMsg('Контракт: ты выступаешь за ' + SEMI_TEAMS[my] + '.');
+  tStart({ kind: 'contract', tier: null, region: S.region, team: my, teams }, 'g16', ps);
+}
 function bureauFight(kind) {
   if (!spend()) return;
   const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с Элитным Спектром';
@@ -968,7 +1024,7 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
 const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
-  const T = R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
+  const T = R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
   for (const x of R.ps) {   // награды и история — каждому живому участнику
     const h = humOf(R, x.id); if (h == null) continue;
     const H = G.players[h];
@@ -979,14 +1035,16 @@ function finishTour() {
         if (H.power < POWER_TOURNEY_CAP) H.power = Math.min(POWER_TOURNEY_CAP, H.power + T.gain);   // до 65 — прокачка
       }
       const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, H.rating += 200, 'esl')
+        : R.kind === 'contract' ? (H.rating += CONTRACT_WIN, 'contract')
         : R.kind === 'dh' ? (H.dhWon ? 'dhagain' : (H.dhWon = true, H.power = Math.min(POWER_MAX, H.power + DH_GAIN), 'dh'))
         : awardTrophy(H, r, T.name);
       if (tr === 'dh') msg += ' Ты достиг вершины силы!';
-      msg += tr === 'esl' ? ` +200 рейтинга и медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
+      if (tr === 'contract') msg += ` +${CONTRACT_WIN} рейтинга.`;
+      msg += tr === 'contract' ? '' : tr === 'esl' ? ` +200 рейтинга и медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id)); logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.'); }
   }
-  S.view = S.trun.kind === 'esl' ? 'bureau' : S.trun.kind === 'dh' ? 'main' : 'tour'; S.trun = null;
+  S.view = S.trun.kind === 'esl' ? 'bureau' : (S.trun.kind === 'dh' || S.trun.kind === 'contract') ? 'main' : 'tour'; S.trun = null;
 }
 
 // ---------- виды ----------
@@ -1007,6 +1065,10 @@ const labelOf = c => {
   if (c.k === 'm') return '<div class="bonus minus">Эффект!</div>';
   if (c.k === 'r') return '<div class="bonus rand">Случайно: бонус или эффект</div>';
   if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — +5 к силе.</div>';
+  if (c.k === 'beast') return `<div class="bonus rand">Бой со зверем · победа — +${BEAST.win} рейтинга</div>`;
+  if (c.k === 'duel') return `<div class="bonus rand">Дуэль · победа — +${DUEL_WIN} рейтинга</div>`;
+  if (c.k === 'fanp') return '<div class="bonus plus">Бонус! +1 к силе до конца недели</div>';
+  if (c.k === 'contract') return `<div class="bonus rand">Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга</div>`;
   if (c.k === 'cond') return '<div class="bonus nt">Условие: сила выше 65</div>';
   return '<div class="bonus nt">Без эффекта</div>';
 };
@@ -1084,9 +1146,9 @@ function viewCard() {
   if (!c) { S.view = 'main'; return viewMain(); }
   return wrap(`
     <div class="card" style="text-align:center">
-      ${picOf(c) ? `<img class="bigpic" src="${picOf(c)}" alt="${esc(c.t)}">` : `<div class="sq big" style="margin:0 auto">${esc(c.t)}</div>`}
+      ${picOf(c) ? `<img class="bigpic${c.desc ? ' tall' : ''}" src="${picOf(c)}" alt="${esc(c.t)}">` : `<div class="sq big" style="margin:0 auto">${esc(c.t)}</div>`}
       <h2>${esc(c.t)}</h2>
-      <div style="text-align:left">${TEXT}</div>
+      <div style="text-align:left">${c.desc ? esc(c.desc) : TEXT}</div>
       ${labelOf(c)}
     </div>
     <button class="btn gold" data-a="use" ${S.actions <= 0 ? 'disabled' : ''}>Использовать (1 действие)</button>
@@ -1324,12 +1386,12 @@ function viewTRun() {
   const nm = id => isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b>` : esc(R.ps[id].name);
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
-  let h = `<div class="card">${R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2>`}<div class="dim">${f.desc}</div>
+  let h = `<div class="card">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/semi_${t}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2>`}<div class="dim">${f.desc}</div>
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div></div>`;
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} рейтинга, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <button class="btn gold" data-a="tfinish">Завершить</button></div>`;
   } else if (me) {
