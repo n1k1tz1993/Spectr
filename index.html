@@ -448,12 +448,19 @@ const finishFight = () => { while (!F.done) fightStep(0.1); };
 
 function bureauFight(kind) {
   if (!spend()) return;
-  const p = rnd(70, 100), name = NICKS[rnd(0, NICKS.length - 1)];
   const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком';
-  startFight(title, fighter(name, p, npcRating(p), false), won => {
-    let d;
-    if (kind === 'ladder') { const big = S.ladderGames < 10; d = won ? (big ? 100 : 20) : -(big ? 100 : 25); S.ladderGames++; }
-    else d = won ? 20 : -20;
+  let opp, name;
+  if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55
+    const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 20)));
+    name = NAMES[rnd(0, NAMES.length - 1)];
+    opp = fighter(name, p, npcRating(p), false);
+  } else {                   // один из 12 про-игроков региона
+    const f = lgPool(S.region).slice(0, PRO_COUNT)[rnd(0, PRO_COUNT - 1)];
+    name = f.name; opp = fighter(f.name, f.p, f.rating, false, f.abil, f.face);
+  }
+  startFight(title, opp, won => {
+    const d = kind === 'ladder' ? (won ? 75 : -75) : (won ? 100 : -100);
+    if (kind === 'ladder') S.ladderGames = (S.ladderGames || 0) + 1;
     S.rating = Math.max(0, S.rating + d);
     histAdd(title + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
     logMsg(title + ' против ' + name + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга).');
@@ -468,13 +475,14 @@ function bureauFight(kind) {
 // Полуфинал и финал Bo5, каждая серия — один матч лиги. Топ-3 лиги едут на чемпионат мира.
 const LDB = {"teams":[[0,"Cloud9","t101",4],[0,"CLG","t102",4],[0,"Team Curse","t103",4],[0,"Dignitas","t104",1],[0,"Evil Geniuses","t105",2],[0,"Team Liquid","t106",6],[0,"Lyon","t107",4],[0,"MYM","t108",4],[0,"Complexity","t109c",4],[0,"TSM","t110",3],[1,"Alliance","t201",5],[1,"ALTERNATE aTTaX","t202",1],[1,"Fnatic","t203",6],[1,"G2 Esports","t204",5],[1,"MOUZ","t205m",4],[1,"Karmine Corp","t206",1],[1,"Ninjas in Pyjamas","t207n",4],[1,"Dark Passage","t208e",3],[1,"SK Gaming","t209",6],[1,"Beşiktaş Esports","t210b",3],[2,"Team Empire","t301",3],[2,"Зенит","t314",4],[2,"M19","t303",3],[2,"Moscow Five","t304",3],[2,"OneBreatch Gaming","t305",4],[2,"RoX","t306",4],[2,"ЦСКА","t313",3],[2,"Team Spirit","t308",4],[2,"Vega Squadron","t309",3],[2,"Virtus.pro","t310",1],[3,"ahq e-Sports Club","t401",2],[3,"EDG","t402",4],[3,"EHOME","t403",4],[3,"DetonatioN FocusMe","t404d",4],[3,"Invictus Gaming","t405",6],[3,"LGD Gaming","t406",1],[3,"Sentinels Singapore","t407",4],[3,"AZUBU Taipei Assassins","t4ta",3],[3,"Vici Gaming","t409",3],[3,"Team WE","t410",3],[4,"CJ Entus Blaze","t501",4],[4,"CJ Entus Frost","t502",6],[4,"Longzhu Gaming IM","t5lz",1],[4,"Jin Air Falcons","t504",3],[4,"Jin Air Stealths","t505",4],[4,"KT Rolster A","t506",4],[4,"KT Rolster B","t507",6],[4,"Najin Sword","t508",3],[4,"Najin Shield","t509",4],[4,"Samsung Galaxy","t510",3],[4,"SK Telecom T1","t511",3],[1,"SUPERMASSIVE","t211",4],[0,"INTZ","t111",2],[0,"CNB eSports Club","t112",1],[1,"Astralis","t212",5],[2,"Спартак","t312",3],[2,"NaVi","t57navi",4],[3,"AZUBU Taipei Snipers","t411",2],[3,"PENTAGRAM","t412",2],[4,"Newbee","t512",4]],"players":[[0,"IdRa",65,"US","Молниеносный рывок"],[0,"Meteos",61,"US","Яростный щит"],[0,"Oddie",57,"AR","Неистовый клинок"],[0,"Sneaky",61,"US","Молниеносный взрыв"],[0,"Bjergsen",61,"DK","Яростный клинок"],[0,"Hai",69,"US","Яростный взрыв"],[0,"Miracle-",65,"US","Теневой взрыв"],[0,"Revolta",57,"BR","Призрачный выпад"],[0,"Svenskeren",61,"DK","Ледяной вихрь"],[0,"jockster",55,"BR","Огненный шар"],[0,"Dyrus",62,"CA","Огненный щит"],[0,"NieN",62,"US","Ледяной щит"],[0,"fNb",52,"BR","Огненный залп"],[0,"WildTurtle",58,"US","Стальной залп"],[0,"MaCaO",54,"AR","Мощный удар"],[0,"DoubleLift",70,"US","Ледяной взрыв"],[0,"Tyler",68,"US","Мощный выпад"],[0,"Voyboy",65,"CA","Громовой взрыв"],[0,"Scarra",62,"US","Стальной удар"],[0,"BrTT",60,"BR","Ледяной клинок"],[1,"Froggen",70,"DK","Молниеносный щит"],[1,"MadFroG",62,"DE","Неистовый щит"],[1,"ZveN",68,"DK","Громовой клинок"],[1,"Reckless",72,"DK","Неистовый шар"],[1,"Kev1N",62,"DE","Теневой удар"],[1,"MickyX",55,"SK","Призрачный шар"],[1,"Shock",58,"SE","Стальной прыжок"],[1,"Araneae",55,"ES","Мощный взрыв"],[1,"YellowStar",60,"FR","Неистовый вихрь"],[1,"EdoBoy",52,"DE","Мощный прыжок"],[1,"xLord",70,"DE","Теневой клинок"],[1,"xPeke",67,"ES","Огненный удар"],[1,"Hjarnan",57,"SE","Яростный прыжок"],[1,"ForellenLord",63,"DE","Огненный прыжок"],[1,"Snoopeh",66,"GB","Молниеносный вихрь"],[1,"Nukeduck",68,"NL","Молниеносный клинок"],[1,"Jankos",61,"PL","Стальной выпад"],[1,"Wh1teL0tuS",56,"TR","Ледяной прыжок"],[1,"HollyPhoenix",52,"TR","Громовой залп"],[1,"k0u",59,"NO","Теневой прыжок"],[2,"Dendi",65,"UA","Огненный рывок"],[2,"Dread",60,"BY","Призрачный залп"],[2,"RamzessZ",61,"RU","Мощный рывок"],[2,"Save",57,"MD","Теневой шар"],[2,"TORONTOTOKYO",62,"KZ","Громовой прыжок"],[2,"KreoX",65,"RU","Теневой щит"],[2,"Happy",71,"RU","Яростный удар"],[2,"Solo",65,"RU","Громовой вихрь"],[2,"Dise",62,"RU","Молниеносный шар"],[2,"ZaKCanFly",58,"RU","Стальной рывок"],[2,"Hawk",60,"RU","Стальной вихрь"],[2,"Max",53,"BY","Теневой рывок"],[2,"Cash",67,"RU","Неистовый рывок"],[2,"Smurf",56,"RU","Ледяной рывок"],[2,"Inspired",52,"UZ","Неистовый прыжок"],[2,"Darien",65,"RU","Призрачный вихрь"],[2,"AlexIch",70,"RU","Громовой выпад"],[2,"FlashInTheNight",56,"RU","Огненный выпад"],[2,"Edward",65,"AM","Мощный щит"],[2,"TiTaN",57,"RU","Громовой щит"],[3,"ClearLove",72,"CN","Неистовый взрыв"],[3,"HaRleLuYaR",51,"SG","Мощный клинок"],[3,"Toyz",66,"TW","Стальной взрыв"],[3,"Misaya",72,"CN","Громовой рывок"],[3,"Doinb",67,"KR","Яростный выпад"],[3,"eer0",72,"CN","Призрачный клинок"],[3,"Fortitude",67,"CN","Яростный шар"],[3,"SwordArt",70,"TW","Теневой залп"],[3,"Dendy",70,"KR","Призрачный рывок"],[3,"infi",75,"CN","Призрачный удар"],[3,"Sky",72,"CN","Ледяной удар"],[3,"ColourFull",70,"CN","Неистовый залп"],[3,"TH000",70,"CN","Призрачный прыжок"],[3,"Life",58,"CN","Огненный вихрь"],[3,"Maple",59,"TW","Ледяной шар"],[3,"MiSTaKe",58,"TW","Молниеносный прыжок"],[3,"Ceros",68,"JP","Призрачный взрыв"],[3,"PawN",70,"KR","Стальной клинок"],[3,"kid",58,"TW","Молниеносный удар"],[3,"Sok",68,"KR","Неистовый выпад"],[4,"Faker",75,"KR","Молниеносный выпад"],[4,"Watch",66,"KR","Неистовый удар"],[4,"Reach",68,"KR","Мощный вихрь"],[4,"MC",65,"KR","Яростный вихрь"],[4,"Peanut",68,"KR","Ледяной выпад"],[4,"Moon",72,"KR","Яростный рывок"],[4,"Deft",67,"KR","Громовой удар"],[4,"KaKaO",65,"KR","Громовой шар"],[4,"inSec",65,"KR","Огненный клинок"],[4,"Flash",70,"KR","Огненный взрыв"],[4,"Lyn",72,"KR","Стальной щит"],[4,"Lawliet",66,"KR","Ледяной залп"],[4,"FoCuS",62,"KR","Молниеносный залп"],[4,"Flame",61,"KR","Призрачный щит"],[4,"Jaedong",75,"KR","Мощный шар"],[4,"Crown",68,"KR","Теневой выпад"],[4,"Ambition",70,"KR","Стальной шар"],[4,"MadLife",66,"KR","Мощный залп"],[4,"LustBoy",62,"KR","Яростный залп"],[4,"Imp",70,"KR","Теневой вихрь"]]};
 const LG_SIZE = r => r === 4 ? 14 : 12;
+const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55;   // про-игроков в регионе; сила соперников в лестнице
 const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [['Seoul Phoenix', null, 2], ['Busan Titans', null, 1]];
 const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
 const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал' };
-const proPower = pw => Math.round(70 + (pw - 50) * 1.2);          // сила 50–75 из старой базы → 70–100
+const proPower = k => k < PRO_COUNT ? Math.round(95 - k * 40 / (PRO_COUNT - 1)) : 54 - (k - PRO_COUNT) * 2;   // место в регионе → сила: 12 про-игроков 95…55, остальные ниже
 function lgPool(r) {   // все 20 бойцов региона из базы, сильнейшие сверху
-  return LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2]).map(({ x, i }) => {
-    const p = proPower(x[2]), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
+  return LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2]).map(({ x, i }, k) => {
+    const p = proPower(k), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
     return { name: x[1], p, rating: npcRating(p), country: x[3], face: (i * 7 + r * 5) % FACE_COUNT, abil: { name: x[4] || an, desc: ad, icon: (i * 11 + r * 13) % ABIL_ICON_COUNT } };
   });
 }
@@ -919,7 +927,7 @@ function viewBureau() {
       <button class="btn" data-a="tour" ${S.actions <= 0 ? 'disabled' : ''}>Участвовать в местном турнире (1 действие)</button>
       <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с случайным про-игроком региона (1 действие)</button>
       <button class="btn" data-a="fight" data-v="ladder" ${S.actions <= 0 ? 'disabled' : ''}>Лестничный матч на рейтинг (1 действие)</button>
-      <div class="dim" style="margin-top:6px">Бой с про-игроком: +20 или −20 рейтинга. Лестничный матч: первые 10 матчей +100 или −100, дальше +20 или −25.</div>
+      <div class="dim" style="margin-top:6px">Лестничный матч: соперник по твоему рейтингу (±200), +75 или −75. Бой с про-игроком региона: +100 или −100.</div>
     </div>${logHtml()}${back}`);
 }
 function viewFlight() {
@@ -1107,7 +1115,7 @@ function viewLTable() {
   const r = S.sel, L = G.leagues[r];
   let h = `<div class="card"><h2><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h2><div class="dim">${lgStatus(L)}</div></div>`;
   if (!L.teams) {
-    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Про-игроки региона:</div><table class="tbl">${lgPool(r).slice(0, LG_SIZE(r)).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
+    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Про-игроки региона:</div><table class="tbl">${lgPool(r).slice(0, PRO_COUNT).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
       ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${esc(H.nick)} ${flagOf(H.country)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
   } else {
     const t = lgTable(L);
