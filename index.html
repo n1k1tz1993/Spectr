@@ -170,13 +170,16 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .ff-log{position:relative}
 .ff-log .flog{font-size:3.3cqw;line-height:1.45;padding:0 1cqw;overflow:hidden;background:transparent;margin:0;min-height:0}
 .ff-log #fend .btn{margin-top:1.5cqw;padding:2.2cqw}
+.logo{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:44px;letter-spacing:.08em;background:linear-gradient(180deg,#FFFFFF,#7DE8FF 60%,#2FD7FF);-webkit-background-clip:text;background-clip:text;color:transparent;padding:6px 0}
 </style></head>
 <body><div id="app"></div>
 <script>
 'use strict';
-const KEY = 'spektr.v2';
+const SKEY = { solo: 'spektr.v2', coop: 'spektr.coop' };   // одиночная карьера и совместная игра хранятся отдельно
 const app = document.getElementById('app');
-let S = null;
+let S = null;      // текущий герой (тот, чья сейчас неделя)
+let G = null;      // игра: { v: 3, mode: 'solo' | 'coop', players: [герои], cur, handoff }
+let SETUP = null;  // создание героев: { mode, n, made: [] }
 
 // ---------- утилиты ----------
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -265,18 +268,24 @@ const leagueOf = r => LEAGUES.find(l => r >= l.min);
 const rateHtml = (r, cls = '') => { const l = leagueOf(r); return `<span class="rt ${cls}" title="${l.n}"><img src="img/rank_${l.id}.webp" alt="${l.n}"><b>${r}</b></span>`; };
 
 // ---------- сохранение ----------
-function load() {
+function fixHero(v) {   // старые сохранения героя
+  if (!v.tiers) { v.tiers = [0, 0, 0, 0, 0]; v.tiers[v.region || 0] = v.tier || 0; }
+  if (!v.troph) v.troph = (v.trophies || []).map(n => ({ r: v.region || 0, n }));
+  if (!v.hist) v.hist = [];
+  if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
+  return v;
+}
+function loadGame(mode) {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (!v || v.v !== 2) return null;
-    if (!v.tiers) { v.tiers = [0, 0, 0, 0, 0]; v.tiers[v.region || 0] = v.tier || 0; }
-    if (!v.troph) v.troph = (v.trophies || []).map(n => ({ r: v.region || 0, n }));
-    if (!v.hist) v.hist = [];
-    if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
+    const v = JSON.parse(localStorage.getItem(SKEY[mode]) || 'null');
+    if (!v) return null;
+    if (v.v === 2 && v.nick) return { v: 3, mode: 'solo', players: [fixHero(v)], cur: 0, handoff: false };   // одиночная карьера до совместной игры
+    if (v.v !== 3 || !v.players || !v.players.length) return null;
+    v.players.forEach(fixHero);
     return v;
   } catch (e) { return null; }
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { if (!G) return; try { localStorage.setItem(SKEY[G.mode], JSON.stringify(G)); } catch (e) {} }
 
 function newHero(nick, country, ability) {
   return { v: 2, nick, country, ability, power: 30, rating: 0, ladderGames: 0, region: 0, turn: 1, actions: 3, hand: [], jetlag: 0,
@@ -284,13 +293,16 @@ function newHero(nick, country, ability) {
 }
 
 // ---------- механика ----------
-const drawHand = () => shuffle([...REGIONS[S.region].cards, ...GENERIC]).slice(0, 3).map(c => ({ ...c }));
-const effPower = () => { let p = S.power; for (const e of S.effects) if (e.from <= S.turn && S.turn <= e.to) p += e.v; if (S.jetlag) p -= 5; return p; };
+const drawHand = (H = S) => shuffle([...REGIONS[H.region].cards, ...GENERIC]).slice(0, 3).map(c => ({ ...c }));
+const heroPower = H => { let p = H.power; for (const e of H.effects) if (e.from <= H.turn && H.turn <= e.to) p += e.v; if (H.jetlag) p -= 5; return p; };
+const effPower = () => heroPower(S);
 const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: from }); };
 const clearJet = () => { S.jetlag = 0; };
 const spend = () => { if (S.actions <= 0) return false; S.actions--; return true; };
 const logMsg = m => { S.log.unshift(m); S.log = S.log.slice(0, 6); };
 const histAdd = t => { S.hist.unshift({ r: S.region, t }); S.hist = S.hist.slice(0, 40); };
+const histTo = (H, r, t) => { H.hist.unshift({ r, t }); H.hist = H.hist.slice(0, 40); };
+const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 6); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 20;                 // у соперников рейтинг основан на силе
 function endTurn() {
@@ -299,6 +311,7 @@ function endTurn() {
   S.hand = drawHand();
   S.view = 'main'; S.sel = null;
   logMsg('Неделя ' + S.turn + '.');
+  if (G && G.mode === 'coop') { G.cur = (G.cur + 1) % G.players.length; S = G.players[G.cur]; G.handoff = true; }   // передать телефон
   save();
 }
 function useCard(i) {
@@ -351,8 +364,9 @@ const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUN
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
   thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
-function startFight(title, opp, onEnd) {
-  F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
+function startFight(title, opp, onEnd) { startFightAB(title, fighter(S.nick, effPower(), S.rating, true, S.ability), opp, onEnd); }
+function startFightAB(title, a, b, onEnd) {
+  F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
   S.view = 'fight';
 }
@@ -438,14 +452,19 @@ const GL = ['A', 'B', 'C', 'D'];
 function playTour(t) {
   const T = TIERS[t], r = S.region;
   if (t > S.tiers[r] || !S.tourPass) return;
-  S.tourPass = false;                      // одно действие — один турнир
+  const inv = (S.tourInv || []).filter(h => h !== G.cur && G.players[h]);
+  if (S.actions < inv.length) { logMsg('Не хватает действий, чтобы позвать всех выбранных игроков.'); return; }
+  S.actions -= inv.length;                 // каждый приглашённый — ещё 1 действие
+  S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
   const fmt = Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
-  const names = shuffle(NAMES.filter(x => x !== S.nick)).slice(0, n - 1);
-  const ps = [{ id: 0, name: S.nick, me: true, seed: Math.random() }].concat(names.map((name, i) => {
+  const hums = [G.cur, ...inv];            // живые игроки: тот, чья неделя, и приглашённые
+  const taken = G.players.map(H => H.nick);
+  const names = shuffle(NAMES.filter(x => !taken.includes(x))).slice(0, n - hums.length);
+  const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() })).concat(names.map((name, i) => {
     const p = rnd(T.lo, T.hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-    return { id: i + 1, name, p, rating: npcRating(p), seed: Math.random(), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
+    return { id: hums.length + i, name, p, rating: npcRating(p), seed: Math.random(), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
   }));
-  const R = { tier: t, region: r, fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, tbOut: {}, tbn: 0 };
+  const R = { tier: t, region: r, fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, outs: {}, tbOut: {}, tbn: 0 };
   const ids = shuffle(ps.map(x => x.id));
   if (fmt === 'se8') { tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, ids[i], ids[i + 1], 3); }
   if (fmt === 'g12') {
@@ -466,14 +485,17 @@ function tAdd(R, a, b, bo, label, grp) { const m = { id: R.M.length, st: R.stage
 function tRR(R, ids, bo, label, rounds) { for (let r = 0; r < rounds; r++) for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) tAdd(R, ids[i], ids[j], bo, label + (rounds > 1 ? ' · круг ' + (r + 1) : '')); }
 const tStage = (R, k) => R.M.filter(m => m.st === k);
 const tLoser = m => (m.w === m.a ? m.b : m.a);
-const tMine = R => R.done ? null : tStage(R, R.stage).find(m => !m.done && (m.a === 0 || m.b === 0));
+const humOf = (R, id) => { const x = R.ps[id]; return x.h != null ? x.h : x.me ? G.cur : null; };   // индекс героя или null для бота
+const isHum = (R, id) => humOf(R, id) != null;
+const tRating = (R, id) => isHum(R, id) ? G.players[humOf(R, id)].rating : R.ps[id].rating;
+const tMine = R => R.done ? null : tStage(R, R.stage).find(m => !m.done && (isHum(R, m.a) || isHum(R, m.b)));
 function tGame(m, w) {   // записать бой серии; Bo2 — всегда 2 боя, 1:1 — ничья
   m.g.push(w);
   const wa = m.g.filter(x => x === m.a).length, wb = m.g.length - wa;
   if (m.bo === 2) { if (m.g.length === 2) { m.done = true; m.w = wa === wb ? null : wa > wb ? m.a : m.b; } }
   else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
 }
-function tFighter(R, id) { const x = R.ps[id]; return x.me ? fighter(S.nick, effPower(), S.rating, true, S.ability) : fighter(x.name, x.p, x.rating, false, x.abil); }
+function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil); const H = G.players[h]; return fighter(H.nick, heroPower(H), H.rating, true, H.ability); }
 function tSimGame(R, a, b) {   // бой без показа — тем же движком, что и живой бой
   const keep = F;
   F = { a: tFighter(R, a), b: tFighter(R, b), t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -565,26 +587,31 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
     let waiting = false;
     for (const m of tStage(R, R.stage)) {
       if (m.done) continue;
-      if ((m.a === 0 || m.b === 0) && !auto) { waiting = true; continue; }
+      if ((isHum(R, m.a) || isHum(R, m.b)) && !auto) { waiting = true; continue; }
       while (!m.done) tGame(m, tSimGame(R, m.a, m.b));
     }
     if (waiting) return;
     const k = R.stage;
     tAdvance(R);
-    if (R.out == null && !R.alive.includes(0)) R.out = k;   // игрок выбыл — дальше турнир досчитывается сам
+    R.outs = R.outs || {};
+    for (const x of R.ps) if (isHum(R, x.id) && R.outs[x.id] == null && !R.alive.includes(x.id)) R.outs[x.id] = k;   // кто из игроков на какой стадии выбыл
+    if (R.out == null && !R.alive.includes(0)) R.out = k;
   }
 }
-const placeText = R => R.winner === 0 ? 'победа' : R.out === 'F' ? 'финал, 2-е место' : R.out === 'SF' ? 'полуфинал' : R.out === 'QF' ? 'четвертьфинал' : R.out === 'DEC' || R.out === 'PI' ? stageName(R.out).toLowerCase() : 'групповой этап';
+const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
-  const T = TIERS[R.tier], r = R.region;
-  if (R.winner === 0) {
-    if (!S.troph.some(x => x.r === r && x.n === T.name)) S.troph.push({ r, n: T.name });
-    if (R.tier + 1 > S.tiers[r] && R.tier + 1 <= 2) S.tiers[r] = R.tier + 1;
-    S.power = Math.max(S.power, Math.min(POWER_TOURNEY_CAP, S.power + T.gain));
-    histAdd(T.name + ' · победа');
-    logMsg(T.name + ': победа! Трофей в коллекции.');
-  } else { histAdd(T.name + ' · ' + placeText(R)); logMsg(T.name + ': ' + placeText(R) + '. Победитель — ' + R.ps[R.winner].name + '.'); }
+  const T = TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
+  for (const x of R.ps) {   // награды и история — каждому живому участнику
+    const h = humOf(R, x.id); if (h == null) continue;
+    const H = G.players[h];
+    if (R.winner === x.id) {
+      if (!H.troph.some(y => y.r === r && y.n === T.name)) H.troph.push({ r, n: T.name });
+      if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) H.tiers[r] = R.tier + 1;
+      H.power = Math.max(H.power, Math.min(POWER_TOURNEY_CAP, H.power + T.gain));
+      histTo(H, r, T.name + ' · победа'); logTo(H, T.name + ': победа! Трофей в коллекции.');
+    } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id)); logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.'); }
+  }
   S.trun = null; S.view = 'tour';
 }
 
@@ -592,7 +619,7 @@ function finishTour() {
 const topBar = () => {
   const lg = leagueOf(S.rating);
   return `<div class="top"><div class="ava">${esc(S.nick.slice(0, 2).toUpperCase())}</div>
-    <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
+    <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· игрок ${G.cur + 1}/${G.players.length}</span>` : ''}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
     <div class="rate">${rateHtml(S.rating, 'big')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div></div>`;
 };
 const labelOf = c => {
@@ -655,7 +682,8 @@ function viewMain() {
       ${rows}
     </div>
     ${trophiesHtml()}
-    ${logHtml()}`);
+    ${logHtml()}
+    <button class="btn" data-a="menu">Главное меню</button>`);
 }
 function viewCard() {
   const c = S.hand[S.sel];
@@ -685,6 +713,11 @@ function viewRest() {
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Отдых</div>
     <h2>Отдых</h2><div style="text-align:left">${TEXT}</div><div class="bonus plus">Бонус!</div></div>${back}`);
 }
+function inviteHtml() {   // совместная игра: позвать других игроков в турнир, каждый — ещё 1 действие
+  const inv = S.tourInv || [];
+  return `<div class="card"><h3>Позвать игроков</h3><div class="dim">Каждый приглашённый — ещё 1 действие. Осталось действий: ${S.actions - inv.length}.</div>
+    <div class="row" style="margin-top:6px">${G.players.map((H, i) => i === G.cur ? '' : `<button class="btn ${inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinv" data-v="${i}" ${!inv.includes(i) && inv.length >= S.actions ? 'disabled' : ''}>${inv.includes(i) ? '✓ ' : ''}${esc(H.nick)} ${flagOf(H.country)}</button>`).join('')}</div></div>`;
+}
 function viewTour() {
   const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n), lg = leagueOf(S.rating);
   const banners = TIERS.map((t, i) => {
@@ -696,6 +729,7 @@ function viewTour() {
       <div style="margin-top:6px">Еженедельные турниры — отличный шанс набраться опыта и проявить себя!</div>
       <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3 </div><div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
     </div>
+    ${G.mode === 'coop' && S.tourPass ? inviteHtml() : ''}
     <div class="card">${banners}</div>${logHtml()}<button class="btn" data-a="toBureau">Назад в бюро</button>`);
 }
 function viewBureau() {
@@ -723,8 +757,34 @@ function viewFlight() {
     </div>${back}`);
 }
 let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0;
+const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); };
+function viewMenu() {
+  const solo = loadGame('solo'), coop = loadGame('coop');
+  return `<div class="card" style="margin-top:24px;text-align:center"><div class="logo">СПЕКТР</div></div>
+    <div class="card"><h2>Одиночная карьера</h2>
+      ${solo ? `<button class="btn gold" data-a="mcont" data-v="solo">Продолжить: ${esc(solo.players[0].nick)} · неделя ${solo.players[0].turn}</button>` : ''}
+      <button class="btn" data-a="mnew" data-v="solo">Новая карьера</button>
+      ${solo ? '<div class="dim" style="margin-top:6px">Новая карьера заменит сохранённую.</div>' : ''}</div>
+    <div class="card"><h2>Совместная игра</h2>
+      <div class="dim">До 6 игроков на одном телефоне. Недели идут по очереди: сыграл свою — передай телефон. В турнир можно позвать других игроков, каждый приглашённый стоит ещё 1 действие.</div>
+      ${coop ? `<button class="btn gold" data-a="mcont" data-v="coop">Продолжить: ${coop.players.map(H => esc(H.nick)).join(', ')}</button>` : ''}
+      <div class="dim" style="margin-top:10px">Новая игра — сколько игроков?</div>
+      <div class="row" style="margin-top:6px">${[2, 3, 4, 5, 6].map(n => `<button class="btn" style="flex:1;text-align:center;width:auto" data-a="mnew" data-v="coop${n}">${n}</button>`).join('')}</div>
+      ${coop ? '<div class="dim" style="margin-top:6px">Новая совместная игра заменит сохранённую.</div>' : ''}</div>`;
+}
+function viewHandoff() {
+  const n = G.players.length;
+  return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Совместная игра · неделя ${S.turn}</div>
+    <div class="ava" style="width:72px;height:72px;margin:14px auto;font-size:26px">${esc(S.nick.slice(0, 2).toUpperCase())}</div>
+    <h2>Ход игрока ${G.cur + 1} из ${n}: ${esc(S.nick)} ${flagOf(S.country)}</h2>
+    <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
+    <button class="btn gold" data-a="hgo" style="margin-top:14px">Начать неделю</button></div>
+    <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${esc(H.nick)} ${flagOf(H.country)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
+    <button class="btn" data-a="menu">Главное меню</button>`;
+}
 function viewSetup() {
-  return `<div class="card" style="margin-top:24px"><h2>Создание персонажа</h2>
+  const who = SETUP && SETUP.mode === 'coop' ? `<div class="dim">Игрок ${SETUP.made.length + 1} из ${SETUP.n}</div>` : '';
+  return `<div class="card" style="margin-top:24px">${who}<h2>Создание персонажа</h2>
     <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
       <div class="sq" style="width:140px;height:140px;font-size:18px;flex:0 0 140px">Лицо</div>
       <div style="flex:1"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}"></div>
@@ -743,6 +803,7 @@ function viewSetup() {
     <div class="dim" style="margin-top:6px">Способность — серия из 5 ударов одним броском. Применяется сама, когда Цы опускается до половины.</div>
     <button class="btn gold" data-a="start" style="margin-top:16px">Создать героя</button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
+    <button class="btn" data-a="mback">Главное меню</button>
   </div>`;
 }
 
@@ -796,7 +857,7 @@ function fightPaint() {
   F.fx = [];
   document.getElementById('flog').innerHTML = F.ev.map(e => `<div>${esc(e)}</div>`).join('');
   if (F.done && !document.getElementById('fend').innerHTML) {
-    document.getElementById('fend').innerHTML = `<div class="bonus ${F.won ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
+    document.getElementById('fend').innerHTML = `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
     document.getElementById('fctl').style.display = 'none'; document.getElementById('flog').style.display = 'none';
   }
 }
@@ -814,36 +875,38 @@ function fightLoop() {
 function viewTRun() {
   const R = S.trun;
   if (!R) { S.view = 'tour'; return viewTour(); }
-  const f = FMT[R.fmt], me = tMine(R);
-  const nm = id => id === 0 ? `<b class="gold">${esc(S.nick)}</b>` : esc(R.ps[id].name);
+  const f = FMT[R.fmt], me = tMine(R), hums = R.ps.filter(x => isHum(R, x.id));
+  const nm = id => isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b>` : esc(R.ps[id].name);
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
-  const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${m.a === 0 || m.b === 0 ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
+  const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   let h = `<div class="card"><img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2><div class="dim">${f.desc}</div>
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div></div>`;
   if (R.done) {
-    const won = R.winner === 0;
-    h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? 'Ты выиграл турнир!' : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${won ? 'Трофей отправится в коллекцию.' : 'Твой результат: ' + placeText(R) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.'}</div>
+    const won = isHum(R, R.winner), solo = hums.length === 1;
+    h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
+      <div class="dim" style="margin-top:6px">${solo ? (won ? 'Трофей отправится в коллекцию.' : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+        : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <button class="btn gold" data-a="tfinish">Завершить</button></div>`;
   } else if (me) {
-    const opp = me.a === 0 ? me.b : me.a, o = R.ps[opp], mine = me.g.filter(x => x === 0).length;
-    h += `<div class="card"><h3>Твой матч · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
-      <div class="tvs"><div>${esc(S.nick)}<br>${rateHtml(S.rating, 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${esc(o.name)}<br>${rateHtml(o.rating, 'mid')}</div></div>
+    const L = isHum(R, me.a) ? me.a : me.b, Rr = L === me.a ? me.b : me.a, mine = me.g.filter(x => x === L).length;
+    h += `<div class="card"><h3>${hums.length > 1 ? 'Матч игрока ' + esc(R.ps[L].name) : 'Твой матч'} · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
+      <div class="tvs"><div>${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}</div></div>
       <div class="dim" style="text-align:center">Bo${me.bo}${me.bo === 2 ? ' · возможна ничья' : ''} · бой ${me.g.length + 1}</div>
       <button class="btn gold" data-a="tplay">В бой</button><button class="btn" data-a="tauto">Досчитать турнир</button></div>`;
   }
   if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
-  const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW')) && (m.a === 0 || m.b === 0) && m.done);
-  if (myGroup.length) h += `<div class="card"><h3>Твои бои в группе</h3>${myGroup.map(series).join('')}</div>`;
+  const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
+  if (myGroup.length) h += `<div class="card"><h3>${hums.length > 1 ? 'Бои игроков в группе' : 'Твои бои в группе'}</h3>${myGroup.map(series).join('')}</div>`;
   for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
   return wrap(h);
 }
 const VIEWS = { trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
-  if (!S) { app.innerHTML = viewSetup(); return; }
+  if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
+  if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); lastView = null; return; }
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
   if (S.view !== lastView) { window.scrollTo(0, 0); lastView = S.view; }   // новый экран всегда с верха
@@ -852,33 +915,51 @@ function render() {
 
 // ---------- действия ----------
 function act(a, v) {
-  if (!S && a !== 'start' && a !== 'flag' && a !== 'sicon') return;
-  const inp = document.getElementById('nick');
-  if (!S && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
-  switch (a) {
-    case 'flag': setupFlag = v; setupErr = ''; break;
-    case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
-    case 'start': {
-      const nick = setupNick.trim();
-      if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
-      if (!setupAName.trim()) { setupErr = 'Придумай название своего удара.'; break; }
-      if (!setupADesc.trim()) { setupErr = 'Напиши, что делает твой удар.'; break; }
-      S = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon }); S.hand = drawHand(); setupErr = ''; save(); break;
+  if (!G) {   // главное меню и создание героев
+    const inp = document.getElementById('nick');
+    if (SETUP && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
+    switch (a) {
+      case 'mcont': G = loadGame(v); if (G) S = G.players[G.cur]; break;
+      case 'mnew': SETUP = v === 'solo' ? { mode: 'solo', n: 1, made: [] } : { mode: 'coop', n: +v.slice(4), made: [] }; resetSetup(); break;
+      case 'mback': SETUP = null; break;
+      case 'flag': setupFlag = v; setupErr = ''; break;
+      case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
+      case 'start': {
+        if (!SETUP) return;
+        const nick = setupNick.trim();
+        if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
+        if (SETUP.made.some(H => H.nick.toLowerCase() === nick.toLowerCase())) { setupErr = 'Такой ник уже занят другим игроком.'; break; }
+        if (!setupAName.trim()) { setupErr = 'Придумай название своего удара.'; break; }
+        if (!setupADesc.trim()) { setupErr = 'Напиши, что делает твой удар.'; break; }
+        const H = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon });
+        H.hand = drawHand(H);
+        SETUP.made.push(H);
+        if (SETUP.made.length < SETUP.n) { resetSetup(); break; }   // следующий игрок
+        G = { v: 3, mode: SETUP.mode, players: SETUP.made, cur: 0, handoff: SETUP.mode === 'coop' };
+        S = G.players[0]; SETUP = null; save(); break;
+      }
+      default: return;
     }
+    render(); return;
+  }
+  switch (a) {
+    case 'hgo': G.handoff = false; break;
+    case 'menu': save(); G = null; S = null; SETUP = null; F = null; break;
     case 'card': S.view = 'card'; S.sel = +v; break;
     case 'league': S.view = 'league'; S.sel = +v; break;
     case 'use': useCard(S.sel); break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
     case 'rest': if (spend()) { clearJet(); S.power += 5; logMsg('Отдых: бонус.'); S.view = 'rest'; } break;
-    case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.view = 'tour'; } break;
+    case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.tourInv = []; S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
-    case 'tplay': {
+    case 'tplay': {   // живой бой: игрок слева; если встретились два игрока — оба живые
       const R = S.trun, m = R && tMine(R); if (!m) return;
-      const opp = m.a === 0 ? m.b : m.a, o = R.ps[opp];
-      startFight(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, fighter(o.name, o.p, o.rating, false, o.abil), won => { tGame(m, won ? 0 : opp); tRun(R, false); S.view = 'trun'; });
+      const L = isHum(R, m.a) ? m.a : m.b, Rr = L === m.a ? m.b : m.a;
+      startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, tFighter(R, L), tFighter(R, Rr), won => { tGame(m, won ? L : Rr); tRun(R, false); S.view = 'trun'; });
       break;
     }
+    case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (a2.length < S.actions) a2.push(h); break; }
     case 'tauto': if (S.trun) tRun(S.trun, true); break;
     case 'tfinish': finishTour(); break;
     case 'fspeed': if (F) F.speed = +v; return;
@@ -900,7 +981,7 @@ function act(a, v) {
     case 'next': endTurn(); break;
     default: return;
   }
-  if (S) save();
+  save();
   render();
 }
 document.addEventListener('click', e => {
@@ -909,6 +990,6 @@ document.addEventListener('click', e => {
   act(t.dataset.a, t.dataset.v);
 });
 window.addEventListener('error', e => { app.insertAdjacentHTML('afterbegin', '<pre style="color:#FF5A5A;white-space:pre-wrap;font-size:12px">Ошибка: ' + esc(e.message) + ' (' + (e.lineno || '?') + ')</pre>'); });
-S = load();
+G = null; S = null;
 render();
 </script></body></html>
