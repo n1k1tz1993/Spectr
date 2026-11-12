@@ -331,16 +331,17 @@ const ART_ICONS = 20;
 const artImg = i => `<img class="aic" src="img/art/${(i | 0) % ART_ICONS}.webp" alt="">`;
 const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
 const itemName = (H, i) => (H.iname && H.iname[i]) || ITEMS[i].n;   // игрок может переименовать любой свой артефакт
-// ---------- жильё: картинка комнаты; номер — бесплатное бюро, остров — без джетлага ----------
+// ---------- жильё: картинка комнаты; любое купленное — бесплатное бюро, остров — ещё и без джетлага ----------
 const ROOMS = [
   { n: 'Однокомнатный номер', cost: 1000, perk: 'Поход в бюро не тратит действие' },
-  { n: 'Пятизвёздочная гостиница с бассейном', cost: 2000 },
-  { n: 'Панорамный пентхаус в центре города', cost: 3000 },
-  { n: 'Роскошная вилла', cost: 4000 },
-  { n: 'Собственный остров', cost: 5000, perk: 'Перелёты без джетлага' }
+  { n: 'Пятизвёздочная гостиница с бассейном', cost: 2000, perk: 'Поход в бюро не тратит действие' },
+  { n: 'Панорамный пентхаус в центре города', cost: 3000, perk: 'Поход в бюро не тратит действие' },
+  { n: 'Роскошная вилла', cost: 4000, perk: 'Поход в бюро не тратит действие' },
+  { n: 'Собственный остров', cost: 5000, perk: 'Бюро без траты действия и перелёты без джетлага' }
 ];
 const ROOM_PICS = ['Интерьер', 'Вид из окна'];
 const hasRoom = (H, k) => (H.rooms || []).includes(k);
+const freeBureau = H => (H.rooms || []).length > 0;   // любое купленное жильё — бюро без траты действия
 const BASE_ROOM = { n: 'Базовое жильё' };   // есть у каждого игрока с начала, картинки img/room/base_0/1
 const roomOf = k => k < 0 ? BASE_ROOM : ROOMS[k];
 const roomImg = (k, v) => `img/room/${k < 0 ? 'base' : k}_${v}.webp`;
@@ -421,7 +422,7 @@ const BEASTS = [   // дикие Спектры: img/beast/<i>.webp
   ['Дикий ворон', 'Ливень перьев', 'Ворон осыпает арену острыми кристальными перьями.'],
   ['Дикий олень', 'Рога шторма', 'Кристальные рога вспыхивают и бьют разрядом.']
 ];
-const DUEL_WIN = 50, CONTRACT_WIN = 100;
+const DUEL_WIN = 50, CONTRACT_WIN = 250;
 SPECIAL.forEach((c, i) => { IMGBY[c.t] = `img/act/sp_${i}.webp`; });
 const SEMI_TEAMS = ['Rift Foxes', 'Neon Rooks', 'Iron Moths', 'Static Fangs', 'Night Circuit'];   // логотипы img/team/semi_<i>.webp
 const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
@@ -1128,7 +1129,7 @@ function viewMain() {
       <h2>Повседневные действия</h2>
       <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Сходить в библиотеку</button>
       <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых</button>
-      <button class="btn" data-a="bureau" ${done && !hasRoom(S, 0) ? 'disabled' : ''}>Сходить в бюро${hasRoom(S, 0) ? ' <span class="dim" style="font-size:12px">· бесплатно</span>' : ''}</button>
+      <button class="btn" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''}>Сходить в бюро${freeBureau(S) ? ' <span class="dim" style="font-size:12px">· бесплатно</span>' : ''}</button>
       <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион</button>
       <button class="btn" data-a="pass">Пропустить неделю</button>
       ${done ? '<button class="btn gold" data-a="next">Следующая неделя</button>' : ''}
@@ -1565,7 +1566,7 @@ function act(a, v) {
       return;
     }
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
-    case 'bureau': if (hasRoom(S, 0)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // однокомнатный номер: бюро рядом, действие не тратится
+    case 'bureau': if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // своё жильё: бюро рядом, действие не тратится
     case 'toBureau': S.view = 'bureau'; break;
     case 'inv': S.view = 'inv'; S.renaming = null; break;
     case 'irename': S.renaming = +v; break;
