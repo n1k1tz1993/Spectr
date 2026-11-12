@@ -206,6 +206,10 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .dos .abrow{text-align:left}
 .dos .abrow .aic{width:56px;height:56px;border-radius:10px;flex:0 0 auto}
 .item.on{border-color:var(--gold)}
+.room{position:relative;border-radius:10px;overflow:hidden;line-height:0;cursor:pointer;aspect-ratio:16/10}
+.room img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.roomph{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4;height:100%;border-radius:10px;background:linear-gradient(135deg,#2a1f4a,#12182a);color:var(--dim,#aab);padding:12px;box-sizing:border-box}
+.rtag{position:absolute;left:8px;bottom:8px;line-height:1.3;font-size:12px;background:rgba(0,0,0,.55);color:#fff;padding:3px 8px;border-radius:8px}
 .item.prestige{background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(140,60,220,.14))}
 .item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
 </style></head>
@@ -318,7 +322,25 @@ const ITEMS = [
 const ART_ICONS = 20;
 const artImg = i => `<img class="aic" src="img/art/${(i | 0) % ART_ICONS}.webp" alt="">`;
 const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
-const itemName = (H, i) => ITEMS[i].n;
+const itemName = (H, i) => (H.iname && H.iname[i]) || ITEMS[i].n;   // игрок может переименовать любой свой артефакт
+// ---------- жильё: косметика и престиж, бонусов не даёт ----------
+const ROOMS = [
+  { n: 'Однокомнатный номер', cost: 1000 },
+  { n: 'Пятизвёздочная гостиница с бассейном', cost: 2000 },
+  { n: 'Панорамный пентхаус в центре города', cost: 3000 },
+  { n: 'Роскошная вилла', cost: 4000 },
+  { n: 'Собственный остров', cost: 5000 }
+];
+const ROOM_PICS = ['Интерьер', 'Вид из окна'];
+function roomHtml() {
+  const own = S.rooms || [];
+  if (!own.length) return `<div class="roomph" style="aspect-ratio:16/10">У тебя пока нет жилья.<br>Его можно купить в магазине.</div>
+    <button class="btn gold" data-a="shop" style="text-align:center;margin-top:8px">В магазин</button>`;
+  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = S.roomPic | 0;
+  return `<div class="room" data-a="rpic"><div class="roomph">${esc(ROOMS[k].n)}<br>${ROOM_PICS[v]}</div><img src="img/room/${k}_${v}.webp" alt="" onerror="this.remove()">
+      <div class="rtag">${ROOM_PICS[v]} · нажми, чтобы сменить</div></div>
+    ${own.length > 1 ? `<div class="row" style="margin-top:8px;gap:6px">${own.slice().sort().map(j => `<button class="btn ${j === k ? 'here' : ''}" data-a="rsel" data-v="${j}" style="width:auto;flex:1 1 45%;text-align:center;font-size:13px;margin:0">${esc(ROOMS[j].n)}</button>`).join('')}</div>` : ''}`;
+}
 const itemIcon = (H, i) => artImg(i);
 const TIERS = [
   { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
@@ -1030,8 +1052,8 @@ function viewMain() {
       <div class="nextm"><div class="dim">Предстоящие матчи</div><b>${nextMatchText()}</b></div>
     </div>
     <div class="card">
-      <h2>Карта мира</h2>
-      ${mapHtml()}
+      <h2>${S.inRoom ? 'Моя комната' : 'Карта мира'}</h2>
+      ${S.inRoom ? roomHtml() : mapHtml()}
       <div class="loc"><img src="img/logo_${S.region}.webp" alt="${esc(REGIONS[S.region].league)}"><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span></div>
     </div>
     <div class="card">
@@ -1049,7 +1071,7 @@ function viewMain() {
     </div>
     ${trophiesHtml()}
     ${logHtml()}
-    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" data-a="shop" style="text-align:center">Магазин</button><button class="btn" data-a="inv" style="text-align:center">Инвентарь</button></div>
+    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" data-a="shop" style="text-align:center;padding-left:6px;padding-right:6px">Магазин</button><button class="btn" data-a="inv" style="text-align:center;padding-left:6px;padding-right:6px">Инвентарь</button><button class="btn" data-a="room" style="text-align:center;padding-left:6px;padding-right:6px">${S.inRoom ? 'Открыть карту' : 'В комнату'}</button></div>
     <button class="btn" data-a="menu">Главное меню</button>`);
 }
 function viewCard() {
@@ -1080,12 +1102,18 @@ function viewLib() {
 
 function itemCard(it, i, act, on) {
   const top = i === ITEMS.length - 1;
-  return `<div class="card item ${on ? 'on' : ''} ${top ? 'prestige' : ''}"><div class="abrow" style="align-items:center">${artImg(i)}<div style="flex:1"><b>${esc(it.n)}</b>${on ? ' <span class="gold">· надет</span>' : ''}${top ? '<div class="gold" style="font-size:12px">★ Самый престижный артефакт</div>' : ''}<div class="dim">${esc(it.d)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
+  const nm = itemName(S, i), ren = S.iname && S.iname[i];
+  return `<div class="card item ${on ? 'on' : ''} ${top ? 'prestige' : ''}"><div class="abrow" style="align-items:center">${artImg(i)}<div style="flex:1"><b>${esc(nm)}</b>${ren ? `<div class="dim" style="font-size:12px">${esc(it.n)}</div>` : ''}${on ? ' <span class="gold">· надет</span>' : ''}${top ? '<div class="gold" style="font-size:12px">★ Самый престижный артефакт</div>' : ''}<div class="dim">${esc(it.d)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
 }
 function viewShop() {   // магазин: артефакты открываются за рейтинг (один раз)
   const own = S.items || [];
   let h = `<div class="card"><h2>Магазин</h2><div class="dim">Украшения с метеоритной рудой. Каждое открывается один раз за рейтинг, затем его можно надеть в инвентаре.</div>
     <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>`;
+  const ro = S.rooms || [];
+  h += `<div class="card"><h3>Жильё</h3><div class="dim">Меняет картинку на главном экране. Бонусов не даёт — только престиж.</div></div>`;
+  h += ROOMS.map((R, j) => `<div class="card item"><b>${esc(R.n)}</b>${ro.includes(j) ? `<div class="dim" style="margin-top:6px">✓ Куплено — загляни «В комнату»</div>`
+    : `<button class="btn" data-a="rbuy" data-v="${j}" style="text-align:center" ${S.rating < R.cost ? 'disabled' : ''}>Купить за ${R.cost} рейтинга</button>`}</div>`).join('');
+  h += `<div class="card"><h3>Артефакты</h3></div>`;
   h += ITEMS.map((it, i) => itemCard(it, i, own.includes(i) ? `<div class="dim" style="text-align:center;margin-top:8px">✓ Открыт — надеть можно в инвентаре</div>`
     : `<button class="btn" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Открыть за ${it.cost} рейтинга</button>`, false)).join('');
   return wrap(h + back);
@@ -1093,7 +1121,11 @@ function viewShop() {   // магазин: артефакты открывают
 function viewInv() {    // инвентарь: открытые артефакты, надет один
   const own = (S.items || []).slice().sort((a, b) => b - a);
   let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
-  h += own.map(i => itemCard(ITEMS[i], i, `<button class="btn ${S.equip === i ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${S.equip === i ? 'Снять' : 'Надеть'}</button>`, S.equip === i)).join('');
+  h += own.map(i => itemCard(ITEMS[i], i, (S.renaming === i
+      ? `<input id="iname" maxlength="32" placeholder="${esc(ITEMS[i].n)}" value="${esc((S.iname && S.iname[i]) || '')}" style="margin-top:8px">
+         <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn gold" data-a="iren" data-v="${i}" style="text-align:center">Сохранить</button><button class="btn" data-a="irencancel" style="text-align:center">Отмена</button></div>
+         <div class="dim" style="font-size:12px">Оставь пустым, чтобы вернуть исходное название.</div>`
+      : `<div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ${S.equip === i ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${S.equip === i ? 'Снять' : 'Надеть'}</button><button class="btn" data-a="irename" data-v="${i}" style="text-align:center;flex:0 0 auto;width:auto">✎ Имя</button></div>`), S.equip === i)).join('');
   if (!own.length) h += `<button class="btn gold" data-a="shop" style="text-align:center">В магазин</button>`;
   return wrap(h + back);
 }
@@ -1471,12 +1503,19 @@ function act(a, v) {
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
-    case 'inv': S.view = 'inv'; break;
+    case 'inv': S.view = 'inv'; S.renaming = null; break;
+    case 'irename': S.renaming = +v; break;
+    case 'irencancel': S.renaming = null; break;
+    case 'iren': { const i = +v, el = document.getElementById('iname'), t = el ? el.value.trim() : ''; S.iname = S.iname || {}; if (t) S.iname[i] = t; else delete S.iname[i]; S.renaming = null; break; }
+    case 'rbuy': { const j = +v; S.rooms = S.rooms || []; if (S.rooms.includes(j) || S.rating < ROOMS[j].cost) return; S.rating -= ROOMS[j].cost; S.rooms.push(j); S.room = j; S.roomPic = 0; logMsg('Куплено жильё: ' + ROOMS[j].n + '.'); break; }
+    case 'room': S.inRoom = !S.inRoom; break;
+    case 'rpic': S.roomPic = (S.roomPic | 0) ? 0 : 1; break;
+    case 'rsel': S.room = +v; S.roomPic = 0; break;
     case 'shop': S.view = 'shop'; break;
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
       if (S.items.includes(i) || S.rating < it.cost) return;
-      S.rating -= it.cost; S.items.push(i); logMsg('Открыт артефакт: ' + it.n + '.'); break;
+      S.rating -= it.cost; S.items.push(i); logMsg('Открыт артефакт: ' + itemName(S, i) + '.'); break;
     }
     case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
     case 'dossier': S.dreg = +v; S.dsel = null; S.view = 'dossier'; break;
