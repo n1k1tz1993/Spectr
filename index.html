@@ -35,10 +35,14 @@ h3{font-size:16px;margin:12px 0 6px}
 input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#0B0F1C;color:var(--txt);font-size:16px;font-family:inherit}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl td{padding:6px 4px;border-bottom:1px solid var(--line)}
-.week{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.week{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.week .inds{margin-top:8px}
+.nextm{text-align:right;font-size:14px}
+.loc{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px}
+.loc img{width:30px;height:30px;border-radius:6px;object-fit:contain;background:#000;flex:0 0 auto}
 .week h2{margin:0}
 .inds{display:flex;gap:6px}
-.ind{width:20px;height:20px;border-radius:4px;background:#3A7BFF;display:inline-block}
+.ind{width:34px;height:12px;border-radius:3px;background:#3A7BFF;display:inline-block}
 .ind.off{background:#2A3350;opacity:.7}
 .mapph{height:180px;background:#fff;color:#111;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:8px}
 .arow{display:flex;gap:12px;align-items:stretch;background:#222A44;border-radius:12px;padding:8px;margin-top:8px;cursor:pointer}
@@ -77,31 +81,31 @@ const flagOf = code => code ? String.fromCodePoint(...[...code].map(ch => 127397
 
 // ---------- регионы (15 действий каждый) ----------
 const REGIONS = [
-  { name: 'Америка', league: 'United Spectre Association', cards: [
+  { name: 'Америка', city: 'Нью-Йорк', league: 'United Spectre Association', cards: [
     C('Тусовка в компании', 'p', 5, 'next'), C('Фитнес-тренировка', 'p', 3, 'turn'), C('Интервью для местного канала', 'p', 2, 'turn'),
     C('Бессонная ночь в Вегасе', 'm', -3, 'turn'), C('Простуда после кондиционера', 'm', -2, 'turn'),
     C('Казино', 'r', 5, 'turn'),
     C('Пляж', 'n'), C('Атракционы', 'n'), C('Комик-кон', 'n'), C('Съёмка в подкасте', 'cond'), C('Прогулка по Голливуду', 'n'),
     C('Визит в музей', 'n'), C('Кинопросмотр', 'n'), C('Гастро-тур по Нью-Йорку', 'n'), C('Поход в национальный парк', 'n') ] },
-  { name: 'Европа', league: 'Объединённая европейская лига Спектров (LCS)', cards: [
+  { name: 'Европа', city: 'Берлин', league: 'Объединённая европейская лига Спектров (LCS)', cards: [
     C('Лекция в Оксфорде', 'p', 5, 'next'), C('Тренировка в Берлине', 'p', 3, 'turn'), C('Интервью для парижского журнала', 'p', 2, 'turn'),
     C('Бюрократия', 'm', -3, 'turn'), C('Лондонский дождь и простуда', 'm', -2, 'turn'),
     C('Ставки в Монако', 'r', 5, 'turn'),
     C('Пляж в Ницце', 'n'), C('Экскурсия по Риму', 'n'), C('Концерт в Вене', 'n'), C('Прогулка по Лондону', 'n'), C('Поход в Лувр', 'n'),
     C('Фестиваль пива в Мюнхене', 'n'), C('Визит в Эрмитаж', 'n'), C('Поход в Альпы', 'n'), C('Шоппинг в Милане', 'n') ] },
-  { name: 'Россия', league: 'Северная Континентальная лига Спектров', cards: [
+  { name: 'Россия', city: 'Москва', league: 'Северная Континентальная лига Спектров', cards: [
     C('Тренировочный лагерь под Москвой', 'p', 5, 'next'), C('Интервью для спортивного канала', 'p', 3, 'turn'), C('Тренировка с тренером в спортзале', 'p', 2, 'turn'),
     C('Пробка на МКАДе', 'm', -3, 'turn'), C('Простуда', 'm', -2, 'turn'),
     C('Лотерея в Сочи', 'r', 5, 'turn'),
     C('Пляж в Сочи', 'n'), C('Экскурсия по Красной площади', 'n'), C('Поход на балет', 'n'), C('Прогулка по парку', 'n'), C('Поход в Третьяковскую галерею', 'n'),
     C('Фестиваль в Казани', 'n'), C('Вечер с настолками с друзьями', 'n'), C('Поездка в Кижи', 'n'), C('Шопинг в ГУМе', 'n') ] },
-  { name: 'Китай', league: 'Азиатская лига Спектров (ASL)', cards: [
+  { name: 'Китай', city: 'Пекин', league: 'Азиатская лига Спектров (ASL)', cards: [
     C('Мастер-класс по кунфу', 'p', 5, 'next'), C('Тренировка в Шаолине', 'p', 3, 'turn'), C('Интервью для пекинского канала', 'p', 2, 'turn'),
     C('Поход в горы Чжанцзяцзе', 'm', -2, 'next'), C('Отравление уличной едой', 'm', -2, 'turn'),
     C('Лотерея в Макао', 'r', 5, 'turn'),
     C('Пляж в Санье', 'n'), C('Экскурсия на Великую китайскую стену', 'n'), C('Поход в Запретный город', 'n'), C('Прогулка по Бунду', 'n'), C('Чайная церемония', 'n'),
     C('Поход на китайский рынок', 'n'), C('Фестиваль фонариков', 'n'), C('Поход на оперу в Пекине', 'n'), C('Шоппинг на Нанкинской улице', 'n') ] },
-  { name: 'Корея', league: 'Звёздная серия (SSS)', cards: [
+  { name: 'Корея', city: 'Сеул', league: 'Звёздная серия (SSS)', cards: [
     C('Тренировка в спортзале Сеула', 'p', 5, 'next'), C('Тренировка с корейским тренером', 'p', 3, 'turn'), C('Интервью для корейского канала', 'p', 2, 'turn'),
     C('Бессонная ночь в караоке', 'm', -3, 'turn'), C('Попробовать деликатес', 'm', -2, 'turn'),
     C('Игровой автомат в Пусане', 'r', 5, 'turn'),
@@ -252,6 +256,8 @@ const trophiesHtml = () => S.troph.length ? `<h2>Коллекция</h2><div>${S
 const back = `<button class="btn" data-a="back">Назад</button>`;
 const wrap = inner => `${topBar()}${inner}`;
 
+// ближайший матч недели: лиги и расписание ещё не сделаны, поэтому пока список пуст
+const nextMatchText = () => { const m = (S.sched || []).filter(x => x.week === S.turn && !x.played)[0]; return m ? esc(m.title) : 'Нет'; };
 const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
   return `<div class="map"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
@@ -275,11 +281,14 @@ function viewMain() {
     ? S.hand.map((c, i) => `<div class="arow" data-a="card" data-v="${i}">${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="${esc(c.t)}" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${TEXT}</div></div></div>`).join('')
     : '<div class="dim">Набор на неделю пуст.</div>';
   return wrap(`
-    <div class="card week"><div><h2>Неделя ${S.turn}</h2>${S.jetlag ? '<div class="minus">Джетлаг!</div>' : ''}</div><div class="inds">${ind}</div></div>
+    <div class="card week">
+      <div><h2>Неделя ${S.turn}</h2><div class="inds">${ind}</div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг!</div>' : ''}</div>
+      <div class="nextm"><div class="dim">Предстоящие матчи</div><b>${nextMatchText()}</b></div>
+    </div>
     <div class="card">
       <h2>Карта мира</h2>
       ${mapHtml()}
-      <div class="dim" style="margin-top:6px">Ты здесь: <b>${REGIONS[S.region].name}</b>. Нажми на выноску, чтобы открыть лигу.</div>
+      <div class="loc"><img src="img/logo_${S.region}.webp" alt="${esc(REGIONS[S.region].league)}"><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span></div>
     </div>
     <div class="card">
       <h2>Повседневные действия</h2>
