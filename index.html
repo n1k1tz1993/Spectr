@@ -140,6 +140,15 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .iconsgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .iconsgrid .iconpick{padding:2px;width:100%}
 .iconsgrid .iconpick .aic{width:100%;height:auto;aspect-ratio:1}
+.gold{color:var(--gold)}
+.ser{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line);font-size:14px}
+.ser span{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ser span:last-child{text-align:right}
+.ser span.win{color:var(--txt);font-weight:700}
+.ser .ssc{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900}
+.ser.mine{background:rgba(245,197,66,.08);border-radius:6px}
+.tvs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:8px;margin:12px 0 6px;font-weight:700}
+.tsc{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:34px;color:var(--gold)}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -392,25 +401,170 @@ function bureauFight(kind) {
     S.view = 'bureau';
   });
 }
+// ---------- турниры ----------
+// Любой турнир играется по случайному формату из четырёх.
+const NAMES = [...NICKS, 'Kira', 'Ronin', 'Jinx', 'Axel', 'Luna', 'Rex', 'Zane', 'Ivy', 'Onyx', 'Sable'];
+const FMT = {
+  se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
+  g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
+  g16: { n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
+  sw20: { n: 20, name: 'Турнир на 20 бойцов', desc: 'Швейцарская система, 5 раундов Bo1. Двое лучших — сразу в полуфинал, 3–6 места играют плей-ин Bo3. Полуфинал и финал Bo5.' }
+};
+const STAGE_NAMES = { QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал', GS: 'Групповой этап', DEC: 'Серия за выход из группы', PI: 'Плей-ин' };
+const stageName = k => STAGE_NAMES[k] || (k.startsWith('SW') ? 'Швейцарская система · раунд ' + k.slice(2) : k.startsWith('TB') ? 'Решающие бои' : k);
+const GL = ['A', 'B', 'C', 'D'];
+
 function playTour(t) {
   const T = TIERS[t], r = S.region;
   if (t > S.tiers[r] || !S.tourPass) return;
   S.tourPass = false;                      // одно действие — один турнир
-  const round = n => {
-    const p = rnd(T.lo, T.hi), name = NICKS[rnd(0, NICKS.length - 1)];
-    startFight(`${T.name} · раунд ${n} из 3`, fighter(name, p, npcRating(p), false), won => {
-      if (won && n < 3) { round(n + 1); return; }
-      if (won) {
-        if (!S.troph.some(x => x.r === r && x.n === T.name)) S.troph.push({ r, n: T.name });
-        if (t + 1 > S.tiers[r] && t + 1 <= 2) S.tiers[r] = t + 1;
-        S.power = Math.max(S.power, Math.min(POWER_TOURNEY_CAP, S.power + T.gain));
-        histAdd(T.name + ' · победа');
-        logMsg(T.name + ': победа! Трофей в коллекции.');
-      } else { histAdd(T.name + ' · поражение в раунде ' + n); logMsg(T.name + ': поражение в раунде ' + n + '.'); }
-      S.view = 'tour';
-    });
-  };
-  round(1);
+  const fmt = Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
+  const names = shuffle(NAMES.filter(x => x !== S.nick)).slice(0, n - 1);
+  const ps = [{ id: 0, name: S.nick, me: true, seed: Math.random() }].concat(names.map((name, i) => {
+    const p = rnd(T.lo, T.hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
+    return { id: i + 1, name, p, rating: npcRating(p), seed: Math.random(), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
+  }));
+  const R = { tier: t, region: r, fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, tbOut: {}, tbn: 0 };
+  const ids = shuffle(ps.map(x => x.id));
+  if (fmt === 'se8') { tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, ids[i], ids[i + 1], 3); }
+  if (fmt === 'g12') {
+    R.groups = { A: ids.slice(0, 6), B: ids.slice(6, 12) }; tBegin(R, 'GS');
+    for (const g of ['A', 'B']) tRR(R, R.groups[g], 2, 'Группа ' + g, 1);
+  }
+  if (fmt === 'g16') {
+    R.groups = { A: ids.slice(0, 4), B: ids.slice(4, 8), C: ids.slice(8, 12), D: ids.slice(12, 16) }; tBegin(R, 'GS');
+    for (const g of GL) tRR(R, R.groups[g], 1, 'Группа ' + g, 2);
+  }
+  if (fmt === 'sw20') { tBegin(R, 'SW1'); for (let i = 0; i < 20; i += 2) tAdd(R, ids[i], ids[i + 1], 1); }
+  S.trun = R;
+  tRun(R, false);
+  S.view = 'trun';
+}
+function tBegin(R, k) { R.stage = k; R.stages.push(k); }
+function tAdd(R, a, b, bo, label, grp) { const m = { id: R.M.length, st: R.stage, a, b, bo, g: [], done: false, w: null, label: label || '', grp: grp || null }; R.M.push(m); return m; }
+function tRR(R, ids, bo, label, rounds) { for (let r = 0; r < rounds; r++) for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) tAdd(R, ids[i], ids[j], bo, label + (rounds > 1 ? ' · круг ' + (r + 1) : '')); }
+const tStage = (R, k) => R.M.filter(m => m.st === k);
+const tLoser = m => (m.w === m.a ? m.b : m.a);
+const tMine = R => R.done ? null : tStage(R, R.stage).find(m => !m.done && (m.a === 0 || m.b === 0));
+function tGame(m, w) {   // записать бой серии; Bo2 — всегда 2 боя, 1:1 — ничья
+  m.g.push(w);
+  const wa = m.g.filter(x => x === m.a).length, wb = m.g.length - wa;
+  if (m.bo === 2) { if (m.g.length === 2) { m.done = true; m.w = wa === wb ? null : wa > wb ? m.a : m.b; } }
+  else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
+}
+function tFighter(R, id) { const x = R.ps[id]; return x.me ? fighter(S.nick, effPower(), S.rating, true, S.ability) : fighter(x.name, x.p, x.rating, false, x.abil); }
+function tSimGame(R, a, b) {   // бой без показа — тем же движком, что и живой бой
+  const keep = F;
+  F = { a: tFighter(R, a), b: tFighter(R, b), t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
+  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;
+  finishFight();
+  const w = F.won ? a : b; F = keep; return w;
+}
+function tTable(R, ids, k) {   // таблица группы: Bo2 — очки 3/1/0, Bo1 — очко за победу
+  const t = {}; ids.forEach(id => { t[id] = { id, pts: 0, w: 0, d: 0, l: 0, gw: 0, gl: 0 }; });
+  for (const m of tStage(R, k)) {
+    if (!m.done || !t[m.a] || !t[m.b]) continue;
+    const wa = m.g.filter(x => x === m.a).length, wb = m.g.length - wa;
+    t[m.a].gw += wa; t[m.a].gl += wb; t[m.b].gw += wb; t[m.b].gl += wa;
+    if (m.w === null) { t[m.a].d++; t[m.b].d++; t[m.a].pts++; t[m.b].pts++; }
+    else { const W = t[m.w], L = t[tLoser(m)]; W.w++; L.l++; W.pts += m.bo === 2 ? 3 : 1; }
+  }
+  return Object.values(t).sort((x, y) => y.pts - x.pts || (y.gw - y.gl) - (x.gw - x.gl) || R.ps[x.id].seed - R.ps[y.id].seed);
+}
+function tQual16(R, g) {   // двое лучших; при споре на границе — решающий бой
+  const tab = tTable(R, R.groups[g], 'GS'), out = R.tbOut[g] || [], q = [];
+  for (const v of [...new Set(tab.map(r => r.pts))]) {
+    const need = 2 - q.length; if (need <= 0) break;
+    const L = tab.filter(r => r.pts === v && !out.includes(r.id)).map(r => r.id);
+    if (L.length <= need) q.push(...L);
+    else { const sh = shuffle(L); return { dec: [sh[0], sh[1]] }; }
+  }
+  for (const r of tab) if (q.length < 2 && !q.includes(r.id)) q.push(r.id);
+  return { q };
+}
+function tSwiss(R) {   // швейцарка: победы, Бухгольц
+  const st = R.stages.filter(k => k.startsWith('SW')), w = {}, opp = {}, played = {};
+  R.ps.forEach(x => { w[x.id] = 0; opp[x.id] = []; played[x.id] = []; });
+  for (const k of st) for (const m of tStage(R, k)) {
+    opp[m.a].push(m.b); opp[m.b].push(m.a);                 // для пар без повторов
+    if (m.done) { w[m.w]++; played[m.a].push(m.b); played[m.b].push(m.a); }
+  }
+  return R.ps.map(x => ({ id: x.id, w: w[x.id], l: played[x.id].length - w[x.id], bh: played[x.id].reduce((s, o) => s + w[o], 0), opp: opp[x.id] }))
+    .sort((a, b) => b.w - a.w || b.bh - a.bh || R.ps[a.id].seed - R.ps[b.id].seed);
+}
+function tAdvance(R) {
+  const k = R.stage, f = R.fmt, win = st => tStage(R, st).map(m => m.w);
+  const knock = st => { const lose = tStage(R, st).map(tLoser); R.alive = R.alive.filter(x => !lose.includes(x)); };
+  const finalStage = () => { tBegin(R, 'F'); const w = win('SF'); tAdd(R, w[0], w[1], 5); };
+  if (k === 'F') { knock('F'); R.done = true; R.winner = tStage(R, 'F')[0].w; return; }
+  if (k === 'SF') { knock('SF'); finalStage(); return; }
+  if (f === 'se8' || f === 'g16') {
+    if (k === 'QF') { knock('QF'); const w = win('QF'); tBegin(R, 'SF'); tAdd(R, w[0], w[1], 3); tAdd(R, w[2], w[3], 3); return; }
+  }
+  if (f === 'g12') {
+    if (k === 'GS') {
+      const A = tTable(R, R.groups.A, 'GS').map(r => r.id), B = tTable(R, R.groups.B, 'GS').map(r => r.id);
+      R.top = { A: A[0], B: B[0] }; R.alive = [A[0], B[0], A[1], A[2], B[1], B[2]];
+      tBegin(R, 'DEC'); tAdd(R, A[1], A[2], 5, 'Группа A'); tAdd(R, B[1], B[2], 5, 'Группа B'); return;
+    }
+    if (k === 'DEC') { knock('DEC'); const [wA, wB] = win('DEC'); tBegin(R, 'SF'); tAdd(R, R.top.A, wB, 5); tAdd(R, R.top.B, wA, 5); return; }
+  }
+  if (f === 'g16' && (k === 'GS' || k.startsWith('TB'))) {
+    if (k.startsWith('TB')) for (const m of tStage(R, k)) (R.tbOut[m.grp] = R.tbOut[m.grp] || []).push(tLoser(m));
+    const res = {}; let tb = false;
+    for (const g of GL) { res[g] = tQual16(R, g); if (res[g].dec) tb = true; }
+    if (tb) { tBegin(R, 'TB' + (++R.tbn)); for (const g of GL) if (res[g].dec) tAdd(R, res[g].dec[0], res[g].dec[1], 1, 'Решающий бой · группа ' + g, g); return; }
+    const q = g => res[g].q;
+    R.alive = GL.flatMap(q);
+    tBegin(R, 'QF');
+    tAdd(R, q('A')[0], q('B')[1], 3); tAdd(R, q('B')[0], q('A')[1], 3); tAdd(R, q('C')[0], q('D')[1], 3); tAdd(R, q('D')[0], q('C')[1], 3);
+    return;
+  }
+  if (f === 'sw20') {
+    if (k.startsWith('SW')) {
+      const n = +k.slice(2), tab = tSwiss(R);
+      if (n < 5) {   // пары по очкам, без повторных встреч
+        tBegin(R, 'SW' + (n + 1));
+        const list = tab.slice();
+        while (list.length) {
+          const a = list.shift(); let j = list.findIndex(b => !a.opp.includes(b.id)); if (j < 0) j = 0;
+          const b = list.splice(j, 1)[0]; tAdd(R, a.id, b.id, 1);
+        }
+        return;
+      }
+      const r = tab.map(x => x.id); R.top = r.slice(0, 2); R.alive = r.slice(0, 6);
+      tBegin(R, 'PI'); tAdd(R, r[2], r[5], 3, '3-е против 6-го'); tAdd(R, r[3], r[4], 3, '4-е против 5-го'); return;
+    }
+    if (k === 'PI') { knock('PI'); const [w36, w45] = win('PI'); tBegin(R, 'SF'); tAdd(R, R.top[0], w45, 5); tAdd(R, R.top[1], w36, 5); return; }
+  }
+}
+function tRun(R, auto) {   // доиграть всё, что можно без игрока; auto — и бои игрока тоже
+  let guard = 0;
+  while (!R.done && guard++ < 500) {
+    let waiting = false;
+    for (const m of tStage(R, R.stage)) {
+      if (m.done) continue;
+      if ((m.a === 0 || m.b === 0) && !auto) { waiting = true; continue; }
+      while (!m.done) tGame(m, tSimGame(R, m.a, m.b));
+    }
+    if (waiting) return;
+    const k = R.stage;
+    tAdvance(R);
+    if (R.out == null && !R.alive.includes(0)) R.out = k;   // игрок выбыл — дальше турнир досчитывается сам
+  }
+}
+const placeText = R => R.winner === 0 ? 'победа' : R.out === 'F' ? 'финал, 2-е место' : R.out === 'SF' ? 'полуфинал' : R.out === 'QF' ? 'четвертьфинал' : R.out === 'DEC' || R.out === 'PI' ? stageName(R.out).toLowerCase() : 'групповой этап';
+function finishTour() {
+  const R = S.trun; if (!R || !R.done) return;
+  const T = TIERS[R.tier], r = R.region;
+  if (R.winner === 0) {
+    if (!S.troph.some(x => x.r === r && x.n === T.name)) S.troph.push({ r, n: T.name });
+    if (R.tier + 1 > S.tiers[r] && R.tier + 1 <= 2) S.tiers[r] = R.tier + 1;
+    S.power = Math.max(S.power, Math.min(POWER_TOURNEY_CAP, S.power + T.gain));
+    histAdd(T.name + ' · победа');
+    logMsg(T.name + ': победа! Трофей в коллекции.');
+  } else { histAdd(T.name + ' · ' + placeText(R)); logMsg(T.name + ': ' + placeText(R) + '. Победитель — ' + R.ps[R.winner].name + '.'); }
+  S.trun = null; S.view = 'tour';
 }
 
 // ---------- виды ----------
@@ -587,7 +741,7 @@ function fside(x, id) {
     <div class="ff-name" style="${fpos(...L.name)}"><b>${esc(x.abil.name)}</b><span id="${id}-acd"></span></div>`;
 }
 function viewFight() {
-  if (!F) { S.view = 'main'; return viewMain(); }
+  if (!F) { S.view = S.trun ? 'trun' : 'main'; return S.trun ? viewTRun() : viewMain(); }
   return `<div class="ff"><div class="ffbox">
     <button class="ff-back" data-a="fback" style="${fpos(18, 112, 131, 190)}" aria-label="Назад"></button>
     ${fside(F.a, 'fa')}${fside(F.b, 'fb')}
@@ -634,7 +788,36 @@ function fightLoop() {
     if (F.done) clearInterval(FT);
   }, 100);
 }
-const VIEWS = { fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+function viewTRun() {
+  const R = S.trun;
+  if (!R) { S.view = 'tour'; return viewTour(); }
+  const f = FMT[R.fmt], me = tMine(R);
+  const nm = id => id === 0 ? `<b class="gold">${esc(S.nick)}</b>` : esc(R.ps[id].name);
+  const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
+  const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${m.a === 0 || m.b === 0 ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
+  let h = `<div class="card"><img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2><div class="dim">${f.desc}</div>
+    <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div></div>`;
+  if (R.done) {
+    const won = R.winner === 0;
+    h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? 'Ты выиграл турнир!' : 'Турнир окончен'}</div>
+      <div class="dim" style="margin-top:6px">${won ? 'Трофей отправится в коллекцию.' : 'Твой результат: ' + placeText(R) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.'}</div>
+      <button class="btn gold" data-a="tfinish">Завершить</button></div>`;
+  } else if (me) {
+    const opp = me.a === 0 ? me.b : me.a, o = R.ps[opp], mine = me.g.filter(x => x === 0).length;
+    h += `<div class="card"><h3>Твой матч · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
+      <div class="tvs"><div>${esc(S.nick)}<br>${rateHtml(S.rating, 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${esc(o.name)}<br>${rateHtml(o.rating, 'mid')}</div></div>
+      <div class="dim" style="text-align:center">Bo${me.bo}${me.bo === 2 ? ' · возможна ничья' : ''} · бой ${me.g.length + 1}</div>
+      <button class="btn gold" data-a="tplay">В бой</button><button class="btn" data-a="tauto">Досчитать турнир</button></div>`;
+  }
+  if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
+  if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
+  if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
+  const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW')) && (m.a === 0 || m.b === 0) && m.done);
+  if (myGroup.length) h += `<div class="card"><h3>Твои бои в группе</h3>${myGroup.map(series).join('')}</div>`;
+  for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
+  return wrap(h);
+}
+const VIEWS = { trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!S) { app.innerHTML = viewSetup(); return; }
@@ -667,6 +850,14 @@ function act(a, v) {
     case 'rest': if (spend()) { clearJet(); S.power += 5; logMsg('Отдых: бонус.'); S.view = 'rest'; } break;
     case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
+    case 'tplay': {
+      const R = S.trun, m = R && tMine(R); if (!m) return;
+      const opp = m.a === 0 ? m.b : m.a, o = R.ps[opp];
+      startFight(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, fighter(o.name, o.p, o.rating, false, o.abil), won => { tGame(m, won ? 0 : opp); tRun(R, false); S.view = 'trun'; });
+      break;
+    }
+    case 'tauto': if (S.trun) tRun(S.trun, true); break;
+    case 'tfinish': finishTour(); break;
     case 'fspeed': if (F) F.speed = +v; return;
     case 'fskip': if (F) { finishFight(); fightPaint(); } return;
     case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); fightPaint(); } return;
