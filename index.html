@@ -207,6 +207,15 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .eslmed img{width:46px;height:46px;border-radius:50%;background:#fff;padding:4px;border:2px solid var(--gold);display:block}
 .eslmed b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:var(--gold)}
 .dos{text-align:center}
+.tmodal{position:relative;width:min(100%,420px);max-height:calc(100vh - 40px);overflow:auto;background:#151B2E;border:1px solid var(--line);border-radius:16px;padding:18px 16px;text-align:center}
+.tmodal p{text-align:left;line-height:1.45}
+.tmodal h3{text-align:left;margin:14px 0 6px}
+.tmodal ul{text-align:left;margin:0;padding-left:20px;line-height:1.5}
+.tmlogo{width:150px;height:150px;object-fit:contain;display:block;margin:0 auto 6px}
+.tmx{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1B2238;color:var(--txt);font-size:16px;cursor:pointer}
+.spons{display:flex;flex-direction:column;gap:6px;text-align:left}
+.spon{display:flex;align-items:center;gap:8px}
+.spon i{font-style:normal;width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#0B0F1C;font-weight:800;font-size:13px}
 .dosimg{width:200px;height:200px;margin:0 auto;border-radius:16px;overflow:hidden;background:var(--bg);border:2px solid var(--gold)}
 .dosimg img{width:100%;height:100%;object-fit:cover;display:block}
 .dos .abrow{text-align:left}
@@ -1170,6 +1179,83 @@ function viewCard() {
     <button class="btn gold" data-a="use" ${S.actions <= 0 ? 'disabled' : ''}>Использовать (1 действие)</button>
     ${back}`);
 }
+// ---------- описания команд для библиотеки: ключ — логотип команды ----------
+const TEAM_INFO = {
+  us_0: { city: 'Нью-Йорк', country: 'US',
+    desc: 'Gotham Volt — команда, которая живёт в ритме мегаполиса и никогда не спит. Её бойцы привыкли к шуму, давлению и вниманию миллионов зрителей. Стиль команды — стремительный натиск, словно разряд молнии между небоскрёбами. В Нью-Йорке говорят: если Volt вышли на арену, свет в городе мигает.',
+    idea: ['Энергия мегаполиса', 'Небоскрёбы и молния в логотипе', 'Быстрый и агрессивный стиль'],
+    sponsors: ['Manhattan Grid Energy', 'Skyline Media', 'Empire Rail'] },
+  us_1: { city: 'Лос-Анджелес', country: 'US',
+    desc: 'Pacific Mirage — самая звёздная команда Америки и любимица публики. В её составе собираются те, кого знают в лицо даже люди, далёкие от боёв Спектров. Команда тренируется на побережье и выходит на арену так, будто снимается в кино. За яркой картинкой скрывается жёсткая дисциплина, иначе мираж давно бы рассеялся.',
+    idea: ['Яркие звёзды лиги', 'Океан и калифорнийский закат', 'Шоу и внимание публики'],
+    sponsors: ['Sunset Studios', 'Coastline Apparel', 'Mirage Records'] },
+  us_2: { city: 'Техас', country: 'US',
+    desc: 'Lone Star Fangs — гордость Техаса, команда с характером гремучей змеи. Бойцы долго выжидают, а потом наносят один точный и смертельный удар. Болельщики приходят на матчи в ковбойских шляпах и встречают каждую победу громким рёвом. Здесь уважают силу, честный бой и верность своей звезде.',
+    idea: ['Гремучая змея и одинокая звезда', 'Выжидание и точный удар', 'Техасская гордость'],
+    sponsors: ['Red Mesa Oil', 'Longhorn Motors', 'Alamo Steakhouse'] },
+  us_3: { city: 'Лас-Вегас', country: 'US',
+    desc: 'Neon Jackpots — команда, которая всегда ставит всё на кон. Её стратегии кажутся безумными, пока не приносят неожиданную победу. Бойцы обожают рискованные приёмы и играют так, будто на арене крутится рулетка. Против них никогда не знаешь, сорвут они джекпот или проиграют всё.',
+    idea: ['Рискованные стратегии', 'Неожиданные победы', 'Неоновый блеск Вегаса'],
+    sponsors: ['Golden Strip Resorts', 'Lucky Seven Entertainment', 'Desert Neon'] },
+  us_4: { city: 'Чикаго', country: 'US',
+    desc: 'Great Lakes Forge — команда, созданная промышленным союзом Чикаго. Её девиз прост: чемпионов не находят, их выковывают. Тренировки здесь тяжёлые, как работа у раскалённой наковальни, зато бойцы выходят крепкими как сталь. Команда редко блистает, но почти никогда не ломается.',
+    idea: ['Промышленный союз', 'Наковальня и волны Великих озёр', '«Выковывает» чемпионов'],
+    sponsors: ['Lakeside Steelworks', 'Windy City Freight', 'Union Tools'] },
+  us_5: { city: 'Флорида', country: 'US',
+    desc: 'Everglade Vipers — команда из болот Флориды, где выживает только самый быстрый. Бойцы делают ставку на скорость, хитрость и молниеносные атаки. Соперник часто не успевает понять, откуда пришёл удар. Как и гадюка в высокой траве, команда прячется до последнего момента.',
+    idea: ['Скорость и хитрость', 'Молниеносные атаки', 'Гадюка из болот Флориды'],
+    sponsors: ['Gator Bay Logistics', 'Orange Coast Drinks', 'Swamp Runner Boats'] },
+  us_6: { city: 'Сиэтл', country: 'US',
+    desc: 'Cascade Circuit — команда, которую основали технологические компании Сиэтла. Здесь каждый бой разбирают на данные, а тренировки строят по алгоритмам. Логотип соединяет лес, горы и электронные схемы — природу и технологии. Бойцы Circuit холодны и расчётливы, как процессор в вычислительном центре.',
+    idea: ['Команда технологических компаний', 'Схемы, леса и горы', 'Анализ и расчёт'],
+    sponsors: ['Evergreen Systems', 'Rainier Cloud', 'Puget Robotics'] },
+  us_7: { city: 'Денвер', country: 'US',
+    desc: 'Mile High Talons — горная школа бойцов из Денвера. На высоте в милю над уровнем моря не хватает воздуха, и это закаляет выдержку. Бойцы Talons славятся тем, что не сдаются даже в самых безнадёжных боях. Как орёл, они терпеливо кружат над соперником, прежде чем вонзить когти.',
+    idea: ['Горная школа бойцов', 'Железная выдержка', 'Когти орла и снежные пики'],
+    sponsors: ['Rocky Peak Outdoor', 'High Altitude Water', 'Front Range Airlines'] },
+  us_8: { city: 'Новый Орлеан', country: 'US',
+    desc: 'Crescent Hex — самая загадочная команда Америки. Она выросла в городе джаза, карнавалов и старых легенд о колдовстве. Способности её бойцов непредсказуемы, и соперники часто говорят, что против Hex играть жутко. Болельщики верят, что под полумесяцем команде помогает сама удача.',
+    idea: ['Мистика Нового Орлеана', 'Полумесяц и череп', 'Непредсказуемые способности'],
+    sponsors: ['Bayou Jazz Hall', 'Mardi Gras Events', 'Voodoo Lane Coffee'] },
+  us_9: { city: 'Союз университетов', country: 'US',
+    desc: 'Varsity Union — команда, собранная из лучших студентов-Спектров страны. Её поддерживает союз университетов, и вместо легенд здесь играют будущие звёзды. Бойцам не хватает опыта, зато хватает дерзости и желания доказать, что они уже готовы. Для многих Varsity Union — первый шаг в большую лигу.',
+    idea: ['Лучшие студенты-Спектры', 'Общее знамя университетов', 'Молодость и амбиции'],
+    sponsors: ['National College League', 'Campus Books', 'Scholar Energy Bars'] },
+  us_10: { city: 'Военно-спортивная организация', country: 'US',
+    desc: 'Sentinel Command — команда ветеранов и курсантов военно-спортивной организации. Каждый бой она проводит как операцию: с разведкой, планом и чётким выполнением. Дисциплина здесь важнее таланта, а ошибки разбирают до последней секунды. Соперники признают: пробить строй Sentinel почти невозможно.',
+    idea: ['Ветераны и курсанты', 'Дисциплина и расчёт', 'Сторожевая башня в логотипе'],
+    sponsors: ['Fort Sentinel Academy', 'Ironclad Gear', 'Patriot Rations'] },
+  us_11: { city: 'Детройт', country: 'US',
+    desc: 'Detroit Overdrive — команда автомобильных корпораций Детройта. Её стиль — мощь и непрерывное наступление на полных оборотах. Бойцы Overdrive не умеют играть от обороны и всегда давят на газ. Когда команда разгоняется, остановить её не может почти никто.',
+    idea: ['Автомобильные корпорации', 'Мощь и поршень в логотипе', 'Наступательный стиль'],
+    sponsors: ['Motor City Works', 'Overdrive Engines', 'Great Lakes Tires'] }
+};
+const SPONSOR_COLORS = ['#F5C542', '#4FD1FF', '#FF6B8B', '#7CFF8A', '#B98CFF'];
+function viewTeams() {   // библиотека: команды лиг по регионам; нажатие — окно с описанием
+  const r = S.treg != null ? S.treg : S.region;
+  const tabs = REGIONS.map((R, i) => `<button class="btn ${i === r ? 'here' : ''}" style="flex:1;text-align:center;width:auto;padding:8px 4px;font-size:13px" data-a="teams" data-v="${i}">${LSHORT[i]}</button>`).join('');
+  const list = LDB.teams.filter(t => t[0] === r);
+  let h = `<div class="card"><h2>Команды лиг</h2><div class="dim">Профессиональные команды регионов: откуда они и кто за ними стоит.</div><div class="row">${tabs}</div></div>
+    <div class="card"><h3><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h3>${list.map(t => {
+      const I = TEAM_INFO[t[2]];
+      return `<button class="erow" data-a="tsel" data-v="${t[2]}"><img class="tlogo" style="width:40px;height:40px" src="img/team/${t[2]}.webp" alt=""><span style="flex:1;text-align:left"><b>${esc(t[1])}</b>${I ? ' ' + flagOf(I.country) : ''}<br><span class="dim" style="font-size:12px">${esc(I ? I.city : t[4] || '')}</span></span></button>`;
+    }).join('')}</div>`;
+  const T = S.tsel ? LDB.teams.find(t => t[2] === S.tsel) : null;
+  if (T) {
+    const I = TEAM_INFO[T[2]];
+    h += `<div class="ovl" data-a="tsel" data-v=""><div class="tmodal" data-a="noop">
+      <button class="tmx" data-a="tsel" data-v="" aria-label="Закрыть">✕</button>
+      <img class="tmlogo" src="img/team/${T[2]}.webp" alt="${esc(T[1])}">
+      <h2>${esc(T[1])} ${I ? flagOf(I.country) : ''}</h2>
+      ${I ? `<div class="gold">${esc(I.city)}</div>
+      <p>${esc(I.desc)}</p>
+      <h3>Коротко</h3><ul>${I.idea.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <h3>Спонсоры</h3><div class="spons">${I.sponsors.map((x, k) => `<span class="spon"><i style="background:${SPONSOR_COLORS[k % SPONSOR_COLORS.length]}">${esc(x[0])}</i>${esc(x)}</span>`).join('')}</div>`
+      : '<p class="dim">Описание команды пока не заполнено.</p>'}
+    </div></div>`;
+  }
+  return wrap(h + back);
+}
 function viewLib() {
   const r = REGIONS[S.region];
   const seen = S.read[S.region] || [];
@@ -1180,7 +1266,8 @@ function viewLib() {
   save();
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Библиотека</div>
     <h2>Заметка ${i + 1} · ${esc(r.name)}</h2><div style="text-align:left">${TEXT}</div><div class="bonus nt">Без эффекта</div></div>
-    <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>${back}`);
+    <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
+    <button class="btn gold" data-a="teams" data-v="${S.region}">Команды лиг</button>${back}`);
 }
 
 function itemCard(it, i, act, on) {
@@ -1492,7 +1579,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
@@ -1597,6 +1684,8 @@ function act(a, v) {
       S.rating -= it.cost; S.items.push(i); logMsg('Открыт артефакт: ' + itemName(S, i) + '.'); break;
     }
     case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
+    case 'teams': S.treg = +v; S.tsel = null; S.view = 'teams'; break;
+    case 'tsel': S.tsel = v || null; break;
     case 'dossier': S.dreg = +v; S.dsel = null; S.view = 'dossier'; break;
     case 'dsel': S.dsel = +v < 0 ? null : +v; break;
     case 'esl': if (S.power >= ESL_MIN_POWER && S.actions > 0) { eslNew(); S.view = 'esl'; } break;
