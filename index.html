@@ -229,15 +229,17 @@ function useCard(i) {
 // ---------- бой ----------
 // Всё считается от одной характеристики — силы (10–125). Сила игроку не показывается.
 const FIGHT = {
-  hp: p => Math.round(150 + p * 1.5),       // здоровье
-  qi: p => Math.round(30 + p * 0.3),        // запас Цы: 4–7 ударов до передышки
+  hp: p => Math.round(270 + p * 2.5),       // здоровье
+  qi: p => Math.round(55 + p * 0.3),        // запас Цы: хватает на способность (5 ударов) и пару обычных
   def: p => p * 0.2,                        // защита: урон × 100 / (100 + защита)
   dmg: p => 25 + p * 0.25,                  // базовый урон удара
   cost: 10,                                 // Цы за удар
   regen: 0.04,                              // восстановление Цы в секунду, доля от запаса
   cd: 1.0,                                  // скорость атаки одинаковая: удар раз в секунду
   rest: 3,                                  // передышка без Цы, потом Цы полная
-  diceDiv: 25                               // поправка к броску: разница сил / diceDiv
+  diceDiv: 25,                              // поправка к броску: разница сил / diceDiv
+  abilityHits: 5,                           // способность: урон и цена как у 5 ударов сразу
+  abilityChance: 0.3                        // шанс применить её, когда Цы хватает
 };
 const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
 let F = null, FT = null;
@@ -267,6 +269,16 @@ function fightStep(dt) {
     x.cd -= dt;
     if (x.cd > 0) continue;
     if (x.qi < FIGHT.cost) { x.rest = FIGHT.rest; F.ev.unshift(x.name + ': Цы иссякла, передышка 3 с'); F.ev = F.ev.slice(0, 6); F.last = { who: x === F.a ? 'a' : 'b', kind: 'rest' }; continue; }
+    if (x.qi >= FIGHT.cost * FIGHT.abilityHits && Math.random() < FIGHT.abilityChance) {
+      // способность: автоматически, нельзя заблокировать, урон 5 ударов, цена 5 ударов
+      const dmg = Math.round(FIGHT.abilityHits * FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p)) * (0.9 + Math.random() * 0.2));
+      x.qi -= FIGHT.cost * FIGHT.abilityHits; x.cd = FIGHT.cd;
+      y.hp = Math.max(0, y.hp - dmg);
+      F.ev.unshift(`${x.name}: Спектральный удар! −${dmg}`); F.ev = F.ev.slice(0, 6);
+      F.last = { who: y === F.a ? 'a' : 'b', kind: 'abil', dmg };
+      if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
+      continue;
+    }
     x.qi -= FIGHT.cost; x.cd = FIGHT.cd;
     const r = strike(x, y);
     F.ev.unshift(r.kind === 'crit' ? `${x.name}: критический удар! −${r.dmg}` : r.kind === 'dodge' ? `${y.name} уклоняется` : r.kind === 'block' ? `${y.name} блокирует удар` : `${x.name} бьёт: −${r.dmg}`);
@@ -491,7 +503,7 @@ function fightPaint() {
   }
   if (F.last) {
     const fx = document.getElementById((F.last.who === 'a' ? 'fa' : 'fb') + '-fx');
-    const t = { crit: ['Крит! −' + F.last.dmg, 'minus'], dodge: ['Уклон!', 'nt'], block: ['Блок!', 'nt'], hit: ['−' + F.last.dmg, 'minus'], rest: ['Нет Цы', 'rand'] }[F.last.kind];
+    const t = { crit: ['Крит! −' + F.last.dmg, 'minus'], dodge: ['Уклон!', 'nt'], block: ['Блок!', 'nt'], hit: ['−' + F.last.dmg, 'minus'], rest: ['Нет Цы', 'rand'], abil: ['Спектральный удар! −' + F.last.dmg, 'rand'] }[F.last.kind];
     fx.textContent = t[0]; fx.className = 'fx show ' + t[1]; void fx.offsetWidth; fx.classList.add('go');
     F.last = null;
   }
