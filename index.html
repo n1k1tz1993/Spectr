@@ -3,6 +3,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0E1220">
 <title>Спектр</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&display=swap">
 <style>
 :root{--bg:#0E1220;--panel:#171D30;--line:#2A3350;--txt:#E8ECF8;--dim:#8A93B0;--gold:#F5C542;--good:#3DDC84;--bad:#FF5A5A;--nt:#9AA3BF}
 *{box-sizing:border-box}
@@ -102,7 +104,7 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .ff-face{display:flex;align-items:center;justify-content:center}
 .ff-face span{width:62%;aspect-ratio:1;background:rgba(255,255,255,.92);color:#111;border-radius:2cqw;display:flex;align-items:center;justify-content:center;font-weight:700}
 .ff-plate{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6cqw}
-.ff-plate b{font-size:4.6cqw;max-width:95%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ff-plate b{font-size:4.2cqw;line-height:1.1;max-width:95%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ff-plate span{color:var(--dim);font-size:3.2cqw}
 .ff-plate em{font-style:normal;color:var(--gold);font-size:3cqw;min-height:3.6cqw}
 .ff-bar{border-radius:3cqw;overflow:hidden}
@@ -125,6 +127,15 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .ff-fx2{align-items:flex-end;padding-bottom:4cqw;font-size:4.6cqw}
 .ff-fx.go{animation:fxup .9s ease-out forwards}
 .ff-fx.qi{color:#2FD7FF}
+.rt{display:inline-flex;align-items:center;gap:.3em;font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;line-height:1;letter-spacing:.02em}
+.rt img{height:1.5em;width:auto;filter:drop-shadow(0 0 4px rgba(0,0,0,.6))}
+.rt b{font-weight:900;background:linear-gradient(180deg,#FFFFFF 0%,#FFE7A3 55%,#F5C542 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 2px 10px rgba(245,197,66,.25);padding-right:.12em}
+.rt.big{font-size:28px}
+.rt.mid{font-size:22px}
+.rt.rf{font-size:4.2cqw}
+.rt.rf img{height:1.25em}
+.rate{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.rate .lg{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -212,10 +223,12 @@ const TIERS = [
 ];
 const POWER_TOURNEY_CAP = 65;
 const LEAGUES = [
-  { min: 3000, n: 'Мастер', c: '#FF7AE6' }, { min: 2500, n: 'Алмаз', c: '#7AE7FF' }, { min: 2000, n: 'Платина', c: '#B8F2E6' },
-  { min: 1500, n: 'Золото', c: '#F5C542' }, { min: 1000, n: 'Серебро', c: '#D0D6E6' }, { min: 0, n: 'Бронза', c: '#D08A4E' }
+  { min: 3000, n: 'Мастер', c: '#FF7AE6', id: 'master' }, { min: 2500, n: 'Алмаз', c: '#7AE7FF', id: 'diamond' }, { min: 2000, n: 'Платина', c: '#B8F2E6', id: 'platinum' },
+  { min: 1500, n: 'Золото', c: '#F5C542', id: 'gold' }, { min: 1000, n: 'Серебро', c: '#D0D6E6', id: 'silver' }, { min: 0, n: 'Бронза', c: '#D08A4E', id: 'bronze' }
 ];
 const leagueOf = r => LEAGUES.find(l => r >= l.min);
+// рейтинг: значок лиги + число пафосным наклонным шрифтом
+const rateHtml = (r, cls = '') => { const l = leagueOf(r); return `<span class="rt ${cls}" title="${l.n}"><img src="img/rank_${l.id}.webp" alt="${l.n}"><b>${r}</b></span>`; };
 
 // ---------- сохранение ----------
 function load() {
@@ -393,7 +406,7 @@ const topBar = () => {
   const lg = leagueOf(S.rating);
   return `<div class="top"><div class="ava">${esc(S.nick.slice(0, 2).toUpperCase())}</div>
     <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
-    <div class="rate"><div class="lg" style="color:${lg.c}">${lg.n}</div><b>${S.rating}</b></div></div>`;
+    <div class="rate">${rateHtml(S.rating, 'big')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div></div>`;
 };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
@@ -494,7 +507,7 @@ function viewTour() {
   }).join('');
   return wrap(`<div class="card"><img class="scene" src="img/tours.webp" alt="Турнирная сетка">
       <div style="margin-top:6px">Еженедельные турниры — отличный шанс набраться опыта и проявить себя!</div>
-      <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3 · Твой рейтинг: <b>${S.rating}</b> · <span style="color:${lg.c}">${lg.n}</span></div>
+      <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3 </div><div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
     </div>
     <div class="card">${banners}</div>${logHtml()}<button class="btn" data-a="toBureau">Назад в бюро</button>`);
 }
@@ -504,7 +517,7 @@ function viewBureau() {
   return wrap(`
     <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров"><h2>Бюро</h2>
       <div class="dim">Всемирная организация Спектров: турниры, поединки, рейтинговая система. Рейтинг у игрока ведётся по боям здесь.</div>
-      <div class="dim" style="margin-top:6px">Твой рейтинг: <b>${S.rating}</b> · <span style="color:${lg.c}">${lg.n}</span></div>
+      <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
     </div>
     <div class="card"><h3>Таблица местной лиги</h3><div class="dim">Заглушка: данные лиги появятся позже.</div>
       <table class="tbl">${rows}</table>
@@ -554,7 +567,7 @@ function fside(x, id) {
   const L = FL[id];
   return `<div class="ff-face" style="${fpos(...L.face)}"><span>${x.me ? 'Лицо' : 'Соперник'}</span></div>
     <div class="ff-fx" id="${id}-fx" style="${fpos(...L.face)}"></div><div class="ff-fx ff-fx2" id="${id}-fx2" style="${fpos(...L.face)}"></div>
-    <div class="ff-plate" style="${fpos(...L.plate)}"><b>${esc(x.name)}</b><span>Рейтинг ${x.rating}</span><em id="${id}-rest"></em></div>
+    <div class="ff-plate" style="${fpos(...L.plate)}"><b>${esc(x.name)}</b>${rateHtml(x.rating, 'rf')}</div>
     <div class="ff-bar hp" style="${fpos(...L.hp)}"><i id="${id}-hp"></i></div>
     <div class="ff-bar qi" style="${fpos(...L.qi)}"><i id="${id}-qi"></i></div>
     <button class="ff-icon" id="${id}-ab" data-a="fabil" data-v="${id}" style="${fpos(...L.icon)}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}</button>
@@ -582,9 +595,8 @@ function fightPaint() {
     if (!hp) return;
     hp.style.width = (x.hp / x.hpMax * 100) + '%';
     document.getElementById(id + '-qi').style.width = (x.qi / x.qiMax * 100) + '%';
-    document.getElementById(id + '-rest').textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : '';
     const ready = !F.done && x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct;
-    document.getElementById(id + '-acd').textContent = x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово — нажми' : 'Мало Цы';
+    document.getElementById(id + '-acd').textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово — нажми' : 'Мало Цы';
     document.getElementById(id + '-ab').classList.toggle('cd', !ready);
   }
   for (const e of F.fx) {
