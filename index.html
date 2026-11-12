@@ -279,7 +279,8 @@ const TIERS = [
 ];
 const POWER_TOURNEY_CAP = 65;
 const LEAGUES = [
-  { min: 3000, n: 'Мастер', c: '#FF7AE6', id: 'master' }, { min: 2500, n: 'Алмаз', c: '#7AE7FF', id: 'diamond' }, { min: 2000, n: 'Платина', c: '#B8F2E6', id: 'platinum' },
+  // рейтинг = сила × 30: старт 30 — бронза, 50 — золото, 55–59 — платина, 60–69 — алмаз, 70+ — мастер (сильнейший в мире — 77)
+  { min: 2100, n: 'Мастер', c: '#FF7AE6', id: 'master' }, { min: 1800, n: 'Алмаз', c: '#7AE7FF', id: 'diamond' }, { min: 1650, n: 'Платина', c: '#B8F2E6', id: 'platinum' },
   { min: 1500, n: 'Золото', c: '#F5C542', id: 'gold' }, { min: 1000, n: 'Серебро', c: '#D0D6E6', id: 'silver' }, { min: 0, n: 'Бронза', c: '#D08A4E', id: 'bronze' }
 ];
 const leagueOf = r => LEAGUES.find(l => r >= l.min);
@@ -325,7 +326,7 @@ const histAdd = t => { S.hist.unshift({ r: S.region, t }); S.hist = S.hist.slice
 const histTo = (H, r, t) => { H.hist.unshift({ r, t }); H.hist = H.hist.slice(0, 40); };
 const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 6); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
-const npcRating = p => p * 20;                 // у соперников рейтинг основан на силе
+const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
 function endTurn() {
   S.turn++; S.actions = 3;
   S.effects = S.effects.filter(e => e.to >= S.turn);
@@ -456,7 +457,7 @@ function bureauFight(kind) {
   const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с Элитным Спектром';
   let opp, name;
   if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55
-    const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 20)));
+    const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 30)));
     name = NAMES[rnd(0, NAMES.length - 1)];
     opp = fighter(name, p, npcRating(p), false);
   } else {                   // один из 12 про-игроков региона
@@ -484,7 +485,7 @@ function eslFill() {   // добрать сгенерированными — к
   const E = S.esl, taken = new Set([...G.players.map(H => H.nick), ...E.pick.map(k => eslElite(k).name), ...E.gen.map(g => g.name)]);
   const pool = shuffle(NAMES.filter(n => !taken.has(n)));
   while (eslCount() < E.size) {
-    const p = Math.max(LADDER_MIN, Math.min(ESL_MIN_POWER, Math.round((S.rating + rnd(-200, 200)) / 20))), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
+    const p = Math.max(LADDER_MIN, Math.min(ESL_MIN_POWER, Math.round((S.rating + rnd(-200, 200)) / 30))), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
     E.gen.push({ name: pool.pop() || ('Боец ' + (E.gen.length + 1)), p, rating: npcRating(p), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } });
   }
 }
@@ -532,10 +533,12 @@ const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55;   // про-игроко
 const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [['Seoul Phoenix', null, 2], ['Busan Titans', null, 1]];
 const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
 const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал' };
-const proPower = k => k < PRO_COUNT ? Math.round(95 - k * 40 / (PRO_COUNT - 1)) : 54 - (k - PRO_COUNT) * 2;   // место в регионе → сила: 12 про-игроков 95…55, остальные ниже
+// Элитные Спектры — 12 сильнейших в каждом регионе, сила 50–77 по общему мировому рейтингу (77 — сильнейший в мире); остальные слабее 50
+const ELITE_RANK = (() => { const all = []; for (let r = 0; r < 5; r++) LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).slice(0, 12).forEach(o => all.push(o)); all.sort((a, b) => b.x[2] - a.x[2] || a.i - b.i); const m = {}; all.forEach((o, k) => { m[o.i] = Math.floor(77 - k * 27 / (all.length - 1)); }); return m; })();
+const proPower = (k, i) => k < PRO_COUNT ? ELITE_RANK[i] : 48 - (k - PRO_COUNT) * 2;
 function lgPool(r) {   // все 20 бойцов региона из базы, сильнейшие сверху
-  return LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2]).map(({ x, i }, k) => {
-    const p = proPower(k), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
+  return LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).map(({ x, i }, k) => {
+    const p = proPower(k, i), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
     return { name: x[1], p, rating: npcRating(p), country: x[3], face: (i * 7 + r * 5) % FACE_COUNT, abil: { name: x[4] || an, desc: ad, icon: (i * 11 + r * 13) % ABIL_ICON_COUNT } };
   });
 }
