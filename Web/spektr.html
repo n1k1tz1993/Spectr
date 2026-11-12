@@ -35,6 +35,17 @@ h3{font-size:16px;margin:12px 0 6px}
 input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#0B0F1C;color:var(--txt);font-size:16px;font-family:inherit}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.week{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.week h2{margin:0}
+.inds{display:flex;gap:6px}
+.ind{width:20px;height:20px;border-radius:4px;background:#3A7BFF;display:inline-block}
+.ind.off{background:#2A3350;opacity:.7}
+.mapph{height:180px;background:#fff;color:#111;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:8px}
+.arow{display:flex;gap:12px;align-items:stretch;background:#222A44;border-radius:12px;padding:8px;margin-top:8px;cursor:pointer}
+.pic{width:84px;height:116px;background:#fff;color:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:12px;padding:4px;flex:0 0 84px}
+.arow .tx{flex:1;min-width:0}
+.ttl{font-weight:700;font-size:15px}
+.ds{font-size:13px;color:var(--dim);margin-top:4px}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -196,29 +207,30 @@ const wrap = inner => `${topBar()}${inner}`;
 
 function viewMain() {
   const done = S.actions <= 0;
-  const hand = S.hand.length
-    ? S.hand.map((c, i) => `<div><div class="sq" data-a="card" data-v="${i}">${esc(c.t)}</div></div>`).join('')
-    : '<div class="dim">Набор на ход пуст.</div>';
+  const ind = [0, 1, 2].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
+  const rows = S.hand.length
+    ? S.hand.map((c, i) => `<div class="arow" data-a="card" data-v="${i}"><div class="pic">${esc(c.t)}</div><div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${TEXT}</div></div></div>`).join('')
+    : '<div class="dim">Набор на неделю пуст.</div>';
   return wrap(`
+    <div class="card week"><div><h2>Неделя ${S.turn}</h2>${S.jetlag ? '<div class="minus">Джетлаг!</div>' : ''}</div><div class="inds">${ind}</div></div>
     <div class="card">
-      <div class="dim">Ход ${S.turn} · Действий: <b>${S.actions}</b> ${S.jetlag ? ' · <span class="minus">Джетлаг!</span>' : ''}</div>
       <h2>Карта мира</h2>
-      ${REGIONS.map((r, i) => `<button class="btn ${i === S.region ? 'here' : ''}" data-a="${i === S.region ? 'noop' : 'noop'}">${r.name}${i === S.region ? ' · здесь' : ''}</button>`).join('')}
+      <div class="mapph">Карта</div>
+      ${REGIONS.map((r, i) => `<button class="btn ${i === S.region ? 'here' : ''}" data-a="noop">${r.name}${i === S.region ? ' · здесь' : ''}</button>`).join('')}
     </div>
     <div class="card">
-      <h2>Действия региона · набор на ход</h2>
-      <div class="row">${hand}</div>
-      <div class="dim" style="margin-top:8px">Нажми на квадрат, чтобы открыть действие.</div>
-    </div>
-    <div class="card">
-      <h2>Всегда доступно</h2>
+      <h2>Повседневные действия</h2>
       <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Сходить в библиотеку</button>
       <button class="btn" data-a="tour" ${done ? 'disabled' : ''}>Участвовать в местном турнире</button>
       <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых</button>
       <button class="btn" data-a="bureau" ${done ? 'disabled' : ''}>Сходить в бюро</button>
       <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион</button>
-      <button class="btn" data-a="pass">Пропустить ход</button>
-      ${done ? '<button class="btn gold" data-a="next">Следующий ход</button>' : ''}
+      <button class="btn" data-a="pass">Пропустить неделю</button>
+      ${done ? '<button class="btn gold" data-a="next">Следующая неделя</button>' : ''}
+    </div>
+    <div class="card">
+      <h2>Действия региона</h2>
+      ${rows}
     </div>
     ${trophiesHtml()}
     ${logHtml()}`);
