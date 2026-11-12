@@ -308,12 +308,18 @@ const FIGHT = {
   thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
 const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
-const ABIL_NAMES = ['Громовой разлом', 'Ледяная спираль', 'Пылающий шквал', 'Теневой рывок', 'Метеоритный кулак', 'Вихрь клинков', 'Пульс бездны', 'Звёздный град', 'Багровая волна', 'Призрачный каскад'];
+const ABIL_LIST = [   // способности соперников: название и что делает
+  ['Громовой разлом', 'раскалывает землю громовым ударом'], ['Ледяная спираль', 'закручивает вокруг врага ледяную спираль'],
+  ['Пылающий шквал', 'обрушивает шквал пылающих ударов'], ['Теневой рывок', 'исчезает в тени и бьёт со спины'],
+  ['Метеоритный кулак', 'врезается в противника, как метеорит'], ['Вихрь клинков', 'окружает врага вихрем клинков'],
+  ['Пульс бездны', 'выпускает пульс тёмной энергии'], ['Звёздный град', 'обрушивает град звёздных осколков'],
+  ['Багровая волна', 'накрывает врага багровой волной'], ['Призрачный каскад', 'наносит каскад призрачных ударов']
+];
 // иконки способностей: img/abil/0..19.webp
 const ABIL_ICON_COUNT = 20;
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
-const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || { name: ABIL_NAMES[rnd(0, ABIL_NAMES.length - 1)], icon: rnd(0, ABIL_ICON_COUNT - 1) },
+const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
   thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
 function startFight(title, opp, onEnd) {
   F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -338,7 +344,9 @@ function useAbility(x, y) {
   const dmg = Math.round(sum * mult);
   x.qi = Math.max(0, x.qi - x.qiMax * FIGHT.abilPct); x.acd = FIGHT.abilCd;
   y.hp = Math.max(0, y.hp - dmg);
-  fev(`${x.name}: «${x.abil.name}»${mult > 1 ? ' — крит ×' + mult.toFixed(1) : ''} · попало ${FIGHT.abilHits - miss} из ${FIGHT.abilHits}${crits ? ', критов ' + crits : ''} · −${dmg}`);
+  // в журнал — что делает удар (фраза, которую придумал игрок), и урон от него
+  const what = (x.abil.desc || 'наносит серию из пяти ударов').replace(/[.!\s]+$/, '');
+  fev(`${x.name} · «${x.abil.name}»: ${what}! −${dmg}${mult > 1 ? ' · крит ×' + mult.toFixed(1) : ''} (попало ${FIGHT.abilHits - miss} из ${FIGHT.abilHits}${crits ? ', критов ' + crits : ''})`);
   fxPush(y, `${x.abil.name}${mult > 1 ? ' ×' + mult.toFixed(1) : ''}! −${dmg}`, 'rand', 1);
   if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
 }
@@ -553,7 +561,8 @@ function viewSetup() {
     <div class="dim">Иконка</div>
     <div class="iconsgrid">${[...Array(ABIL_ICON_COUNT).keys()].map(i => `<button class="iconpick ${i === setupIcon ? 'on' : ''}" data-a="sicon" data-v="${i}">${abilIcon(i)}</button>`).join('')}</div>
     <div class="dim" style="margin-top:10px">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
-    <div class="dim" style="margin-top:10px">Описание</div><textarea id="adesc" maxlength="160" rows="3" placeholder="Как выглядит твой удар">${esc(setupADesc)}</textarea>
+    <div class="dim" style="margin-top:10px">Что делает твой сильнейший удар?</div><textarea id="adesc" maxlength="120" rows="2" placeholder="Например: обрушивает на врага огненный молот">${esc(setupADesc)}</textarea>
+    <div class="dim" style="margin-top:4px">Эта фраза появится в журнале боя, когда ты применишь удар.</div>
     <div class="dim" style="margin-top:6px">Способность — серия из 5 ударов одним броском. Применяется сама, когда Цы опускается до половины.</div>
     <button class="btn gold" data-a="start" style="margin-top:16px">Начать</button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
@@ -647,6 +656,7 @@ function act(a, v) {
       const nick = setupNick.trim();
       if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
       if (!setupAName.trim()) { setupErr = 'Придумай название своего удара.'; break; }
+      if (!setupADesc.trim()) { setupErr = 'Напиши, что делает твой удар.'; break; }
       S = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon }); S.hand = drawHand(); setupErr = ''; save(); break;
     }
     case 'card': S.view = 'card'; S.sel = +v; break;
