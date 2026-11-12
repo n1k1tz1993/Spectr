@@ -93,6 +93,8 @@ textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line)
 .abil span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .abil .aic{width:22px;height:22px;font-size:13px}
 .fx{font-size:18px}
+.acd{font-size:11px;color:var(--dim);min-height:14px}
+.abil.cd .aic{filter:grayscale(1) brightness(.6)}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -251,6 +253,7 @@ const FIGHT = {
   diceDiv: 40,                              // поправка к броску: разница сил / diceDiv
   abilHits: 5,                              // способность = 5 ударов, урон проходит одним ударом
   abilCrit: 0.2,                            // шанс крита способности
+  abilCd: 3,                                // перезарядка способности, секунд
   thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
 const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
@@ -260,7 +263,7 @@ const ABIL_ICONS = [['⚡', '#3A7BFF'], ['❄', '#2FD7FF'], ['🔥', '#FF6A3D'],
 const abilIcon = i => { const [g, c] = ABIL_ICONS[i % ABIL_ICONS.length]; return `<span class="aic" style="background:${c}">${g}</span>`; };
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil) => ({ name, p, rating, me, abil: abil || { name: ABIL_NAMES[rnd(0, ABIL_NAMES.length - 1)], icon: rnd(0, ABIL_ICONS.length - 1) },
-  thr: me ? FIGHT.thrMe : FIGHT.thrNpc, used: false, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
+  thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
 function startFight(title, opp, onEnd) {
   F = { title, a: fighter(S.nick, effPower(), S.rating, true, S.ability), b: opp, onEnd, t: 0, done: false, won: false, ev: [], speed: 1, last: null };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
@@ -281,7 +284,7 @@ function useAbility(x, y) {
   for (let i = 0; i < FIGHT.abilHits; i++) { const r = rollHit(x, y); sum += r.dmg; if (r.kind === 'crit') crits++; if (r.dmg === 0) miss++; }
   const mult = Math.random() < FIGHT.abilCrit ? 1.1 + Math.random() * 0.9 : 1;
   const dmg = Math.round(sum * mult);
-  x.qi = Math.max(0, x.qi - x.qiMax * FIGHT.abilPct); x.used = true;
+  x.qi = Math.max(0, x.qi - x.qiMax * FIGHT.abilPct); x.acd = FIGHT.abilCd;
   y.hp = Math.max(0, y.hp - dmg);
   fev(`${x.name}: «${x.abil.name}»${mult > 1 ? ' — крит ×' + mult.toFixed(1) : ''} · попало ${FIGHT.abilHits - miss} из ${FIGHT.abilHits}${crits ? ', критов ' + crits : ''} · −${dmg}`);
   F.last = { who: y === F.a ? 'a' : 'b', kind: 'abil', dmg, name: x.abil.name, mult };
@@ -290,7 +293,8 @@ function useAbility(x, y) {
 function fightStep(dt) {
   for (const [x, y] of [[F.a, F.b], [F.b, F.a]]) {
     if (F.done) return;
-    if (x.rest > 0) { x.rest -= dt; if (x.rest <= 0) { x.rest = 0; x.qi = x.qiMax; x.used = false; x.cd = 0.3; } continue; }
+    x.acd = Math.max(0, x.acd - dt);
+    if (x.rest > 0) { x.rest -= dt; if (x.rest <= 0) { x.rest = 0; x.qi = x.qiMax; x.cd = 0.3; } continue; }
     x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
     x.cd -= dt;
     if (x.cd > 0) continue;
@@ -302,7 +306,7 @@ function fightStep(dt) {
     F.last = { who: y === F.a ? 'a' : 'b', kind: r.kind, dmg: r.dmg };
     if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
     // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
-    if (!x.used && x.qi <= x.qiMax * x.thr && x.qi >= x.qiMax * FIGHT.abilPct) useAbility(x, y);
+    if (x.acd <= 0 && x.qi <= x.qiMax * x.thr && x.qi >= x.qiMax * FIGHT.abilPct) useAbility(x, y);
   }
   F.t += dt;
   if (F.t > 300 && !F.done) { F.done = true; F.won = F.a.hp / F.a.hpMax >= F.b.hp / F.b.hpMax; }
@@ -501,7 +505,7 @@ function viewSetup() {
 
 function fbox(x, id) {
   return `<div class="fbox"><div class="face">${x.me ? 'Лицо' : 'Соперник'}</div><b class="fname">${esc(x.name)}</b><div class="dim">Рейтинг ${x.rating}</div>
-    <div class="abil">${abilIcon(x.abil.icon)}<span>${esc(x.abil.name)}</span></div>
+    <div class="abil" id="${id}-ab">${abilIcon(x.abil.icon)}<span>${esc(x.abil.name)}</span></div><div class="acd" id="${id}-acd"></div>
     <div class="bar hp"><i id="${id}-hp"></i></div><div class="bar qi"><i id="${id}-qi"></i></div><div class="frest" id="${id}-rest"></div><div class="fx" id="${id}-fx"></div></div>`;
 }
 function viewFight() {
@@ -525,6 +529,8 @@ function fightPaint() {
     hp.style.width = (x.hp / x.hpMax * 100) + '%';
     qi.style.width = (x.qi / x.qiMax * 100) + '%';
     rs.textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : '';
+    document.getElementById(id + '-acd').textContent = x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : '';
+    document.getElementById(id + '-ab').classList.toggle('cd', x.acd > 0);
   }
   if (F.last) {
     const fx = document.getElementById((F.last.who === 'a' ? 'fa' : 'fb') + '-fx');
