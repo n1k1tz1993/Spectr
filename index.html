@@ -56,6 +56,8 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .lrow{position:absolute;display:flex;align-items:center;padding:0 4cqw;color:#E8ECF8;font-size:3.4cqw;line-height:1.1;overflow:hidden}
 .lped{position:absolute;transform:translate(-50%,-100%);color:var(--gold);font-weight:700;font-size:3cqw;text-align:center;white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.9)}
 .lclose{position:absolute;top:0;right:0;width:15%;height:10%;background:transparent;border:0;cursor:pointer}
+img.pic{object-fit:cover;padding:0;background:#fff}
+.bigpic{display:block;width:200px;height:276px;object-fit:cover;border-radius:10px;margin:0 auto}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -131,6 +133,11 @@ const PANELS = [
   { rows: [[817, 894], [912, 988], [1007, 1083]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1320 }
 ];
 const TIER_SHORT = ['Новички', 'Любители', 'Полупро'];
+// картинки действий: img/act/r<регион>_<номер>.webp и img/act/g_<номер>.webp (порядок как в списках выше)
+const IMGBY = {};
+REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${ri}_${i}.webp`; }));
+GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
+const picOf = c => IMGBY[c.t] || '';
 const TIERS = [
   { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
   { name: 'Любительский турнир', lo: 22, hi: 37, gain: 2 },
@@ -265,7 +272,7 @@ function viewMain() {
   const done = S.actions <= 0;
   const ind = [0, 1, 2].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
   const rows = S.hand.length
-    ? S.hand.map((c, i) => `<div class="arow" data-a="card" data-v="${i}"><div class="pic">${esc(c.t)}</div><div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${TEXT}</div></div></div>`).join('')
+    ? S.hand.map((c, i) => `<div class="arow" data-a="card" data-v="${i}">${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="${esc(c.t)}" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${TEXT}</div></div></div>`).join('')
     : '<div class="dim">Набор на неделю пуст.</div>';
   return wrap(`
     <div class="card week"><div><h2>Неделя ${S.turn}</h2>${S.jetlag ? '<div class="minus">Джетлаг!</div>' : ''}</div><div class="inds">${ind}</div></div>
@@ -296,7 +303,7 @@ function viewCard() {
   if (!c) { S.view = 'main'; return viewMain(); }
   return wrap(`
     <div class="card" style="text-align:center">
-      <div class="sq big" style="margin:0 auto">${esc(c.t)}</div>
+      ${picOf(c) ? `<img class="bigpic" src="${picOf(c)}" alt="${esc(c.t)}">` : `<div class="sq big" style="margin:0 auto">${esc(c.t)}</div>`}
       <h2>${esc(c.t)}</h2>
       <div style="text-align:left">${TEXT}</div>
       ${labelOf(c)}
