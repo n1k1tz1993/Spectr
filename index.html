@@ -200,6 +200,11 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .eslmed{flex:0 0 auto;text-align:center}
 .eslmed img{width:46px;height:46px;border-radius:50%;background:#fff;padding:4px;border:2px solid var(--gold);display:block}
 .eslmed b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:var(--gold)}
+.dos{text-align:center}
+.dosimg{width:200px;height:200px;margin:0 auto;border-radius:16px;overflow:hidden;background:var(--bg);border:2px solid var(--gold)}
+.dosimg img{width:100%;height:100%;object-fit:cover;display:block}
+.dos .abrow{text-align:left}
+.dos .abrow .aic{width:56px;height:56px;border-radius:10px;flex:0 0 auto}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -404,7 +409,7 @@ const ABIL_LIST = [   // способности соперников: назва
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
 const FACE_COUNT = 36;   // портреты: img/face/0..35.webp
-const faceImg = (i, cls = '') => `<img class="${cls}" src="img/face/${((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT}.webp" alt="">`;
+const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 120;   // 0–19 первый набор, 20–119 ещё пять наборов по 20
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
@@ -481,7 +486,7 @@ function bureauFight(kind) {
     name = NAMES[rnd(0, NAMES.length - 1)];
     opp = fighter(name, p, npcRating(p), false);
   } else {                   // один из 12 про-игроков региона
-    const f = lgPool(S.region).slice(0, PRO_COUNT)[rnd(0, PRO_COUNT - 1)];
+    const f = lgPool(S.region)[rnd(0, proCount(S.region) - 1)];
     name = f.name; opp = fighter(f.name, f.p, f.rating, false, f.abil, f.face);
   }
   startFight(title, opp, won => {
@@ -533,7 +538,7 @@ function viewEsl() {
       ${E.gen.length ? `<div class="dim" style="margin-top:6px">Добрано бойцов: ${E.gen.length}. <a href="#" data-a="eslclear" style="color:var(--gold)">Убрать</a></div>` : ''}</div>`;
   if (G.mode === 'coop') h += `<div class="card"><h3>Игроки в регионе ${REGIONS[S.region].name}</h3>${here.length ? `<div class="row">${here.map(i => `<button class="btn ${E.inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="eslinv" data-v="${i}">${E.inv.includes(i) ? '✓ ' : ''}${esc(G.players[i].nick)} ${flagOf(G.players[i].country)}</button>`).join('')}</div>` : '<div class="dim">Других игроков здесь нет.</div>'}</div>`;
   for (let r = 0; r < REGIONS.length; r++) {
-    const list = lgPool(r).slice(0, PRO_COUNT);
+    const list = lgPool(r).slice(0, proCount(r));
     h += `<div class="card"><h3><img class="tlogo" src="img/logo_${r}.webp" alt=""> Элитные Спектры · ${LSHORT[r]}</h3>${list.map((f, k) => {
       const key = r + ':' + k, on = E.pick.includes(key);
       return `<button class="erow ${on ? 'on' : ''}" data-a="eslpick" data-v="${key}"><span class="ava">${faceImg(f.face)}</span><span style="flex:1;text-align:left"><b>${esc(f.name)}</b> ${flagOf(f.country)}</span>${rateHtml(f.rating)}<span class="chk">${on ? '✓' : ''}</span></button>`;
@@ -545,7 +550,7 @@ function viewEsl() {
 // ---------- DreamHack: выпадает среди трёх действий недели; играют все игроки; 32 бойца; победа — +5 силы, кубка нет ----------
 function dhStart() {
   const hums = G.players.map((H, h) => h);
-  const elite = []; for (let r = 0; r < REGIONS.length; r++) lgPool(r).slice(0, PRO_COUNT).forEach(f => elite.push(f));
+  const elite = []; for (let r = 0; r < REGIONS.length; r++) lgPool(r).slice(0, proCount(r)).forEach(f => elite.push(f));
   elite.sort((a, b) => b.p - a.p);
   const bots = elite.slice(0, 32 - hums.length);
   const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() }))
@@ -559,18 +564,31 @@ function dhStart() {
 // Полуфинал и финал Bo5, каждая серия — один матч лиги. Топ-3 лиги едут на чемпионат мира.
 const LDB = {"teams":[[0,"Cloud9","t101",4],[0,"CLG","t102",4],[0,"Team Curse","t103",4],[0,"Dignitas","t104",1],[0,"Evil Geniuses","t105",2],[0,"Team Liquid","t106",6],[0,"Lyon","t107",4],[0,"MYM","t108",4],[0,"Complexity","t109c",4],[0,"TSM","t110",3],[1,"Alliance","t201",5],[1,"ALTERNATE aTTaX","t202",1],[1,"Fnatic","t203",6],[1,"G2 Esports","t204",5],[1,"MOUZ","t205m",4],[1,"Karmine Corp","t206",1],[1,"Ninjas in Pyjamas","t207n",4],[1,"Dark Passage","t208e",3],[1,"SK Gaming","t209",6],[1,"Beşiktaş Esports","t210b",3],[2,"Team Empire","t301",3],[2,"Зенит","t314",4],[2,"M19","t303",3],[2,"Moscow Five","t304",3],[2,"OneBreatch Gaming","t305",4],[2,"RoX","t306",4],[2,"ЦСКА","t313",3],[2,"Team Spirit","t308",4],[2,"Vega Squadron","t309",3],[2,"Virtus.pro","t310",1],[3,"ahq e-Sports Club","t401",2],[3,"EDG","t402",4],[3,"EHOME","t403",4],[3,"DetonatioN FocusMe","t404d",4],[3,"Invictus Gaming","t405",6],[3,"LGD Gaming","t406",1],[3,"Sentinels Singapore","t407",4],[3,"AZUBU Taipei Assassins","t4ta",3],[3,"Vici Gaming","t409",3],[3,"Team WE","t410",3],[4,"CJ Entus Blaze","t501",4],[4,"CJ Entus Frost","t502",6],[4,"Longzhu Gaming IM","t5lz",1],[4,"Jin Air Falcons","t504",3],[4,"Jin Air Stealths","t505",4],[4,"KT Rolster A","t506",4],[4,"KT Rolster B","t507",6],[4,"Najin Sword","t508",3],[4,"Najin Shield","t509",4],[4,"Samsung Galaxy","t510",3],[4,"SK Telecom T1","t511",3],[1,"SUPERMASSIVE","t211",4],[0,"INTZ","t111",2],[0,"CNB eSports Club","t112",1],[1,"Astralis","t212",5],[2,"Спартак","t312",3],[2,"NaVi","t57navi",4],[3,"AZUBU Taipei Snipers","t411",2],[3,"PENTAGRAM","t412",2],[4,"Newbee","t512",4]],"players":[[0,"IdRa",65,"US","Молниеносный рывок"],[0,"Meteos",61,"US","Яростный щит"],[0,"Oddie",57,"AR","Неистовый клинок"],[0,"Sneaky",61,"US","Молниеносный взрыв"],[0,"Bjergsen",61,"DK","Яростный клинок"],[0,"Hai",69,"US","Яростный взрыв"],[0,"Miracle-",65,"US","Теневой взрыв"],[0,"Revolta",57,"BR","Призрачный выпад"],[0,"Svenskeren",61,"DK","Ледяной вихрь"],[0,"jockster",55,"BR","Огненный шар"],[0,"Dyrus",62,"CA","Огненный щит"],[0,"NieN",62,"US","Ледяной щит"],[0,"fNb",52,"BR","Огненный залп"],[0,"WildTurtle",58,"US","Стальной залп"],[0,"MaCaO",54,"AR","Мощный удар"],[0,"DoubleLift",70,"US","Ледяной взрыв"],[0,"Tyler",68,"US","Мощный выпад"],[0,"Voyboy",65,"CA","Громовой взрыв"],[0,"Scarra",62,"US","Стальной удар"],[0,"BrTT",60,"BR","Ледяной клинок"],[1,"Froggen",70,"DK","Молниеносный щит"],[1,"MadFroG",62,"DE","Неистовый щит"],[1,"ZveN",68,"DK","Громовой клинок"],[1,"Reckless",72,"DK","Неистовый шар"],[1,"Kev1N",62,"DE","Теневой удар"],[1,"MickyX",55,"SK","Призрачный шар"],[1,"Shock",58,"SE","Стальной прыжок"],[1,"Araneae",55,"ES","Мощный взрыв"],[1,"YellowStar",60,"FR","Неистовый вихрь"],[1,"EdoBoy",52,"DE","Мощный прыжок"],[1,"xLord",70,"DE","Теневой клинок"],[1,"xPeke",67,"ES","Огненный удар"],[1,"Hjarnan",57,"SE","Яростный прыжок"],[1,"ForellenLord",63,"DE","Огненный прыжок"],[1,"Snoopeh",66,"GB","Молниеносный вихрь"],[1,"Nukeduck",68,"NL","Молниеносный клинок"],[1,"Jankos",61,"PL","Стальной выпад"],[1,"Wh1teL0tuS",56,"TR","Ледяной прыжок"],[1,"HollyPhoenix",52,"TR","Громовой залп"],[1,"k0u",59,"NO","Теневой прыжок"],[2,"Dendi",65,"UA","Огненный рывок"],[2,"Dread",60,"BY","Призрачный залп"],[2,"RamzessZ",61,"RU","Мощный рывок"],[2,"Save",57,"MD","Теневой шар"],[2,"TORONTOTOKYO",62,"KZ","Громовой прыжок"],[2,"KreoX",65,"RU","Теневой щит"],[2,"Happy",71,"RU","Яростный удар"],[2,"Solo",65,"RU","Громовой вихрь"],[2,"Dise",62,"RU","Молниеносный шар"],[2,"ZaKCanFly",58,"RU","Стальной рывок"],[2,"Hawk",60,"RU","Стальной вихрь"],[2,"Max",53,"BY","Теневой рывок"],[2,"Cash",67,"RU","Неистовый рывок"],[2,"Smurf",56,"RU","Ледяной рывок"],[2,"Inspired",52,"UZ","Неистовый прыжок"],[2,"Darien",65,"RU","Призрачный вихрь"],[2,"AlexIch",70,"RU","Громовой выпад"],[2,"FlashInTheNight",56,"RU","Огненный выпад"],[2,"Edward",65,"AM","Мощный щит"],[2,"TiTaN",57,"RU","Громовой щит"],[3,"ClearLove",72,"CN","Неистовый взрыв"],[3,"HaRleLuYaR",51,"SG","Мощный клинок"],[3,"Toyz",66,"TW","Стальной взрыв"],[3,"Misaya",72,"CN","Громовой рывок"],[3,"Doinb",67,"KR","Яростный выпад"],[3,"eer0",72,"CN","Призрачный клинок"],[3,"Fortitude",67,"CN","Яростный шар"],[3,"SwordArt",70,"TW","Теневой залп"],[3,"Dendy",70,"KR","Призрачный рывок"],[3,"infi",75,"CN","Призрачный удар"],[3,"Sky",72,"CN","Ледяной удар"],[3,"ColourFull",70,"CN","Неистовый залп"],[3,"TH000",70,"CN","Призрачный прыжок"],[3,"Life",58,"CN","Огненный вихрь"],[3,"Maple",59,"TW","Ледяной шар"],[3,"MiSTaKe",58,"TW","Молниеносный прыжок"],[3,"Ceros",68,"JP","Призрачный взрыв"],[3,"PawN",70,"KR","Стальной клинок"],[3,"kid",58,"TW","Молниеносный удар"],[3,"Sok",68,"KR","Неистовый выпад"],[4,"Faker",75,"KR","Молниеносный выпад"],[4,"Watch",66,"KR","Неистовый удар"],[4,"Reach",68,"KR","Мощный вихрь"],[4,"MC",65,"KR","Яростный вихрь"],[4,"Peanut",68,"KR","Ледяной выпад"],[4,"Moon",72,"KR","Яростный рывок"],[4,"Deft",67,"KR","Громовой удар"],[4,"KaKaO",65,"KR","Громовой шар"],[4,"inSec",65,"KR","Огненный клинок"],[4,"Flash",70,"KR","Огненный взрыв"],[4,"Lyn",72,"KR","Стальной щит"],[4,"Lawliet",66,"KR","Ледяной залп"],[4,"FoCuS",62,"KR","Молниеносный залп"],[4,"Flame",61,"KR","Призрачный щит"],[4,"Jaedong",75,"KR","Мощный шар"],[4,"Crown",68,"KR","Теневой выпад"],[4,"Ambition",70,"KR","Стальной шар"],[4,"MadLife",66,"KR","Мощный залп"],[4,"LustBoy",62,"KR","Яростный залп"],[4,"Imp",70,"KR","Теневой вихрь"]]};
 const LG_SIZE = r => r === 4 ? 14 : 12;
-const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55;   // про-игроков в регионе; сила соперников в лестнице
+const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55;
+const proCount = r => r === 1 ? 18 : PRO_COUNT;   // в Европе 18 Элитных Спектров, в остальных регионах по 12   // про-игроков в регионе; сила соперников в лестнице
 const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [['Seoul Phoenix', null, 2], ['Busan Titans', null, 1]];
 const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
 const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал' };
 // Элитные Спектры — 12 сильнейших в каждом регионе, сила 50–77 по общему мировому рейтингу (77 — сильнейший в мире); остальные слабее 50
-const ELITE_RANK = (() => { const all = []; for (let r = 0; r < 5; r++) LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).slice(0, 12).forEach(o => all.push(o)); all.sort((a, b) => b.x[2] - a.x[2] || a.i - b.i); const m = {}; all.forEach((o, k) => { m[o.i] = Math.floor(77 - k * 27 / (all.length - 1)); }); return m; })();
-const proPower = (k, i) => k < PRO_COUNT ? ELITE_RANK[i] : 48 - (k - PRO_COUNT) * 2;
-function lgPool(r) {   // все 20 бойцов региона из базы, сильнейшие сверху
-  return LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).map(({ x, i }, k) => {
-    const p = proPower(k, i), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
+const ELITE_RANK = (() => { const all = []; for (let r = 0; r < 5; r++) LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).slice(0, proCount(r)).forEach(o => all.push(o)); all.sort((a, b) => b.x[2] - a.x[2] || a.i - b.i); const m = {}; all.forEach((o, k) => { m[o.i] = Math.floor(77 - k * 27 / (all.length - 1)); }); return m; })();
+const proPower = (k, i, r) => k < proCount(r) ? ELITE_RANK[i] : 48 - (k - proCount(r)) * 2;
+// Элитные Спектры, расписанные вручную: регион → место в списке (с 0). Остальные места пока из старой базы.
+const ELITE_DATA = {
+  1: {
+    0: { n: 'MaDFroG', c: 'DE', p: 71, img: 'img/elite/eu_0.webp', a: 'Рунический клинок', d: 'Взмах рунического клинка сокрушает всё вокруг!', icon: 18,
+         bio: 'MaDFroG считается непревзойдённым мечником и одним из сильнейших Спектров во всей Европе. Доставая клинок из темноты, он сеет разрушения и не щадит никого ради победы.' }
+  }
+};
+const LPOOL = {};
+function lgPool(r) {   // все 20 бойцов региона, сильнейшие сверху
+  if (LPOOL[r]) return LPOOL[r];
+  const base = LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).map(({ x, i }, k) => {
+    const p = proPower(k, i, r), [an, ad] = ABIL_LIST[i % ABIL_LIST.length];
     return { name: x[1], p, rating: npcRating(p), country: x[3], face: (i * 7 + r * 5) % FACE_COUNT, abil: { name: x[4] || an, desc: ad, icon: (i * 11 + r * 13) % ABIL_ICON_COUNT } };
   });
+  for (const [k, e] of Object.entries(ELITE_DATA[r] || {})) base[+k] = { name: e.n, p: e.p, rating: npcRating(e.p), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon }, bio: e.bio, real: true };
+  const n = proCount(r), pros = base.slice(0, n).sort((a, b) => b.p - a.p);
+  return (LPOOL[r] = pros.concat(base.slice(n)));
 }
 const newSeason = (r, week, prev) => ({ r, season: prev ? prev.season + 1 : 1, phase: 'draft', draftEnd: week + DRAFT_WEEKS - 1, teams: null, M: [], sched: null, ri: 0, left: 0, champ: null, worlds: [] });
 const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues = REGIONS.map((_, r) => newSeason(r, 1)); };
@@ -1004,7 +1022,23 @@ function viewLib() {
   S.read[S.region] = [...(S.read[S.region] || []), i];
   save();
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Библиотека</div>
-    <h2>Заметка ${i + 1} · ${esc(r.name)}</h2><div style="text-align:left">${TEXT}</div><div class="bonus nt">Без эффекта</div></div>${back}`);
+    <h2>Заметка ${i + 1} · ${esc(r.name)}</h2><div style="text-align:left">${TEXT}</div><div class="bonus nt">Без эффекта</div></div>
+    <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>${back}`);
+}
+function viewDossier() {
+  const r = S.dreg != null ? S.dreg : S.region, list = lgPool(r).slice(0, proCount(r));
+  const tabs = REGIONS.map((R, i) => `<button class="btn ${i === r ? 'here' : ''}" style="flex:1;text-align:center;width:auto;padding:8px 4px;font-size:13px" data-a="dossier" data-v="${i}">${LSHORT[i]}</button>`).join('');
+  const one = S.dsel != null && list[S.dsel] ? list[S.dsel] : null;
+  let h = `<div class="card"><h2>Досье Элитных Спектров</h2><div class="dim">Сильнейшие Спектры регионов: кто они и на что способны.</div><div class="row">${tabs}</div></div>`;
+  if (one) {
+    h += `<div class="card dos"><div class="dosimg">${faceImg(one.face)}</div><h2>${esc(one.name)} ${flagOf(one.country)}</h2><div>${rateHtml(one.rating, 'mid')}</div>
+      <div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(one.abil.icon)}<div><b>${esc(one.abil.name)}</b><div class="dim">${esc(one.abil.desc)}</div></div></div>
+      <div style="margin-top:10px">${one.bio ? esc(one.bio) : '<span class="dim">Досье пока не заполнено.</span>'}</div>
+      <button class="btn" data-a="dsel" data-v="-1">К списку</button></div>`;
+  } else {
+    h += `<div class="card"><h3><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h3>${list.map((f, k) => `<button class="erow" data-a="dsel" data-v="${k}"><span class="ava">${faceImg(f.face)}</span><span style="flex:1;text-align:left"><b>${esc(f.name)}</b> ${flagOf(f.country)}<br><span class="dim" style="font-size:12px">${esc(f.abil.name)}</span></span>${rateHtml(f.rating)}</button>`).join('')}</div>`;
+  }
+  return wrap(h + back);
 }
 function viewRest() {
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Отдых</div>
@@ -1235,7 +1269,7 @@ function viewLTable() {
   const r = S.sel, L = G.leagues[r];
   let h = `<div class="card"><h2><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h2><div class="dim">${lgStatus(L)}</div></div>`;
   if (!L.teams) {
-    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Элитные Спектры региона:</div><table class="tbl">${lgPool(r).slice(0, PRO_COUNT).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
+    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Элитные Спектры региона:</div><table class="tbl">${lgPool(r).slice(0, proCount(r)).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
       ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${esc(H.nick)} ${flagOf(H.country)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
   } else {
     const t = lgTable(L);
@@ -1269,7 +1303,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
@@ -1357,6 +1391,8 @@ function act(a, v) {
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
+    case 'dossier': S.dreg = +v; S.dsel = null; S.view = 'dossier'; break;
+    case 'dsel': S.dsel = +v < 0 ? null : +v; break;
     case 'esl': if (S.power >= ESL_MIN_POWER && S.actions > 0) { eslNew(); S.view = 'esl'; } break;
     case 'eslsize': S.esl.size = +v; break;
     case 'eslpick': { const a2 = S.esl.pick, at = a2.indexOf(v); if (at >= 0) a2.splice(at, 1); else if (eslCount() < S.esl.size) a2.push(v); break; }
