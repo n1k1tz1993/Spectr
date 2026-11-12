@@ -206,11 +206,8 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .dos .abrow{text-align:left}
 .dos .abrow .aic{width:56px;height:56px;border-radius:10px;flex:0 0 auto}
 .item.on{border-color:var(--gold)}
+.item.prestige{background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(140,60,220,.14))}
 .item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
-.artgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
-.artgrid button{padding:0;border:2px solid transparent;border-radius:10px;background:none;aspect-ratio:1;overflow:hidden}
-.artgrid button.on{border-color:var(--gold)}
-.artgrid .aic{width:100%;height:100%;display:block}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -294,29 +291,35 @@ REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${
 GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
 IMGBY['DreamHack'] = 'img/act/dh.webp';
 const picOf = c => IMGBY[c.t] || '';
-// ---------- инвентарь: 10 предметов, открываются за рейтинг, надет один; дают +1…+10 к силе сверх потолка ----------
-// Предметы 1–9 — временные, пока не придут описания. 10-й — Артефакт: имя, описание и иконку игрок придумывает сам.
+// ---------- инвентарь: 20 артефактов, открываются за рейтинг (тратится один раз), надет один; дают +1…+10 к силе сверх потолка ----------
+// Иконка артефакта i — img/art/i.webp. Самый престижный — часы AUREON «Абсолют» (+10).
 const ITEMS = [
-  { n: 'Кольцо с осколком метеорита', d: 'Крошечный осколок, с которым легко совладать.', b: 1, cost: 300, icon: 0 },
-  { n: 'Браслет Цы', d: 'Помогает удерживать Цы в напряжённом бою.', b: 2, cost: 500, icon: 1 },
-  { n: 'Часы ускорения', d: 'Фрагмент метеорита ускоряет реакцию владельца.', b: 3, cost: 700, icon: 2 },
-  { n: 'Перчатки рудокопа', d: 'Руда вплетена прямо в ткань.', b: 4, cost: 900, icon: 5 },
-  { n: 'Амулет Спектра', d: 'Пульсирует в такт дыханию.', b: 5, cost: 1100, icon: 6 },
-  { n: 'Наручи шторма', d: 'Потрескивают от скрытого заряда.', b: 6, cost: 1300, icon: 10 },
-  { n: 'Плащ тени', d: 'Скрывает движения от взгляда соперника.', b: 7, cost: 1500, icon: 11 },
-  { n: 'Корона метеорита', d: 'Тяжёлая, но и сила в ней немалая.', b: 8, cost: 1800, icon: 15 },
-  { n: 'Сердце кометы', d: 'Камень, который почти невозможно контролировать.', b: 9, cost: 2100, icon: 16 },
-  { n: 'Артефакт', d: 'Твой собственный предмет силы.', b: 10, cost: 2500, icon: 19, art: true }
+  { n: 'Кольцо «Трещина»', d: 'Грубое кольцо с трещиной, сквозь которую сочится свет руды. С него начинают все.', b: 1, cost: 100 },
+  { n: 'Кулон «Осколок»', d: 'Осколок метеорита на простом шнурке. Слабый, но послушный.', b: 1, cost: 150 },
+  { n: 'Браслет «Первый импульс»', d: 'Кожаный браслет, который впервые учит чувствовать ток Цы.', b: 2, cost: 200 },
+  { n: 'Серьга «Искра»', d: 'Крошечная искра у самого уха — помогает услышать собственную Цы.', b: 2, cost: 300 },
+  { n: 'Булавка «Зацеп»', d: 'Самодельная булавка с куском руды. Держится крепко, как и её хозяин.', b: 3, cost: 400 },
+  { n: 'Кольцо «Фокус»', d: 'Огранённый камень собирает Цы в одну точку.', b: 3, cost: 500 },
+  { n: 'Браслет «Связь»', d: 'Плетёный браслет, связывающий дыхание и удар.', b: 4, cost: 600 },
+  { n: 'Подвеска «Призма»', d: 'Треугольная призма раскладывает поток Цы на чистые лучи.', b: 4, cost: 700 },
+  { n: 'Запонка «Дипломат»', d: 'Строгая запонка для тех, кто побеждает спокойно.', b: 5, cost: 800 },
+  { n: 'Зажим «Контроль»', d: 'Зажим, который не даёт Цы вырваться раньше времени.', b: 5, cost: 900 },
+  { n: 'Перстень «Монолит»', d: 'Тяжёлый перстень — сила, высеченная из цельного камня.', b: 6, cost: 1000 },
+  { n: 'Часы «Пульсар»', d: 'Кристаллы на безеле пульсируют в ритме боя.', b: 6, cost: 1100 },
+  { n: 'Кафф «Шёпот»', d: 'Кристаллы на ухе шепчут о следующем движении соперника.', b: 7, cost: 1200 },
+  { n: 'Брошь «Сияние»', d: 'Сияющая брошь, которую носят на больших сценах.', b: 7, cost: 1350 },
+  { n: 'Пряжка «Ядро»', d: 'В пряжке спрятано плотное ядро метеоритной руды.', b: 8, cost: 1500 },
+  { n: 'Кулон «Слеза Атлантики»', d: 'Камень в бриллиантовой оправе. Говорят, его подняли со дна океана.', b: 8, cost: 1650 },
+  { n: 'Браслет «Созвездие»', d: 'Звенья с кристаллами, как звёзды на ночном небе.', b: 9, cost: 1800 },
+  { n: 'Перстень «Суверен»', d: 'Золото и руда — знак того, кто правит своим регионом.', b: 9, cost: 2000 },
+  { n: 'Карманные часы «Вечность»', d: 'Старинный механизм, в котором время будто застыло.', b: 9, cost: 2200 },
+  { n: 'Часы AUREON «Абсолют»', d: 'Вершина мастерства вымышленного бренда AUREON. Роскошь отражает качество исполнения артефакта; эффективность в бою по-прежнему зависит от контроля Цы.', b: 10, cost: 2500 }
 ];
-const ART_ICONS = 20;   // img/art/0..19 — иконки предметов и артефакта
-const ART_NAMES = ['Кольцо «Трещина»', 'Кулон «Осколок»', 'Браслет «Первый импульс»', 'Серьга «Искра»', 'Булавка «Зацеп»',
-  'Кольцо «Фокус»', 'Браслет «Связь»', 'Подвеска «Призма»', 'Запонка «Дипломат»', 'Зажим «Контроль»',
-  'Перстень «Монолит»', 'Часы «Пульсар»', 'Кафф «Шёпот»', 'Брошь «Сияние»', 'Пряжка «Ядро»',
-  'Кулон «Слеза Атлантики»', 'Браслет «Созвездие»', 'Перстень «Суверен»', 'Карманные часы «Вечность»', 'Часы AUREON «Абсолют»'];
+const ART_ICONS = 20;
 const artImg = i => `<img class="aic" src="img/art/${(i | 0) % ART_ICONS}.webp" alt="">`;
 const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
-const itemName = (H, i) => ITEMS[i].art && H.art ? H.art.name : ITEMS[i].n;
-const itemIcon = (H, i) => artImg(ITEMS[i].art && H.art ? H.art.icon : ITEMS[i].icon);
+const itemName = (H, i) => ITEMS[i].n;
+const itemIcon = (H, i) => artImg(i);
 const TIERS = [
   { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
   { name: 'Любительский турнир', lo: 22, hi: 37, gain: 3 },
@@ -1075,23 +1078,15 @@ function viewLib() {
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>${back}`);
 }
 
-let artName = '', artDesc = '', artIcon = 19;
 function viewInv() {
   const own = S.items || [];
-  let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">Предметы с метеоритной рудой усиливают Спектра. Открываются за рейтинг (рейтинг тратится один раз). Надеть можно один предмет.</div>
+  let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">Украшения с метеоритной рудой усиливают Спектра. Каждый открывается один раз за рейтинг. Надеть можно один.</div>
     <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>`;
   h += ITEMS.map((it, i) => {
-    const has = own.includes(i), on = S.equip === i;
-    let act;
-    if (has) act = `<button class="btn ${on ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${on ? 'Снять' : 'Надеть'}</button>`;
-    else if (it.art && S.artMake) act = `<div style="margin-top:8px"><input id="artname" maxlength="28" placeholder="Название артефакта" value="${esc(artName)}"><textarea id="artdesc" maxlength="140" rows="2" placeholder="Описание" style="margin-top:6px">${esc(artDesc)}</textarea></div>
-        <div class="dim" style="font-size:12px;margin-top:6px">Облик: ${ART_NAMES[artIcon]}</div>
-        <div class="artgrid">${ART_NAMES.map((nm, k) => `<button class="${k === artIcon ? 'on' : ''}" data-a="aicon" data-v="${k}" title="${nm}">${artImg(k)}</button>`).join('')}</div>
-        <button class="btn gold" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Создать за ${it.cost} рейтинга</button>`;
-    else if (it.art) act = `<button class="btn" data-a="amake" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Создать артефакт — ${it.cost} рейтинга</button>`;
-    else act = `<button class="btn" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Открыть за ${it.cost} рейтинга</button>`;
-    const nm = it.art && S.art ? S.art.name : it.n, ds = it.art && S.art ? S.art.desc : it.d;
-    return `<div class="card item ${on ? 'on' : ''}"><div class="abrow" style="align-items:center">${itemIcon(S, i)}<div style="flex:1"><b>${esc(nm)}</b>${on ? ' <span class="gold">· надет</span>' : ''}<div class="dim">${esc(ds)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
+    const has = own.includes(i), on = S.equip === i, top = i === ITEMS.length - 1;
+    const act = has ? `<button class="btn ${on ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${on ? 'Снять' : 'Надеть'}</button>`
+      : `<button class="btn" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Открыть за ${it.cost} рейтинга</button>`;
+    return `<div class="card item ${on ? 'on' : ''} ${top ? 'prestige' : ''}"><div class="abrow" style="align-items:center">${artImg(i)}<div style="flex:1"><b>${esc(it.n)}</b>${on ? ' <span class="gold">· надет</span>' : ''}${top ? '<div class="gold" style="font-size:12px">★ Самый престижный артефакт</div>' : ''}<div class="dim">${esc(it.d)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
   }).join('');
   return wrap(h + back);
 }
@@ -1469,19 +1464,11 @@ function act(a, v) {
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
-    case 'inv': S.view = 'inv'; S.artMake = false; break;
-    case 'amake': S.artMake = true; artName = ''; artDesc = ''; artIcon = 19; break;
-    case 'aicon': { const n1 = document.getElementById('artname'), d1 = document.getElementById('artdesc'); if (n1) { artName = n1.value; artDesc = d1.value; } artIcon = (+v | 0) % ART_ICONS; break; }
+    case 'inv': S.view = 'inv'; break;
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
       if (S.items.includes(i) || S.rating < it.cost) return;
-      if (it.art) {
-        const n1 = document.getElementById('artname'), d1 = document.getElementById('artdesc');
-        artName = n1 ? n1.value.trim() : ''; artDesc = d1 ? d1.value.trim() : '';
-        if (!artName) { logMsg('Дай артефакту название.'); break; }
-        S.art = { name: artName, desc: artDesc || 'Мой собственный предмет силы.', icon: artIcon }; S.artMake = false;
-      }
-      S.rating -= it.cost; S.items.push(i); logMsg('Открыт предмет: ' + itemName(S, i) + '.'); break;
+      S.rating -= it.cost; S.items.push(i); logMsg('Открыт артефакт: ' + it.n + '.'); break;
     }
     case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
     case 'dossier': S.dreg = +v; S.dsel = null; S.view = 'dossier'; break;
