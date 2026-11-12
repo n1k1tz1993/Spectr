@@ -70,6 +70,20 @@ img.pic{object-fit:cover;padding:0;background:#fff}
 .tierbtn.locked img{filter:grayscale(1) brightness(.45)}
 .tierbtn .tag{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.75);color:var(--txt);font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px}
 .tierbtn .tag.gold{color:var(--gold)}
+.frow{display:flex;align-items:flex-start;gap:8px}
+.fbox{flex:1;position:relative;text-align:center;min-width:0}
+.face{width:100%;aspect-ratio:1;background:#fff;color:#111;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:6px}
+.fname{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vs{align-self:center;font-weight:700;color:var(--gold);padding-top:20px}
+.bar{height:10px;border-radius:5px;background:#0B0F1C;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;transition:width .1s linear}
+.bar.hp i{background:linear-gradient(90deg,#FF5A5A,#FF8A5A)}
+.bar.qi i{background:linear-gradient(90deg,#2FD7FF,#3A7BFF)}
+.frest{font-size:12px;color:var(--gold);min-height:16px;margin-top:4px}
+.fx{position:absolute;left:0;right:0;top:30%;font-size:22px;font-weight:800;text-shadow:0 2px 6px #000;opacity:0;pointer-events:none}
+.fx.go{animation:fxup .8s ease-out forwards}
+@keyframes fxup{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
+.flog{font-size:13px;line-height:1.5;background:#11162A;border-radius:10px;padding:8px 10px;margin-top:10px;min-height:100px}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -212,37 +226,92 @@ function useCard(i) {
   logMsg(c.t + ': ' + msg);
   S.view = 'main'; S.sel = null; save();
 }
+// ---------- бой ----------
+// Всё считается от одной характеристики — силы (10–125). Сила игроку не показывается.
+const FIGHT = {
+  hp: p => Math.round(150 + p * 1.5),       // здоровье
+  qi: p => Math.round(30 + p * 0.3),        // запас Цы: 4–7 ударов до передышки
+  def: p => p * 0.2,                        // защита: урон × 100 / (100 + защита)
+  dmg: p => 25 + p * 0.25,                  // базовый урон удара
+  cost: 10,                                 // Цы за удар
+  regen: 0.04,                              // восстановление Цы в секунду, доля от запаса
+  cd: 1.0,                                  // скорость атаки одинаковая: удар раз в секунду
+  rest: 3,                                  // передышка без Цы, потом Цы полная
+  diceDiv: 25                               // поправка к броску: разница сил / diceDiv
+};
+const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
+let F = null, FT = null;
+const fighter = (name, p, rating, me) => ({ name, p, rating, me, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
+function startFight(title, opp, onEnd) {
+  F = { title, a: fighter(S.nick, effPower(), S.rating, true), b: opp, onEnd, t: 0, done: false, won: false, ev: [], speed: 1, last: null };
+  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
+  S.view = 'fight';
+}
+function strike(x, y) {
+  const roll = rnd(1, 20), r = roll + Math.round((x.p - y.p) / FIGHT.diceDiv);  // бросок кубика d20 с поправкой на разницу сил
+  const base = FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p));
+  let kind = 'hit', dmg = 0;
+  if (roll === 20 || r >= 19) { kind = 'crit'; dmg = base * 2; }
+  else if (roll === 1 || r <= 3) kind = 'dodge';
+  else if (r <= 6) kind = 'block';
+  else dmg = base * (0.85 + Math.random() * 0.3);
+  dmg = Math.round(dmg);
+  y.hp = Math.max(0, y.hp - dmg);
+  return { kind, dmg };
+}
+function fightStep(dt) {
+  for (const [x, y] of [[F.a, F.b], [F.b, F.a]]) {
+    if (F.done) return;
+    if (x.rest > 0) { x.rest -= dt; if (x.rest <= 0) { x.rest = 0; x.qi = x.qiMax; x.cd = 0.3; } continue; }
+    x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
+    x.cd -= dt;
+    if (x.cd > 0) continue;
+    if (x.qi < FIGHT.cost) { x.rest = FIGHT.rest; F.ev.unshift(x.name + ': Цы иссякла, передышка 3 с'); F.ev = F.ev.slice(0, 6); F.last = { who: x === F.a ? 'a' : 'b', kind: 'rest' }; continue; }
+    x.qi -= FIGHT.cost; x.cd = FIGHT.cd;
+    const r = strike(x, y);
+    F.ev.unshift(r.kind === 'crit' ? `${x.name}: критический удар! −${r.dmg}` : r.kind === 'dodge' ? `${y.name} уклоняется` : r.kind === 'block' ? `${y.name} блокирует удар` : `${x.name} бьёт: −${r.dmg}`);
+    F.ev = F.ev.slice(0, 6);
+    F.last = { who: y === F.a ? 'a' : 'b', kind: r.kind, dmg: r.dmg };
+    if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
+  }
+  F.t += dt;
+  if (F.t > 300 && !F.done) { F.done = true; F.won = F.a.hp / F.a.hpMax >= F.b.hp / F.b.hpMax; }
+}
+const finishFight = () => { while (!F.done) fightStep(0.1); };
+
 function bureauFight(kind) {
   if (!spend()) return;
-  const opp = { p: rnd(70, 100) };
-  const won = Math.random() < winProb(effPower(), opp.p);
-  let d;
-  if (kind === 'ladder') {
-    const big = S.ladderGames < 10;
-    d = won ? (big ? 100 : 20) : -(big ? 100 : 25);
-    S.ladderGames++;
-  } else d = won ? 20 : -20;
-  S.rating = Math.max(0, S.rating + d);
-  histAdd((kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком') + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
-  logMsg((kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком') + ' · соперник ' + npcRating(opp.p) + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга).');
-  save();
+  const p = rnd(70, 100), name = NICKS[rnd(0, NICKS.length - 1)];
+  const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком';
+  startFight(title, fighter(name, p, npcRating(p), false), won => {
+    let d;
+    if (kind === 'ladder') { const big = S.ladderGames < 10; d = won ? (big ? 100 : 20) : -(big ? 100 : 25); S.ladderGames++; }
+    else d = won ? 20 : -20;
+    S.rating = Math.max(0, S.rating + d);
+    histAdd(title + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
+    logMsg(title + ' против ' + name + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга).');
+    S.view = 'bureau';
+  });
 }
 function playTour(t) {
   const T = TIERS[t], r = S.region;
-  if (t > S.tiers[r]) return;
-  let rounds = 0, won = true;
-  for (let i = 0; i < 3; i++) {
-    const opp = rnd(T.lo, T.hi);
-    if (Math.random() < winProb(effPower(), opp)) rounds++; else { won = false; break; }
-  }
-  if (won) {
-    if (!S.troph.some(x => x.r === r && x.n === T.name)) S.troph.push({ r, n: T.name });
-    if (t + 1 > S.tiers[r] && t + 1 <= 2) S.tiers[r] = t + 1;
-    S.power = Math.max(S.power, Math.min(POWER_TOURNEY_CAP, S.power + T.gain));
-    histAdd(T.name + ' · победа');
-    logMsg(T.name + ': победа! Трофей в коллекции.');
-  } else { histAdd(T.name + ' · поражение в раунде ' + (rounds + 1)); logMsg(T.name + ': поражение в раунде ' + (rounds + 1) + '.'); }
-  save();
+  if (t > S.tiers[r] || !S.tourPass) return;
+  S.tourPass = false;                      // одно действие — один турнир
+  const round = n => {
+    const p = rnd(T.lo, T.hi), name = NICKS[rnd(0, NICKS.length - 1)];
+    startFight(`${T.name} · раунд ${n} из 3`, fighter(name, p, npcRating(p), false), won => {
+      if (won && n < 3) { round(n + 1); return; }
+      if (won) {
+        if (!S.troph.some(x => x.r === r && x.n === T.name)) S.troph.push({ r, n: T.name });
+        if (t + 1 > S.tiers[r] && t + 1 <= 2) S.tiers[r] = t + 1;
+        S.power = Math.max(S.power, Math.min(POWER_TOURNEY_CAP, S.power + T.gain));
+        histAdd(T.name + ' · победа');
+        logMsg(T.name + ': победа! Трофей в коллекции.');
+      } else { histAdd(T.name + ' · поражение в раунде ' + n); logMsg(T.name + ': поражение в раунде ' + n + '.'); }
+      S.view = 'tour';
+    });
+  };
+  round(1);
 }
 
 // ---------- виды ----------
@@ -345,9 +414,9 @@ function viewRest() {
 function viewTour() {
   const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n), lg = leagueOf(S.rating);
   const banners = TIERS.map((t, i) => {
-    const locked = i > S.tiers[r];
+    const locked = i > S.tiers[r] || !S.tourPass;
     return `<button class="tierbtn ${locked ? 'locked' : ''}" data-a="play" data-v="${i}" ${locked ? 'disabled' : ''} aria-label="${t.name}">
-      <img src="img/tier_${i}.webp" alt="${t.name}">${locked ? '<span class="tag">Закрыт</span>' : has(t.name) ? '<span class="tag gold">Трофей есть</span>' : ''}</button>`;
+      <img src="img/tier_${i}.webp" alt="${t.name}">${i > S.tiers[r] ? '<span class="tag">Закрыт</span>' : !S.tourPass ? '<span class="tag">Сыгран на этой неделе</span>' : has(t.name) ? '<span class="tag gold">Трофей есть</span>' : ''}</button>`;
   }).join('');
   return wrap(`<div class="card"><img class="scene" src="img/tours.webp" alt="Турнирная сетка">
       <div style="margin-top:6px">Еженедельные турниры — отличный шанс набраться опыта и проявить себя!</div>
@@ -394,11 +463,61 @@ function viewSetup() {
   </div>`;
 }
 
-const VIEWS = { league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+function fbox(x, id) {
+  return `<div class="fbox"><div class="face">${x.me ? 'Лицо' : 'Соперник'}</div><b class="fname">${esc(x.name)}</b><div class="dim">Рейтинг ${x.rating}</div>
+    <div class="bar hp"><i id="${id}-hp"></i></div><div class="bar qi"><i id="${id}-qi"></i></div><div class="frest" id="${id}-rest"></div><div class="fx" id="${id}-fx"></div></div>`;
+}
+function viewFight() {
+  if (!F) { S.view = 'main'; return viewMain(); }
+  return wrap(`<div class="card fight"><h2>${esc(F.title)}</h2>
+    <div class="frow">${fbox(F.a, 'fa')}<div class="vs">VS</div>${fbox(F.b, 'fb')}</div>
+    <div class="dim" style="margin-top:6px">Красная полоса — здоровье, голубая — Цы.</div>
+    <div class="flog" id="flog"></div>
+    <div id="fend"></div>
+    <div class="row" id="fctl" style="margin-top:8px;flex-wrap:nowrap">
+      <button class="btn" data-a="fspeed" data-v="1" style="text-align:center">×1</button>
+      <button class="btn" data-a="fspeed" data-v="3" style="text-align:center">×3</button>
+      <button class="btn" data-a="fskip" style="text-align:center">Досчитать</button>
+    </div></div>`);
+}
+function fightPaint() {
+  if (!F) return;
+  for (const [x, id] of [[F.a, 'fa'], [F.b, 'fb']]) {
+    const hp = document.getElementById(id + '-hp'), qi = document.getElementById(id + '-qi'), rs = document.getElementById(id + '-rest');
+    if (!hp) return;
+    hp.style.width = (x.hp / x.hpMax * 100) + '%';
+    qi.style.width = (x.qi / x.qiMax * 100) + '%';
+    rs.textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : '';
+  }
+  if (F.last) {
+    const fx = document.getElementById((F.last.who === 'a' ? 'fa' : 'fb') + '-fx');
+    const t = { crit: ['Крит! −' + F.last.dmg, 'minus'], dodge: ['Уклон!', 'nt'], block: ['Блок!', 'nt'], hit: ['−' + F.last.dmg, 'minus'], rest: ['Нет Цы', 'rand'] }[F.last.kind];
+    fx.textContent = t[0]; fx.className = 'fx show ' + t[1]; void fx.offsetWidth; fx.classList.add('go');
+    F.last = null;
+  }
+  document.getElementById('flog').innerHTML = F.ev.map(e => `<div>${esc(e)}</div>`).join('');
+  if (F.done && !document.getElementById('fend').innerHTML) {
+    document.getElementById('fend').innerHTML = `<div class="bonus ${F.won ? 'plus' : 'minus'}" style="font-size:20px;text-align:center">${F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
+    document.getElementById('fctl').style.display = 'none';
+  }
+}
+function fightLoop() {
+  clearInterval(FT);
+  if (S.view !== 'fight' || !F) return;
+  fightPaint();
+  FT = setInterval(() => {
+    if (!F || S.view !== 'fight') { clearInterval(FT); return; }
+    for (let i = 0; i < F.speed && !F.done; i++) fightStep(0.1);
+    fightPaint();
+    if (F.done) clearInterval(FT);
+  }, 100);
+}
+const VIEWS = { fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 function render() {
   if (!S) { app.innerHTML = viewSetup(); return; }
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
+  fightLoop();
 }
 
 // ---------- действия ----------
@@ -419,8 +538,11 @@ function act(a, v) {
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
     case 'rest': if (spend()) { clearJet(); S.power += 5; logMsg('Отдых: бонус.'); S.view = 'rest'; } break;
-    case 'tour': if (spend()) { clearJet(); S.view = 'tour'; } break;
+    case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
+    case 'fspeed': if (F) F.speed = +v; return;
+    case 'fskip': if (F) { finishFight(); fightPaint(); } return;
+    case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
     case 'fight': bureauFight(v); break;
