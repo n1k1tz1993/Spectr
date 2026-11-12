@@ -205,6 +205,12 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .dosimg img{width:100%;height:100%;object-fit:cover;display:block}
 .dos .abrow{text-align:left}
 .dos .abrow .aic{width:56px;height:56px;border-radius:10px;flex:0 0 auto}
+.item.on{border-color:var(--gold)}
+.item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
+.artgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
+.artgrid button{padding:0;border:2px solid transparent;border-radius:10px;background:none;aspect-ratio:1;overflow:hidden}
+.artgrid button.on{border-color:var(--gold)}
+.artgrid .aic{width:100%;height:100%;display:block}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -288,9 +294,32 @@ REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${
 GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
 IMGBY['DreamHack'] = 'img/act/dh.webp';
 const picOf = c => IMGBY[c.t] || '';
+// ---------- инвентарь: 10 предметов, открываются за рейтинг, надет один; дают +1…+10 к силе сверх потолка ----------
+// Предметы 1–9 — временные, пока не придут описания. 10-й — Артефакт: имя, описание и иконку игрок придумывает сам.
+const ITEMS = [
+  { n: 'Кольцо с осколком метеорита', d: 'Крошечный осколок, с которым легко совладать.', b: 1, cost: 300, icon: 0 },
+  { n: 'Браслет Цы', d: 'Помогает удерживать Цы в напряжённом бою.', b: 2, cost: 500, icon: 1 },
+  { n: 'Часы ускорения', d: 'Фрагмент метеорита ускоряет реакцию владельца.', b: 3, cost: 700, icon: 2 },
+  { n: 'Перчатки рудокопа', d: 'Руда вплетена прямо в ткань.', b: 4, cost: 900, icon: 5 },
+  { n: 'Амулет Спектра', d: 'Пульсирует в такт дыханию.', b: 5, cost: 1100, icon: 6 },
+  { n: 'Наручи шторма', d: 'Потрескивают от скрытого заряда.', b: 6, cost: 1300, icon: 10 },
+  { n: 'Плащ тени', d: 'Скрывает движения от взгляда соперника.', b: 7, cost: 1500, icon: 11 },
+  { n: 'Корона метеорита', d: 'Тяжёлая, но и сила в ней немалая.', b: 8, cost: 1800, icon: 15 },
+  { n: 'Сердце кометы', d: 'Камень, который почти невозможно контролировать.', b: 9, cost: 2100, icon: 16 },
+  { n: 'Артефакт', d: 'Твой собственный предмет силы.', b: 10, cost: 2500, icon: 19, art: true }
+];
+const ART_ICONS = 20;   // img/art/0..19 — иконки предметов и артефакта
+const ART_NAMES = ['Кольцо «Трещина»', 'Кулон «Осколок»', 'Браслет «Первый импульс»', 'Серьга «Искра»', 'Булавка «Зацеп»',
+  'Кольцо «Фокус»', 'Браслет «Связь»', 'Подвеска «Призма»', 'Запонка «Дипломат»', 'Зажим «Контроль»',
+  'Перстень «Монолит»', 'Часы «Пульсар»', 'Кафф «Шёпот»', 'Брошь «Сияние»', 'Пряжка «Ядро»',
+  'Кулон «Слеза Атлантики»', 'Браслет «Созвездие»', 'Перстень «Суверен»', 'Карманные часы «Вечность»', 'Часы AUREON «Абсолют»'];
+const artImg = i => `<img class="aic" src="img/art/${(i | 0) % ART_ICONS}.webp" alt="">`;
+const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
+const itemName = (H, i) => ITEMS[i].art && H.art ? H.art.name : ITEMS[i].n;
+const itemIcon = (H, i) => artImg(ITEMS[i].art && H.art ? H.art.icon : ITEMS[i].icon);
 const TIERS = [
   { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
-  { name: 'Любительский турнир', lo: 22, hi: 37, gain: 2 },
+  { name: 'Любительский турнир', lo: 22, hi: 37, gain: 3 },
   { name: 'Полупрофессиональный турнир', lo: 40, hi: 55, gain: 5 }
 ];
 const POWER_TOURNEY_CAP = 65, POWER_MAX = 100, TROPHY_GAIN = 1, DH_GAIN = 5;
@@ -340,7 +369,7 @@ function newHero(nick, country, ability, face) {
 // ---------- механика ----------
 const DH_CARD = { t: 'DreamHack', k: 'dh' }, DH_CHANCE = 0.12;
 const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
-const heroPower = H => { let p = H.power; for (const e of H.effects) if (e.from <= H.turn && H.turn <= e.to) p += e.v; if (H.jetlag) p -= 5; return p; };
+const heroPower = H => { let p = H.power + itemBonus(H); for (const e of H.effects) if (e.from <= H.turn && H.turn <= e.to) p += e.v; if (H.jetlag) p -= 5; return p; };
 const effPower = () => heroPower(S);
 const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: from }); };
 const clearJet = () => { S.jetlag = 0; };
@@ -352,6 +381,7 @@ const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 6); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
 function endTurn() {
+  S.lgBonus = heroPower(S) - S.power;   // бонусы и минусы на конец своей недели — с ними играются матчи лиги
   S.turn++; S.actions = 3;
   S.effects = S.effects.filter(e => e.to >= S.turn);
   S.hand = drawHand();
@@ -637,7 +667,7 @@ const lgRating = (L, i) => { const T = L.teams[i]; return T.h != null ? G.player
 const lgHum = (L, i) => L.teams[i].h != null;
 function lgFighter(L, i) {
   const T = L.teams[i];
-  if (T.h != null) { const H = G.players[T.h]; return fighter(H.nick, heroPower(H) + T.bonus, H.rating, true, H.ability, H.face); }
+  if (T.h != null) { const H = G.players[T.h]; return fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus : heroPower(H)) + T.bonus, H.rating, true, H.ability, H.face); }
   return fighter(T.f.name, T.f.p + T.bonus, T.f.rating, false, T.f.abil, T.f.face);
 }
 function lgTable(L) {
@@ -742,7 +772,10 @@ function playTour(t) {
   if (inv.length) S.actions -= 1;          // позвать любое число игроков — одно действие
   S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
   const fmt = Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
-  const hums = [G.cur, ...inv];            // живые игроки: тот, чья неделя, и приглашённые
+  const invd = (S.tourInvade || []).filter(h => h !== G.cur && G.players[h] && !inv.includes(h));
+  invd.forEach(h => { G.players[h].skipNext = true; logTo(G.players[h], 'Ты вторгся на турнир игрока ' + S.nick + ' и пропустишь свою неделю.'); });
+  S.tourInvade = [];
+  const hums = [G.cur, ...inv, ...invd];   // живые игроки: тот, чья неделя, приглашённые и вторгшиеся
   const taken = G.players.map(H => H.nick);
   const names = shuffle(NAMES.filter(x => !taken.includes(x))).slice(0, n - hums.length);
   const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() })).concat(names.map((name, i) => {
@@ -915,11 +948,11 @@ function finishTour() {
         if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) { H.tiers[r] = R.tier + 1; msg += ' Открыт следующий турнир.'; }
         if (H.power < POWER_TOURNEY_CAP) H.power = Math.min(POWER_TOURNEY_CAP, H.power + T.gain);   // до 65 — прокачка
       }
-      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, 'esl')
+      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, H.rating += 200, 'esl')
         : R.kind === 'dh' ? (H.dhWon ? 'dhagain' : (H.dhWon = true, H.power = Math.min(POWER_MAX, H.power + DH_GAIN), 'dh'))
         : awardTrophy(H, r, T.name);
       if (tr === 'dh') msg += ' Ты достиг вершины силы!';
-      msg += tr === 'esl' ? ` Медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
+      msg += tr === 'esl' ? ` +200 рейтинга и медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id)); logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.'); }
   }
@@ -1013,6 +1046,7 @@ function viewMain() {
     </div>
     ${trophiesHtml()}
     ${logHtml()}
+    <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="inv" style="text-align:center">Инвентарь</button></div>
     <button class="btn" data-a="menu">Главное меню</button>`);
 }
 function viewCard() {
@@ -1040,6 +1074,27 @@ function viewLib() {
     <h2>Заметка ${i + 1} · ${esc(r.name)}</h2><div style="text-align:left">${TEXT}</div><div class="bonus nt">Без эффекта</div></div>
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>${back}`);
 }
+
+let artName = '', artDesc = '', artIcon = 19;
+function viewInv() {
+  const own = S.items || [];
+  let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">Предметы с метеоритной рудой усиливают Спектра. Открываются за рейтинг (рейтинг тратится один раз). Надеть можно один предмет.</div>
+    <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>`;
+  h += ITEMS.map((it, i) => {
+    const has = own.includes(i), on = S.equip === i;
+    let act;
+    if (has) act = `<button class="btn ${on ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${on ? 'Снять' : 'Надеть'}</button>`;
+    else if (it.art && S.artMake) act = `<div style="margin-top:8px"><input id="artname" maxlength="28" placeholder="Название артефакта" value="${esc(artName)}"><textarea id="artdesc" maxlength="140" rows="2" placeholder="Описание" style="margin-top:6px">${esc(artDesc)}</textarea></div>
+        <div class="dim" style="font-size:12px;margin-top:6px">Облик: ${ART_NAMES[artIcon]}</div>
+        <div class="artgrid">${ART_NAMES.map((nm, k) => `<button class="${k === artIcon ? 'on' : ''}" data-a="aicon" data-v="${k}" title="${nm}">${artImg(k)}</button>`).join('')}</div>
+        <button class="btn gold" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Создать за ${it.cost} рейтинга</button>`;
+    else if (it.art) act = `<button class="btn" data-a="amake" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Создать артефакт — ${it.cost} рейтинга</button>`;
+    else act = `<button class="btn" data-a="ibuy" data-v="${i}" style="text-align:center" ${S.rating < it.cost ? 'disabled' : ''}>Открыть за ${it.cost} рейтинга</button>`;
+    const nm = it.art && S.art ? S.art.name : it.n, ds = it.art && S.art ? S.art.desc : it.d;
+    return `<div class="card item ${on ? 'on' : ''}"><div class="abrow" style="align-items:center">${itemIcon(S, i)}<div style="flex:1"><b>${esc(nm)}</b>${on ? ' <span class="gold">· надет</span>' : ''}<div class="dim">${esc(ds)}</div><div class="gold" style="font-size:13px;margin-top:2px">Усиление +${it.b}</div></div></div>${act}</div>`;
+  }).join('');
+  return wrap(h + back);
+}
 function viewDossier() {
   const r = S.dreg != null ? S.dreg : S.region, list = lgPool(r).slice(0, proCount(r));
   const tabs = REGIONS.map((R, i) => `<button class="btn ${i === r ? 'here' : ''}" style="flex:1;text-align:center;width:auto;padding:8px 4px;font-size:13px" data-a="dossier" data-v="${i}">${LSHORT[i]}</button>`).join('');
@@ -1058,6 +1113,12 @@ function viewDossier() {
 function viewRest() {
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Отдых</div>
     <h2>Отдых</h2><div style="text-align:left">${TEXT}</div><div class="bonus plus">Бонус!</div></div>${back}`);
+}
+function invadeHtml() {   // вторжение: любой другой игрок может ворваться в турнир, но пропустит свою неделю
+  const inv = S.tourInv || [], ivd = S.tourInvade || [], list = G.players.map((H, i) => i).filter(i => i !== G.cur && !inv.includes(i) && !G.players[i].skipNext);
+  if (!list.length) return '';
+  return `<div class="card"><h3>Вторжение на турнир</h3><div class="dim">Тебя не позвали? Можно вторгнуться из любого региона, но цена — пропуск своей следующей недели.</div>
+    <div class="row" style="margin-top:6px">${list.map(i => `<button class="btn ${ivd.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinvade" data-v="${i}">${ivd.includes(i) ? '⚔ ' : ''}${esc(G.players[i].nick)} ${flagOf(G.players[i].country)}</button>`).join('')}</div></div>`;
 }
 function inviteHtml() {   // совместная игра: позвать игроков из этого же региона — одно действие на всех
   const inv = S.tourInv || [], here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
@@ -1080,7 +1141,7 @@ function viewTour() {
       <div style="margin-top:6px">Еженедельные турниры — отличный шанс набраться опыта и проявить себя!</div>
       <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3 </div><div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
     </div>
-    ${G.mode === 'coop' && S.tourPass ? inviteHtml() : ''}
+    ${G.mode === 'coop' && S.tourPass ? inviteHtml() + invadeHtml() : ''}
     <div class="card">${banners}</div>${logHtml()}<button class="btn" data-a="toBureau">Назад в бюро</button>`);
 }
 function viewBureau() {
@@ -1126,7 +1187,7 @@ function viewHandoff() {
     <div class="ava" style="width:96px;height:96px;margin:14px auto">${faceImg(S.face)}</div>
     <h2>Ход игрока ${G.cur + 1} из ${n}: ${esc(S.nick)} ${flagOf(S.country)}</h2>
     <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
-    <button class="btn gold" data-a="hgo" style="margin-top:14px">Начать неделю</button></div>
+    ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div><button class="btn gold" data-a="hskip" style="margin-top:10px">Пропустить неделю</button>` : `<button class="btn gold" data-a="hgo" style="margin-top:14px">Начать неделю</button>`}</div>
     <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${esc(H.nick)} ${flagOf(H.country)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
     <button class="btn" data-a="menu">Главное меню</button>`;
 }
@@ -1318,7 +1379,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { inv: viewInv, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
@@ -1364,6 +1425,7 @@ function act(a, v) {
   }
   switch (a) {
     case 'hgo': G.handoff = false; break;
+    case 'hskip': S.skipNext = false; G.handoff = false; logMsg('Неделя пропущена: вторжение на турнир.'); endTurn(); break;
     case 'lgo': G.lann = G.lq[0]; G.lview = 'match'; break;
     case 'lplay': {
       const L = G.leagues[G.lq[0]], m = lgPending(L); if (!m) return;
@@ -1391,6 +1453,7 @@ function act(a, v) {
       startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, tFighter(R, L), tFighter(R, Rr), won => { tGame(m, won ? L : Rr); tRun(R, false); S.view = 'trun'; });
       break;
     }
+    case 'tinvade': { const h = +v, a2 = S.tourInvade = S.tourInvade || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else a2.push(h); break; }
     case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (S.actions >= 1 && G.players[h].region === S.region) a2.push(h); break; }
     case 'tauto': if (S.trun) tRun(S.trun, true); break;
     case 'tfinish': finishTour(); break;
@@ -1406,6 +1469,21 @@ function act(a, v) {
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
     case 'bureau': if (spend()) { clearJet(); S.view = 'bureau'; } break;
     case 'toBureau': S.view = 'bureau'; break;
+    case 'inv': S.view = 'inv'; S.artMake = false; break;
+    case 'amake': S.artMake = true; artName = ''; artDesc = ''; artIcon = 19; break;
+    case 'aicon': { const n1 = document.getElementById('artname'), d1 = document.getElementById('artdesc'); if (n1) { artName = n1.value; artDesc = d1.value; } artIcon = (+v | 0) % ART_ICONS; break; }
+    case 'ibuy': {
+      const i = +v, it = ITEMS[i]; S.items = S.items || [];
+      if (S.items.includes(i) || S.rating < it.cost) return;
+      if (it.art) {
+        const n1 = document.getElementById('artname'), d1 = document.getElementById('artdesc');
+        artName = n1 ? n1.value.trim() : ''; artDesc = d1 ? d1.value.trim() : '';
+        if (!artName) { logMsg('Дай артефакту название.'); break; }
+        S.art = { name: artName, desc: artDesc || 'Мой собственный предмет силы.', icon: artIcon }; S.artMake = false;
+      }
+      S.rating -= it.cost; S.items.push(i); logMsg('Открыт предмет: ' + itemName(S, i) + '.'); break;
+    }
+    case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
     case 'dossier': S.dreg = +v; S.dsel = null; S.view = 'dossier'; break;
     case 'dsel': S.dsel = +v < 0 ? null : +v; break;
     case 'esl': if (S.power >= ESL_MIN_POWER && S.actions > 0) { eslNew(); S.view = 'esl'; } break;
