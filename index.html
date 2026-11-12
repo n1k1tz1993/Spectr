@@ -282,7 +282,13 @@ const TIERS = [
   { name: 'Любительский турнир', lo: 22, hi: 37, gain: 2 },
   { name: 'Полупрофессиональный турнир', lo: 40, hi: 55, gain: 5 }
 ];
-const POWER_TOURNEY_CAP = 65;
+const POWER_TOURNEY_CAP = 65, POWER_MAX = 125, TROPHY_GAIN = 5;
+// Кубки собираются только после прокачки (сила 65). Каждый новый кубок — +5 силы, максимум 125.
+function awardTrophy(H, r, name) {
+  if (H.power < POWER_TOURNEY_CAP) return 'locked';
+  if (H.troph.some(y => y.r === r && y.n === name)) return 'have';
+  H.troph.push({ r, n: name }); H.power = Math.min(POWER_MAX, H.power + TROPHY_GAIN); return 'new';
+}
 const LEAGUES = [
   // рейтинг = сила × 30: старт 30 — бронза, 50 — золото, 55–59 — платина, 60–69 — алмаз, 70+ — мастер (сильнейший в мире — 77)
   { min: 2100, n: 'Мастер', c: '#FF7AE6', id: 'master' }, { min: 1800, n: 'Алмаз', c: '#7AE7FF', id: 'diamond' }, { min: 1650, n: 'Платина', c: '#B8F2E6', id: 'platinum' },
@@ -617,8 +623,8 @@ function lgFinish(L) {
     if (T.h == null) return;
     const H = G.players[T.h], place = i === champ ? 'чемпион' : i === second ? '2-е место' : i === third ? '3-е место' : 'сезон окончен';
     if (i === champ) {
-      if (!H.troph.some(y => y.r === L.r && y.n === 'Кубок лиги')) { H.troph.push({ r: L.r, n: 'Кубок лиги' }); H.power = Math.min(120, H.power + 5); }
-      logTo(H, `Ты чемпион лиги ${LSHORT[L.r]}! Кубок в коллекции.`);
+      const tr = awardTrophy(H, L.r, 'Кубок лиги');
+      logTo(H, `Ты чемпион лиги ${LSHORT[L.r]}!${tr === 'new' ? ' Кубок в коллекции.' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : ''}`);
     } else logTo(H, `Лига ${LSHORT[L.r]}: ${place}.`);
     if (L.worlds.includes(i)) logTo(H, 'Ты в топ-3 и едешь на чемпионат мира!');
     histTo(H, L.r, `Лига ${LSHORT[L.r]} · сезон ${L.season}: ${place}`);
@@ -836,12 +842,14 @@ function finishTour() {
     const h = humOf(R, x.id); if (h == null) continue;
     const H = G.players[h];
     if (R.winner === x.id) {
-      if (!H.troph.some(y => y.r === r && y.n === T.name)) H.troph.push({ r, n: T.name });
+      let msg = T.name + ': победа!';
       if (R.kind !== 'esl') {
-        if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) H.tiers[r] = R.tier + 1;
-        H.power = Math.max(H.power, Math.min(POWER_TOURNEY_CAP, H.power + T.gain));
+        if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) { H.tiers[r] = R.tier + 1; msg += ' Открыт следующий турнир.'; }
+        if (H.power < POWER_TOURNEY_CAP) H.power = Math.min(POWER_TOURNEY_CAP, H.power + T.gain);   // до 65 — прокачка
       }
-      histTo(H, r, T.name + ' · победа'); logTo(H, T.name + ': победа! Трофей в коллекции.');
+      const tr = awardTrophy(H, r, T.name);
+      msg += tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
+      histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id)); logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.'); }
   }
   S.view = S.trun.kind === 'esl' ? 'bureau' : 'tour'; S.trun = null;
