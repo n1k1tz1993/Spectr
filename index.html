@@ -46,6 +46,16 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .arow .tx{flex:1;min-width:0}
 .ttl{font-weight:700;font-size:15px}
 .ds{font-size:13px;color:var(--dim);margin-top:4px}
+.map{position:relative;container-type:inline-size;border-radius:10px;overflow:hidden;line-height:0}
+.map img{width:100%;display:block}
+.mbox{position:absolute;display:flex;align-items:center;justify-content:center;color:#BFF6FF;font-weight:700;font-size:2.6cqw;line-height:1;cursor:pointer;letter-spacing:.02em;white-space:nowrap}
+.mbox.cur{color:var(--gold);text-shadow:0 0 6px rgba(245,197,66,.7)}
+.mpin{position:absolute;width:7cqw;height:7cqw;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer}
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:12px;z-index:10}
+.lpanel{position:relative;width:min(100%,calc((100vh - 24px)*2/3));aspect-ratio:2/3;background-size:100% 100%;container-type:inline-size}
+.lrow{position:absolute;display:flex;align-items:center;padding:0 4cqw;color:#E8ECF8;font-size:3.4cqw;line-height:1.1;overflow:hidden}
+.lped{position:absolute;transform:translate(-50%,-100%);color:var(--gold);font-weight:700;font-size:3cqw;text-align:center;white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.9)}
+.lclose{position:absolute;top:0;right:0;width:15%;height:10%;background:transparent;border:0;cursor:pointer}
 </style></head>
 <body><div id="app"></div>
 <script>
@@ -103,6 +113,24 @@ const GENERIC = [
   C('Встреча с фанатами', 'n'), C('Фотосессия для журнала', 'n'), C('Ремонт экипировки', 'n'), C('Поход в магазин', 'n'), C('Прослушивание музыки перед боем', 'n'),
   C('Звонок семье', 'n'), C('Осмотр метеоритного камня', 'n'), C('Выставка технологий', 'n'), C('Экскурсия по лиге', 'n'), C('Посещение спортзала', 'n'), C('Игра в настолки с командой', 'n')
 ];
+// карта 1254×1254: выноски (x0,y0,x1,y1), точки, короткое имя лиги
+const MAPW = 1254;
+const MAPSPOTS = [
+  { box: [67, 569, 262, 615], pin: [176, 464], label: 'USA' },
+  { box: [335, 292, 533, 339], pin: [634, 374], label: 'LCS' },
+  { box: [864, 258, 1066, 305], pin: [774, 357], label: 'СКЛС' },
+  { box: [813, 520, 1006, 567], pin: [1085, 466], label: 'ASL' },
+  { box: [1023, 638, 1228, 685], pin: [1157, 501], label: 'SSS' }
+];
+// панели лиг 1024×1536: строки «Последние матчи», края строк, центры пьедесталов, низ подписи трофея
+const PANELS = [
+  { rows: [[918, 992], [1013, 1088], [1109, 1184]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1345 },
+  { rows: [[835, 909], [931, 1005], [1027, 1102]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1345 },
+  { rows: [[870, 923], [944, 997], [1018, 1073]], x: [66, 958], ped: [175, 397, 623, 848], pedY: 1365 },
+  { rows: [[751, 825], [847, 922], [944, 1019]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1345 },
+  { rows: [[817, 894], [912, 988], [1007, 1083]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1320 }
+];
+const TIER_SHORT = ['Новички', 'Любители', 'Полупро'];
 const TIERS = [
   { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
   { name: 'Любительский турнир', lo: 22, hi: 37, gain: 2 },
@@ -116,12 +144,21 @@ const LEAGUES = [
 const leagueOf = r => LEAGUES.find(l => r >= l.min);
 
 // ---------- сохранение ----------
-function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || 'null'); return v && v.v === 2 ? v : null; } catch (e) { return null; } }
+function load() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!v || v.v !== 2) return null;
+    if (!v.tiers) { v.tiers = [0, 0, 0, 0, 0]; v.tiers[v.region || 0] = v.tier || 0; }
+    if (!v.troph) v.troph = (v.trophies || []).map(n => ({ r: v.region || 0, n }));
+    if (!v.hist) v.hist = [];
+    return v;
+  } catch (e) { return null; }
+}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
 function newHero(nick, country) {
   return { v: 2, nick, country, power: 30, rating: 0, ladderGames: 0, region: 0, turn: 1, actions: 3, hand: [], jetlag: 0,
-           effects: [], tier: 0, trophies: [], read: {}, log: ['Добро пожаловать в Спектр. Ход 1.'], view: 'main', sel: null, tourCount: 0 };
+           effects: [], tiers: [0, 0, 0, 0, 0], troph: [], hist: [], read: {}, log: ['Добро пожаловать в Спектр. Ход 1.'], view: 'main', sel: null, tourCount: 0 };
 }
 
 // ---------- механика ----------
@@ -131,6 +168,7 @@ const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.ef
 const clearJet = () => { S.jetlag = 0; };
 const spend = () => { if (S.actions <= 0) return false; S.actions--; return true; };
 const logMsg = m => { S.log.unshift(m); S.log = S.log.slice(0, 6); };
+const histAdd = t => { S.hist.unshift({ r: S.region, t }); S.hist = S.hist.slice(0, 40); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 20;                 // у соперников рейтинг основан на силе
 function endTurn() {
@@ -166,23 +204,25 @@ function bureauFight(kind) {
     S.ladderGames++;
   } else d = won ? 20 : -20;
   S.rating = Math.max(0, S.rating + d);
+  histAdd((kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком') + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
   logMsg((kind === 'ladder' ? 'Лестничный матч' : 'Бой с про-игроком') + ' · соперник ' + npcRating(opp.p) + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга).');
   save();
 }
 function playTour(t) {
-  const T = TIERS[t];
-  if (t > S.tier) return;
+  const T = TIERS[t], r = S.region;
+  if (t > S.tiers[r]) return;
   let rounds = 0, won = true;
-  for (let r = 0; r < 3; r++) {
+  for (let i = 0; i < 3; i++) {
     const opp = rnd(T.lo, T.hi);
     if (Math.random() < winProb(effPower(), opp)) rounds++; else { won = false; break; }
   }
   if (won) {
-    if (!S.trophies.includes(T.name)) S.trophies.push(T.name);
-    if (t + 1 > S.tier && t + 1 <= 2) S.tier = t + 1;
+    if (!S.troph.some(x => x.r === r && x.n === T.name)) S.troph.push({ r, n: T.name });
+    if (t + 1 > S.tiers[r] && t + 1 <= 2) S.tiers[r] = t + 1;
     S.power = Math.max(S.power, Math.min(POWER_TOURNEY_CAP, S.power + T.gain));
+    histAdd(T.name + ' · победа');
     logMsg(T.name + ': победа! Трофей в коллекции.');
-  } else logMsg(T.name + ': поражение в раунде ' + (rounds + 1) + '.');
+  } else { histAdd(T.name + ' · поражение в раунде ' + (rounds + 1)); logMsg(T.name + ': поражение в раунде ' + (rounds + 1) + '.'); }
   save();
 }
 
@@ -201,10 +241,26 @@ const labelOf = c => {
   return '<div class="bonus nt">Без эффекта</div>';
 };
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
-const trophiesHtml = () => S.trophies.length ? `<h2>Коллекция</h2><div>${S.trophies.map(t => `<span class="trophy">${esc(t)}</span>`).join('')}</div>` : '';
+const trophiesHtml = () => S.troph.length ? `<h2>Коллекция</h2><div>${S.troph.map(t => `<span class="trophy">${esc(REGIONS[t.r].name)} · ${esc(t.n)}</span>`).join('')}</div>` : '';
 const back = `<button class="btn" data-a="back">Назад</button>`;
 const wrap = inner => `${topBar()}${inner}`;
 
+const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
+function mapHtml() {
+  return `<div class="map"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
+    const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
+    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPW)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPW)}">${m.label}</div>
+      <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPW)}"></div>`;
+  }).join('')}</div>`;
+}
+function viewLeague() {
+  const r = S.sel, P = PANELS[r];
+  const hist = S.hist.filter(h => h.r === r).slice(0, 3);
+  const rows = P.rows.map(([a, b], i) => `<div class="lrow" style="top:${pc(a, 1536)};height:${pc(b - a, 1536)};left:${pc(P.x[0], 1024)};width:${pc(P.x[1] - P.x[0], 1024)}">${hist[i] ? esc(hist[i].t) : ''}</div>`).join('');
+  const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '');
+  const peds = P.ped.map((cx, i) => won[i] ? `<div class="lped" style="left:${pc(cx, 1024)};top:${pc(P.pedY, 1536)}">${won[i]}</div>` : '').join('');
+  return viewMain() + `<div class="ovl" data-a="back"><div class="lpanel" data-a="noop" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div></div>`;
+}
 function viewMain() {
   const done = S.actions <= 0;
   const ind = [0, 1, 2].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
@@ -215,8 +271,8 @@ function viewMain() {
     <div class="card week"><div><h2>Неделя ${S.turn}</h2>${S.jetlag ? '<div class="minus">Джетлаг!</div>' : ''}</div><div class="inds">${ind}</div></div>
     <div class="card">
       <h2>Карта мира</h2>
-      <div class="mapph">Карта</div>
-      ${REGIONS.map((r, i) => `<button class="btn ${i === S.region ? 'here' : ''}" data-a="noop">${r.name}${i === S.region ? ' · здесь' : ''}</button>`).join('')}
+      ${mapHtml()}
+      <div class="dim" style="margin-top:6px">Ты здесь: <b>${REGIONS[S.region].name}</b>. Нажми на выноску, чтобы открыть лигу.</div>
     </div>
     <div class="card">
       <h2>Повседневные действия</h2>
@@ -264,8 +320,9 @@ function viewRest() {
     <h2>Отдых</h2><div style="text-align:left">${TEXT}</div><div class="bonus plus">Бонус!</div></div>${back}`);
 }
 function viewTour() {
-  return wrap(`<div class="card"><h2>Местный турнир</h2><div class="dim">Открыто уровней: ${S.tier + 1} из 3</div>
-    ${TIERS.map((t, i) => `<button class="btn" data-a="play" data-v="${i}" ${i > S.tier ? 'disabled' : ''}>${t.name}${i > S.tier ? ' · закрыт' : ''}${S.trophies.includes(t.name) ? ' · трофей есть' : ''}</button>`).join('')}
+  const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n);
+  return wrap(`<div class="card"><h2>Местный турнир · ${REGIONS[r].name}</h2><div class="dim">Открыто уровней: ${S.tiers[r] + 1} из 3</div>
+    ${TIERS.map((t, i) => `<button class="btn" data-a="play" data-v="${i}" ${i > S.tiers[r] ? 'disabled' : ''}>${t.name}${i > S.tiers[r] ? ' · закрыт' : ''}${has(t.name) ? ' · трофей есть' : ''}</button>`).join('')}
     </div>${logHtml()}${back}`);
 }
 function viewBureau() {
@@ -306,7 +363,7 @@ function viewSetup() {
   </div>`;
 }
 
-const VIEWS = { main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 function render() {
   if (!S) { app.innerHTML = viewSetup(); return; }
   const v = VIEWS[S.view] || viewMain;
@@ -326,6 +383,7 @@ function act(a, v) {
       S = newHero(nick, setupFlag); S.hand = drawHand(); setupErr = ''; save(); break;
     }
     case 'card': S.view = 'card'; S.sel = +v; break;
+    case 'league': S.view = 'league'; S.sel = +v; break;
     case 'use': useCard(S.sel); break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
