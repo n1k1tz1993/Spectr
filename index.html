@@ -496,7 +496,7 @@ const ABIL_LIST = [   // способности соперников: назва
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
 const FACE_COUNT = 36;   // портреты: img/face/0..35.webp
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
-const ABIL_ICON_COUNT = 120;   // 0–19 первый набор, 20–119 ещё пять наборов по 20
+const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), lastCrit: false, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
@@ -710,7 +710,9 @@ const ELITE_DATA = {
     9: { n: 'Akke', c: 'SE', p: 77, img: 'img/elite/eu_9.webp', a: 'Град ударов', d: 'Кажется, вам хотят набить лицо!', icon: 1,
          bio: 'Один из сильнейших Спектров Европы. Рядом с ним даже стоять страшно.' },
     10: { n: 'sumaiL', c: 'GR', p: 66, img: 'img/elite/eu_10.webp', a: 'Восстановление', d: 'Разбегается и на полной скорости врезается в противника!', icon: 112,
-         bio: 'Сумаил использует медицинские техники в качестве инструмента боя со Спектрами. Кто бы мог подумать, что медицина может быть такой опасной?' }
+         bio: 'Сумаил использует медицинские техники в качестве инструмента боя со Спектрами. Кто бы мог подумать, что медицина может быть такой опасной?' },
+    11: { n: 'koNNoR', c: 'IE', p: 52, img: 'img/elite/eu_11.webp', a: 'Алхимия', d: 'Смешивает склянки со светящейся жидкостью и бросает в противника!', icon: 104,
+         bio: 'Коннор — любитель интересных напитков. Иногда они взрываются, но не всегда.' }
   }
 };
 const LPOOL = {};
