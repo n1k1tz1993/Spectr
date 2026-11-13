@@ -112,6 +112,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .lwrap{width:min(100%,calc((100vh - 90px)*2/3))}
 .lpanel{position:relative;width:100%;aspect-ratio:2/3;background-size:100% 100%;container-type:inline-size}
 .lrow{position:absolute;display:flex;align-items:center;padding:0 4cqw;color:#E8ECF8;font-size:3.4cqw;line-height:1.1;overflow:hidden}
+.lpedimg{position:absolute;transform:translate(-50%,-100%);width:auto;max-width:20%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.7))}
 .lped{position:absolute;transform:translate(-50%,-100%);color:var(--gold);font-weight:700;font-size:3cqw;text-align:center;white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.9)}
 .lclose{position:absolute;top:0;right:0;width:15%;height:10%;background:transparent;border:0;cursor:pointer}
 img.pic{object-fit:cover;padding:0;background:#fff}
@@ -252,6 +253,11 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .gbar{height:8px;border-radius:4px;background:#0B0F1C;overflow:hidden}
 .gbar i{display:block;height:100%;background:linear-gradient(90deg,#3A7BFF,#2FD7FF)}
 .grow b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:#7DE8FF}
+.ctrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:6px 0 12px}
+.ctro{display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;font-size:12px;color:var(--gold);text-align:center}
+.ctro img{height:84px;width:auto;max-width:72px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.ctro.big{width:110px}.ctro.big img{height:120px;max-width:110px}
+.ctro img.esl{height:70px;width:70px;border-radius:50%;background:#fff;padding:6px;border:2px solid var(--gold)}
 .coll{display:flex;gap:10px;align-items:flex-start}
 .coll>div:first-child{flex:1}
 .eslmed{flex:0 0 auto;text-align:center}
@@ -659,6 +665,8 @@ const MAPSPOTS = [
   { box: [1023, 513, 1228, 560], pin: [1157, 376], label: 'SSS' }
 ];
 // панели лиг 1024×1536: строки «Последние матчи», края строк, центры пьедесталов, низ подписи трофея
+const TROPHY_IMG = [true, true, true, true, false];   // трофеи лиг: img/trophy/r<регион>_<0..3>.webp (новички, любители, полупро, лига)
+const PED_SINK = 28;   // насколько основание трофея опускается на диск пьедестала
 const PANELS = [
   { rows: [[918, 992], [1013, 1088], [1109, 1184]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1345 },
   { rows: [[835, 909], [931, 1005], [1027, 1102]], x: [62, 962], ped: [165, 397, 627, 858], pedY: 1345 },
@@ -2321,7 +2329,15 @@ const labelOf = c => {
   return '<div class="bonus plus">Бонус!</div>';
 };
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
-const trophiesHtml = () => S.troph.length || S.eslWins ? `<h2>Коллекция</h2><div class="coll"><div>${S.troph.map(t => `<span class="trophy">${esc(REGIONS[t.r].name)} · ${esc(t.n)}</span>`).join('')}</div>${S.eslWins ? `<div class="eslmed"><img src="img/esl.webp" alt="ESL ONE"><b>×${S.eslWins}</b></div>` : ''}</div>` : '';
+const trophiesHtml = () => {   // коллекция: трофеи лиг картинками по регионам, кубки Wild Card и чемпионата мира, медаль ESL
+  const names = [...TIERS.map(t => t.name), 'Кубок лиги'], lbl = [...TIER_SHORT, 'Лига'];
+  const big = [S.wfWon ? `<div class="ctro big"><img src="img/trophy/wf.webp" alt=""><span>Чемпион мира${S.wfWon > 1 ? ' ×' + S.wfWon : ''}</span></div>` : '',
+    S.wcWon ? `<div class="ctro big"><img src="img/trophy/wc.webp" alt=""><span>Wild Card${S.wcWon > 1 ? ' ×' + S.wcWon : ''}</span></div>` : '',
+    S.eslWins ? `<div class="ctro big"><img class="esl" src="img/esl.webp" alt=""><span>ESL ONE ×${S.eslWins}</span></div>` : ''].join('');
+  const regs = REGIONS.map((R, r) => { const own = names.map((n, i) => S.troph.some(x => x.r === r && x.n === n) ? i : -1).filter(i => i >= 0);
+    return own.length ? `<h3>${esc(R.name)} · ${LSHORT[r]}</h3><div class="ctrow">${own.map(i => `<div class="ctro">${TROPHY_IMG[r] ? `<img src="img/trophy/r${r}_${i}.webp" alt="">` : '<span class="trophy">🏆</span>'}<span>${lbl[i]}</span></div>`).join('')}</div>` : ''; }).join('');
+  return big || regs ? `${big ? `<div class="ctrow">${big}</div>` : ''}${regs}` : '';
+};
 const back = '';   // «Назад» — стрелка в строке раздела под шапкой
 const wrap = inner => `<div class="hdr">${topBar()}${subBar()}</div>${inner}`;
 
@@ -2351,7 +2367,9 @@ function viewLeague() {
   const hist = S.hist.filter(h => h.r === r).slice(0, 3);
   const rows = P.rows.map(([a, b], i) => `<div class="lrow" style="top:${pc(a, 1536)};height:${pc(b - a, 1536)};left:${pc(P.x[0], 1024)};width:${pc(P.x[1] - P.x[0], 1024)}">${hist[i] ? esc(hist[i].t) : ''}</div>`).join('');
   const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '').concat(S.troph.some(x => x.r === r && x.n === 'Кубок лиги') ? ['Лига'] : ['']);
-  const peds = P.ped.map((cx, i) => won[i] ? `<div class="lped" style="left:${pc(cx, 1024)};top:${pc(P.pedY, 1536)}">${won[i]}</div>` : '').join('');
+  const room = P.pedY - P.rows[2][1] - 20;   // высота от пьедестала до списка матчей
+  const peds = P.ped.map((cx, i) => !won[i] ? '' : TROPHY_IMG[r] ? `<img class="lpedimg" src="img/trophy/r${r}_${i}.webp" alt="${won[i]}" title="${won[i]}" style="left:${pc(cx, 1024)};top:${pc(P.pedY + PED_SINK, 1536)};height:${pc(Math.min(room, 140 + i * 25), 1536)}">`
+    : `<div class="lped" style="left:${pc(cx, 1024)};top:${pc(P.pedY, 1536)}">${won[i]}</div>`).join('');
   return viewMain() + `<div class="ovl" data-a="back"><div class="lwrap" data-a="noop"><div class="lpanel" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div>
     <div class="lside"><div class="lttl"><img src="img/logo_${r}.webp" alt=""><b>${esc(REGIONS[r].league)}</b></div>
       <div class="dim">Трофеи региона: ${won.filter(Boolean).length} из 4</div>
