@@ -699,7 +699,7 @@ const ONLY_ELITE = { 1: true };   // в Европе только расписа
 const proCount = r => ONLY_ELITE[r] ? Object.keys(ELITE_DATA[r] || {}).length : PRO_COUNT;   // Элитных Спектров в регионе
 const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [];
 const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
-const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал',
+const LG_STAGE = { KP: 'Плей-ин', RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал',
   K1: 'Этап 1 · отбор · 100 → 50', K2: 'Этап 1 · отбор · 50 → 25',
   W1: 'Wild Card · этап 1 · раунд 1', W2: 'Wild Card · этап 1 · раунд 2', W3: 'Wild Card · этап 1 · раунд 3', W4: 'Wild Card · этап 1 · раунд 4', W5: 'Wild Card · этап 1 · раунд 5',
   R64: '1/32 финала', R32: '1/16 финала', R16: '1/8 финала',
@@ -894,6 +894,7 @@ function lgDraft(L) {
   }
   L.sched = R1.concat(R1.map(rd => rd.map(([a, b]) => [b, a])));
   L.phase = 'RR'; L.ri = 0;
+  if (r === 4) { L.fmt = 'kr12'; L.rrBo = 1; }   // Корея: Bo1 в два круга, плей-ин 3–6
 }
 const lgTeamName = (L, i) => { const T = L.teams[i]; return T.h != null ? G.players[T.h].nick : T.f.name; };
 const lgRating = (L, i) => { const T = L.teams[i]; return T.h != null ? G.players[T.h].rating : T.f.rating; };
@@ -923,7 +924,12 @@ function lgNextRound(L) {   // создать следующий «матч ли
   if (L.phase === 'RR') {
     if (L.ri < L.sched.length) { const rd = L.sched[L.ri++]; return rd.map(([a, b]) => lgAdd(L, 'RR', a, b, L.rrBo || 2, 'Тур ' + L.ri)); }
     const t = lgTable(L).map(x => x.i); L.top = t.slice(0, 2); L.final10 = t;
+    if (L.fmt === 'kr12') { L.phase = 'KP'; return [lgAdd(L, 'KP', t[2], t[5], 3, '3-е против 6-го'), lgAdd(L, 'KP', t[3], t[4], 3, '4-е против 5-го')]; }
     L.phase = 'PI1'; return [[2, 9], [3, 8], [4, 7], [5, 6]].map(([x, y]) => lgAdd(L, 'PI1', t[x], t[y], 3, `${x + 1}-е против ${y + 1}-го`));
+  }
+  if (L.phase === 'KP') {   // 1-е место играет с худшим по таблице победителем плей-ина
+    const ord = L.final10, w = lgStage(L, 'KP').map(m => m.w).sort((a, b) => ord.indexOf(a) - ord.indexOf(b));
+    L.phase = 'SF'; return [lgAdd(L, 'SF', L.top[0], w[1], 5), lgAdd(L, 'SF', L.top[1], w[0], 5)];
   }
   if (L.phase === 'PI1') { const w = win('PI1'); L.phase = 'PI2'; return [lgAdd(L, 'PI2', w[0], w[3], 3), lgAdd(L, 'PI2', w[1], w[2], 3)]; }
   if (L.phase === 'PI2') { const w = win('PI2'); L.phase = 'SF'; return [lgAdd(L, 'SF', L.top[0], w[1], 5), lgAdd(L, 'SF', L.top[1], w[0], 5)]; }
@@ -1121,12 +1127,14 @@ function lgFinish(L) {
 }
 const lgSimMatch = (L, m) => { while (!m.done) tGame(m, simAB(lgFighter(L, m.a), lgFighter(L, m.b)) ? m.a : m.b); };
 const lgPending = L => L ? (L.cur || []).find(m => !m.done && (lgHum(L, m.a) || lgHum(L, m.b))) : null;
+// фазы, после которых идёт стадия плей-офф (четвертьфинал, полуфинал или финал)
+const LG_PO_NEXT = ['PI2', 'KP', 'EPD', 'QF', 'RPC', 'SF'];
 const lgQ = k => k === 'wc' ? G.wc : k === 'wf' ? G.wf : G.leagues[k];
 function lgStartTurn() {   // ход лиг: после того как все игроки сыграли неделю
   ensureLeagues();
   for (const L of G.leagues) {
     if (L.phase === 'draft' && G.week >= L.draftEnd) lgDraft(L);     // драфт — в конце последней недели; матчи со следующей
-    else if (L.phase !== 'draft' && L.phase !== 'done') L.left = LG_PER_WEEK;
+    else if (L.phase !== 'draft' && L.phase !== 'done') { L.left = LG_PER_WEEK; L.wkUsed = 0; }
   }
   G.lq = G.leagues.filter(L => L.left > 0).map(L => L.r);
   if (G.wc) { G.wc.left = 99; G.wc.stopAt = wcNextStage(G.wc) + 1; G.lq.push('wc'); }
@@ -1143,8 +1151,10 @@ function lgProcess() {
     if (L.left <= 0) { G.lq.shift(); continue; }
     if (L.wc && wcNextStage(L) >= L.stopAt) { L.left = 0; continue; }   // Wild Card: один этап за ход
     if (L.wf && L.block !== L.turnBlock) { L.left = 0; continue; }     // чемпионат мира: один блок за ход
-    L.left--;
+    if (!L.title && L.wkUsed && LG_PO_NEXT.includes(L.phase)) { L.left = 0; continue; }   // плей-офф — с новой недели
+    L.left--; L.wkUsed = (L.wkUsed || 0) + 1;
     L.cur = lgNextRound(L);
+    if (!L.title && L.cur && L.cur[0] && ['QF', 'SF', 'F'].includes(L.cur[0].st)) L.left = 0;   // стадия плей-офф — одна на неделю
     if (!L.cur) { if (L.wc) wcFinish(L); else if (L.wf) wfFinish(L); L.left = 0; continue; }
     for (const m of L.cur) if (!lgHum(L, m.a) && !lgHum(L, m.b)) lgSimMatch(L, m);
   }
@@ -2003,9 +2013,9 @@ function viewLTable() {
       return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
     }
     const t = lgTable(L);
-    h += `<div class="card"><h3>Таблица</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-Н-П</td><td>О</td></tr>${t.map((x, k) => `<tr class="${k < 2 ? 'z1' : k < 10 ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.d}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table>
-      <div class="dim" style="margin-top:6px">1–2 — сразу в полуфинал, 3–10 — плей-ин. Топ-3 по итогам — на чемпионат мира.</div></div>`;
-    for (const st of ['PI1', 'PI2', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
+    h += `<div class="card"><h3>Таблица</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-Н-П</td><td>О</td></tr>${t.map((x, k) => `<tr class="${k < 2 ? 'z1' : k < (L.fmt === 'kr12' ? 6 : 10) ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.d}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table>
+      <div class="dim" style="margin-top:6px">${L.fmt === 'kr12' ? 'Bo1 в два круга. 1–2 — сразу в полуфинал, 3–6 — плей-ин Bo3 (3-е с 6-м, 4-е с 5-м) за два места.' : '1–2 — сразу в полуфинал, 3–10 — плей-ин.'} Топ-3 по итогам — на чемпионат мира.</div></div>`;
+    for (const st of ['KP', 'PI1', 'PI2', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   }
   return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
 }
