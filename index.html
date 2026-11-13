@@ -2278,7 +2278,7 @@ function viewCard() {   // до выполнения: картинка, опис
       <div class="evtinfo"><h2>${esc(c.t)}</h2><p>${descOf(c) ? esc(descOf(c)) : TEXT}</p>
         <div class="effbox ${E.cls}"><span>${E.kind}</span><b>${E.txt}</b></div>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
-        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>Провести время · 1 действие</button>
+        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
 }
