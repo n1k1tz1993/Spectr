@@ -744,7 +744,7 @@ const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'вор�
 const DUEL_WIN = 50, CONTRACT_WIN = 250;
 SPECIAL.forEach((c, i) => { IMGBY[c.t] = `img/act/sp_${i}.webp`; });
 // полупрофессиональные команды: имя и логотип img/team/<logo>.webp (бывшие команды лиги Америки — тоже здесь)
-const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths', 'semi_2'], ['Static Fangs', 'semi_3'], ['Night Circuit', 'semi_4'], ['NBees Vanguard', 'semi_5'], ['Aster Bloom', 'semi_6'], ['Austral Kings', 'semi_7'], ['Imperial Verde', 'semi_8'], ['Northern Guard', 'semi_9'],
+const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths', 'semi_2'], ['Static Fangs', 'semi_3'], ['Night Circuit', 'semi_4'], ['NBees Vanguard', 'semi_5'], ['Aster Bloom', 'semi_6'], ['Austral Kings', 'semi_7'], ['Imperial Verde', 'semi_8'], ['Northern Guard', 'semi_9'], ['Berlin Axiom', 'semi_10'], ['Paris Aurel', 'semi_11'], ['London Regent', 'semi_12'], ['Milano Forma', 'semi_13'], ['Madrid Solaris', 'semi_14'], ['Amsterdam Delta', 'semi_15'], ['Stockholm Nord', 'semi_16'], ['Copenhagen Vector', 'semi_17'], ['Helsinki Halo', 'semi_18'], ['Warsaw Bastion', 'semi_19'], ['Zurich Vault', 'semi_20'], ['Lisbon Maré', 'semi_21'],
   ['Gotham Volt', 'us_0'], ['Pacific Mirage', 'us_1'], ['Lone Star Fangs', 'us_2'], ['Neon Jackpots', 'us_3'], ['Great Lakes Forge', 'us_4'], ['Everglade Vipers', 'us_5'],
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
@@ -2137,6 +2137,18 @@ const TEAM_INFO_RU = {
 };
 // полупрофессиональные команды — объединения бойцов и самих Спектров: одно предложение
 const SEMI_INFO = {
+  "Berlin Axiom": "Берлинский союз Спектров-инженеров, которые строят бой точно, как чертёж.",
+  "Paris Aurel": "Изящные парижские бойцы, превращающие каждый поединок в красивое представление.",
+  "London Regent": "Лондонское объединение Спектров с королевской выдержкой и старыми традициями.",
+  "Milano Forma": "Миланский клуб бойцов, у которых стиль на арене так же важен, как победа.",
+  "Madrid Solaris": "Горячие мадридские Спектры, заряженные энергией южного солнца.",
+  "Amsterdam Delta": "Амстердамское братство бойцов, гибких и непредсказуемых, как течение каналов.",
+  "Stockholm Nord": "Стокгольмские Спектры с холодной головой и северной выдержкой.",
+  "Copenhagen Vector": "Копенгагенский клуб быстрых бойцов, всегда выбирающих кратчайший путь к победе.",
+  "Helsinki Halo": "Хельсинкское объединение Спектров, спокойных и стойких, как полярная ночь.",
+  "Warsaw Bastion": "Варшавские бойцы, которые держат оборону, как неприступная крепость.",
+  "Zurich Vault": "Цюрихский союз расчётливых Спектров, где каждое движение выверено до мелочей.",
+  "Lisbon Maré": "Лиссабонское братство бойцов, накатывающих на соперника, как океанская волна.",
   "Austral Kings": "Союз бойцов с юга континента, которые держатся как короли, даже когда проигрывают.",
   "Imperial Verde": "Гордое братство Спектров, сражающихся под зелёным шлемом и лавровым венком.",
   "Northern Guard": "Объединение канадских Спектров, спокойных и стойких, как северный лес зимой.",
