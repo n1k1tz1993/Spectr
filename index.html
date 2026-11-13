@@ -249,6 +249,7 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .tcell{display:inline-flex;align-items:center;gap:6px;text-align:left;line-height:1.15}
 .tcell .dim{font-size:11px}
 .ltbl td{vertical-align:middle}
+.tbl tr td:first-child{padding-left:12px;text-align:center;min-width:34px}
 .tbl tr.z1 td{background:rgba(101,217,121,.17)}
 .tbl tr.z2 td{background:rgba(245,200,76,.14)}
 .tbl tr.z3 td{background:rgba(255,110,100,.13)}
@@ -3279,7 +3280,7 @@ function viewTRun() {
   const R = S.trun;
   if (!R) { S.view = 'tour'; return viewTour(); }
   const f = FMT[R.fmt], me = tMine(R), hums = R.ps.filter(x => isHum(R, x.id));
-  const nm = id => teamTag(R.ps[id]) + (isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b> ${flagOf(G.players[humOf(R, id)].country)}` : esc(R.ps[id].name) + (R.ps[id].country ? ' ' + flagOf(R.ps[id].country) : ''));
+  const nm = id => teamTag(R.ps[id]) + (isHum(R, id) ? `${flagOf(G.players[humOf(R, id)].country)} <b class="gold">${esc(R.ps[id].name)}</b>` : (R.ps[id].country ? flagOf(R.ps[id].country) + ' ' : '') + esc(R.ps[id].name));   // флаг перед ником
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
@@ -3335,7 +3336,7 @@ function viewTRun() {
 function lgTeamCell(L, i, cls = '') {
   const T = L.teams[i], logo = T.logo ? `<img class="tlogo" src="img/team/${T.logo}.webp" alt="">` : `<span class="tlogo tl0">${esc(T.name[0])}</span>`;
   const flag = T.h != null ? flagOf(G.players[T.h].country) : flagOf(T.f.country);
-  return `<span class="tcell ${cls}">${logo}<span><b class="${T.h != null ? 'gold' : ''}">${esc(lgTeamName(L, i))}</b> ${flag}<br><span class="dim">${esc(T.name)}${T.city ? ' · ' + esc(T.city) : ''}</span></span></span>`;
+  return `<span class="tcell ${cls}">${logo}<span>${flag} <b class="${T.h != null ? 'gold' : ''}">${esc(lgTeamName(L, i))}</b><br><span class="dim">${esc(T.name)}${T.city ? ' · ' + esc(T.city) : ''}</span></span></span>`;
 }
 const lgScore = m => { const wa = m.g.filter(x => x === m.a).length; return `${wa}:${m.g.length - wa}`; };
 const lgSeries = (L, m) => `<div class="ser ${lgHum(L, m.a) || lgHum(L, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${esc(lgTeamName(L, m.a))}</span><b class="ssc">${m.done || m.g.length ? lgScore(m) : '—'}</b><span class="${m.w === m.b ? 'win' : ''}">${esc(lgTeamName(L, m.b))}</span></div>`;
