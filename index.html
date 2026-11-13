@@ -764,8 +764,10 @@ html.land .fyl .flog{max-height:110px}
 .hd .stat{justify-content:flex-start;gap:1.1cqw;margin:0}
 .hd .sti{width:7cqw;height:6.8cqw;min-width:24px;min-height:24px;border-radius:1.2cqw;border:1px solid #2A4A70;background:#0E1A30}
 .hd .sti svg{width:3.4cqw;height:3.4cqw;min-width:12px;min-height:12px}
-.hd .sti:not(.on){color:#7FA7D8}
-.hd .sti.on.g{box-shadow:0 0 0 1px #2ECC71,0 0 1.2cqw rgba(46,204,113,.45)}.hd .sti.on.r{box-shadow:0 0 0 1px #FF4D4F,0 0 1.2cqw rgba(255,77,79,.45)}
+.hd .sti:not(.on){color:#3E5578;opacity:.7}
+.hd .sti.on.g{color:#4DF08F;background:rgba(46,204,113,.28);border-color:#2ECC71;box-shadow:0 0 0 1px #2ECC71,0 0 2.4cqw rgba(46,204,113,.75);animation:stglow 1.8s ease-in-out infinite}.hd .sti.on.r{color:#FF6B6D;background:rgba(255,77,79,.28);border-color:#FF4D4F;box-shadow:0 0 0 1px #FF4D4F,0 0 2.4cqw rgba(255,77,79,.75);animation:stglow 1.8s ease-in-out infinite}
+.hd .sti.on svg{filter:drop-shadow(0 0 .8cqw currentColor)}
+@keyframes stglow{50%{filter:brightness(1.25)}}
 .hdr{grid-area:r;display:flex;flex-direction:column;justify-content:center;gap:0;padding:0 0 0 1.4cqw;border:0;margin:0}
 .hdrt{display:flex;align-items:center;gap:2cqw;padding-bottom:1.6cqw;border-bottom:1px solid rgba(39,184,232,.25)}
 .hdrt img{width:9.4cqw;height:9.4cqw;object-fit:contain;filter:drop-shadow(0 0 1cqw rgba(255,140,60,.35))}
