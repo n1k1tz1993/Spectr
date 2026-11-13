@@ -334,6 +334,51 @@ html.land .fzp{aspect-ratio:auto;height:min(30vw,calc(100vh - 340px));min-height
 html.land .fzl .flog{max-height:none}
 html.land .fzn b{font-size:18px}
 html.land .fza b{font-size:14px}
+/* ---------- главный экран, нижнее меню, экран действия ---------- */
+#app[data-view=main],#app[data-view=more],#app[data-view=coll]{padding-bottom:96px}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:rgba(11,16,32,.96);border-top:1px solid var(--line);max-width:520px;margin:0 auto}
+.nav button{min-height:52px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--dim);font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.nav button b{font-size:15px;font-weight:600}
+.nav button small{font-size:11px}
+.nav button.on{color:var(--txt);border-color:var(--cyan);background:rgba(50,213,231,.08)}
+.nav button.on b{color:var(--cyan)}
+.nav button:disabled{opacity:.45}
+.mgrid{display:block}
+.inds{display:flex;align-items:center;gap:6px;margin-top:8px}
+.inds{flex-wrap:wrap}
+.inds .dim{margin-left:6px;font-size:13px;white-space:nowrap}
+.arow{width:100%;border:1px solid var(--line);font-family:inherit;color:var(--txt);text-align:left;background:var(--nest)}
+.arow .ds{color:var(--dim);font-size:13px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
+.tag.plus{color:var(--good);border-color:rgba(101,217,121,.5)}.tag.minus{color:var(--bad);border-color:rgba(255,139,123,.5)}.tag.rand{color:var(--gold);border-color:rgba(245,200,76,.5)}.tag.nt{color:var(--dim)}
+.morei{display:flex;flex-direction:column;gap:2px}
+.morei b{font-weight:600}
+.morei .dim{font-size:13px}
+.evt{display:flex;flex-direction:column;gap:14px}
+.evtpic{display:flex;justify-content:center}
+.evtpic img{width:100%;max-width:300px;aspect-ratio:270/372;object-fit:cover;border-radius:12px;display:block}
+.evtinfo h2{margin:0 0 6px;font-size:22px}
+.evtinfo p{margin:0 0 12px;line-height:1.45;text-align:left}
+.effbox{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--nest);margin-bottom:10px}
+.effbox span{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.effbox b{font-size:16px;font-weight:600}
+.effbox.plus{border-color:rgba(101,217,121,.6)}.effbox.plus span{color:var(--good)}
+.effbox.minus{border-color:rgba(255,139,123,.6)}.effbox.minus span{color:var(--bad)}
+.effbox.rand span{color:var(--gold)}.effbox.nt span{color:var(--dim)}
+.quote{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--nest);margin-bottom:10px}
+.quote .ava{width:48px;height:48px}
+.quote p{margin:0;font-style:italic;line-height:1.45}
+.evtgo{text-align:center;margin-top:6px}
+html.land #app[data-view=main],html.land #app[data-view=card],html.land #app[data-view=cardres],html.land #app[data-view=more],html.land #app[data-view=coll]{column-count:1}
+html.land #app[data-view=main],html.land #app[data-view=more],html.land #app[data-view=coll]{padding-left:112px;padding-bottom:40px}
+html.land .nav{top:0;bottom:0;right:auto;width:96px;max-width:none;grid-template-columns:1fr;grid-auto-rows:min-content;align-content:center;border-top:0;border-right:1px solid var(--line);padding:12px 8px}
+html.land .mgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);column-gap:16px;align-items:start}
+html.land .mgrid>.card{grid-column:2;margin-top:12px}
+html.land .mgrid>.mapcard{grid-column:1;grid-row:1 / span 6;margin-top:12px}
+html.land #app>.card.evt{display:flex;flex-direction:row;align-items:flex-start}
+html.land .evtpic{flex:0 0 55%}
+html.land .evtpic img{max-width:none;max-height:calc(100vh - 170px);width:auto}
+html.land .evtinfo{flex:1;min-width:0}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -596,24 +641,54 @@ function endTurn() {
   if (G && roundDone) lgStartTurn();   // все сходили — играют лиги
   save();
 }
+// действие недели: выбор → выполнение → результат (точный эффект отдельно от фразы героя)
+const CARD_PHRASE = {
+  next: 'Этот вечер придал мне уверенности. На следующей неделе выйду на арену с новым настроем.',
+  plus: 'Чувствую прилив сил. На оставшиеся дни недели заряда точно хватит.',
+  minus: 'Самочувствие так себе. Остаток недели придётся провести спокойнее.',
+  minusNext: 'Чувствую, это ещё аукнется. На следующей неделе будет тяжелее собраться.',
+  rest: 'Хорошо провёл день и отвлёкся от соревнований. Теперь чувствую себя как обычно.'
+};
+const effWhen = d => d === 'next' ? 'на следующую неделю' : 'до конца недели';
+function cardExpect(c) {   // ожидаемый эффект до нажатия
+  if (c.k === 'p') return { kind: 'Бонус', cls: 'plus', txt: `+${c.v} к силе ${effWhen(c.d)}` };
+  if (c.k === 'm') return { kind: 'Штраф', cls: 'minus', txt: `${c.v} к силе ${effWhen(c.d)}` };
+  if (c.k === 'r') return { kind: 'Случайно', cls: 'rand', txt: '+5 или −5 к силе до конца недели, вероятность 50/50' };
+  if (c.k === 'fanp') return { kind: 'Бонус', cls: 'plus', txt: `+${c.v} к силе до конца недели` };
+  if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: 'Сила выше 65 — +20 рейтинга; иначе без прибавки' };
+  if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — +5 к силе' };
+  if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.win} рейтинга` };
+  if (c.k === 'duel') return { kind: 'Бой', cls: 'rand', txt: `Дуэль · победа — +${DUEL_WIN} рейтинга` };
+  if (c.k === 'contract') return { kind: 'Турнир', cls: 'rand', txt: `Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга` };
+  if (c.k === 'fans') return { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу' };
+  return { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу. Временные бонусы и штрафы снимаются' };
+}
 function useCard(i) {
   const c = S.hand[i];
   if (!c || !spend()) return;
-  clearJet();
-  let msg;
-  if (c.k === 'p' || c.k === 'm') { addEff(c.v, c.d); msg = c.k === 'p' ? 'Бонус!' : 'Эффект!'; }
-  else if (c.k === 'r') { const v = Math.random() < 0.5 ? 5 : -5; addEff(v, 'turn'); msg = v > 0 ? 'Бонус!' : 'Эффект!'; }
-  else if (c.k === 'dh') { S.hand.splice(i, 1); dhStart(); save(); return; }
-  else if (c.k === 'beast' || c.k === 'duel') { S.hand.splice(i, 1); specialFight(c.k); save(); return; }
-  else if (c.k === 'contract') { S.hand.splice(i, 1); contractStart(); save(); return; }
-  else if (c.k === 'fanp') { addEff(c.v, 'turn'); msg = 'Бонус! +' + c.v + ' к силе до конца недели.'; }
-  else if (c.k === 'fans') msg = 'Приятно.';
-  else if (c.k === 'cond') {
-    if (S.power > 65) { S.rating += 20; msg = 'Бонус! +20 рейтинга.'; } else msg = 'Ничего не произошло: нужна сила выше 65.';
-  } else msg = 'Без эффекта.';
+  const jet = !!S.jetlag; clearJet();   // любое действие недели снимает джетлаг
+  if (c.k === 'dh') { S.hand.splice(i, 1); dhStart(); save(); return; }
+  if (c.k === 'beast' || c.k === 'duel') { S.hand.splice(i, 1); specialFight(c.k); save(); return; }
+  if (c.k === 'contract') { S.hand.splice(i, 1); contractStart(); save(); return; }
+  let R;
+  if (c.k === 'p' || c.k === 'm' || c.k === 'r' || c.k === 'fanp') {
+    const v = c.k === 'r' ? (Math.random() < 0.5 ? 5 : -5) : c.v, d = c.k === 'r' || c.k === 'fanp' ? 'turn' : c.d;
+    addEff(v, d);
+    R = { kind: v > 0 ? 'Бонус' : 'Штраф', cls: v > 0 ? 'plus' : 'minus', txt: `${v > 0 ? '+' : ''}${v} к силе ${effWhen(d)}`,
+      phrase: v > 0 ? (d === 'next' ? CARD_PHRASE.next : CARD_PHRASE.plus) : (d === 'next' ? CARD_PHRASE.minusNext : CARD_PHRASE.minus) };
+  } else if (c.k === 'cond') {
+    const ok = S.power > 65; if (ok) S.rating += 20;
+    R = ok ? { kind: 'Бонус', cls: 'plus', txt: '+20 рейтинга', phrase: CARD_PHRASE.plus } : { kind: 'Отдых', cls: 'nt', txt: 'Без прибавки: нужна сила выше 65', phrase: CARD_PHRASE.rest };
+  } else if (c.k === 'fans') {
+    R = { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу', phrase: 'Приятно, когда тебя ждут и поддерживают.' };
+  } else {   // нейтральное действие: снимает временные бонусы и штрафы
+    const had = S.effects.length; S.effects = [];
+    R = { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу' + (had ? '. Временные бонусы и штрафы сняты' : ''), phrase: CARD_PHRASE.rest };
+  }
+  if (jet) R.txt += '. Джетлаг снят';
   S.hand.splice(i, 1);
-  logMsg(c.t + ': ' + msg);
-  S.view = 'main'; S.sel = null; save();
+  logMsg(c.t + ': ' + R.kind.toLowerCase() + ' — ' + R.txt + '.');
+  S.cardRes = Object.assign({ c }, R); S.view = 'cardres'; S.sel = null; save();
 }
 // ---------- бой ----------
 // Всё считается от одной характеристики — силы (10–125). Сила игроку не показывается.
@@ -1682,9 +1757,9 @@ const topBar = () => {   // компактная шапка: портрет 40×
     <div class="tgrow ${pct >= 100 ? 'done' : ''}" title="${pct >= 100 ? 'Прокачка завершена' : 'Прогресс прокачки ' + Math.round(pct) + '%'}"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
 };
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { card: ['Действие', 'back'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
-  ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'back'], weeks: ['История недель', 'back'] };
+  ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'more'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
@@ -1733,52 +1808,77 @@ function viewLeague() {
   return viewMain() + `<div class="ovl" data-a="back"><div class="lwrap" data-a="noop"><div class="lpanel" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div>
     <div class="row" style="flex-wrap:nowrap;margin-top:8px"><button class="btn" data-a="ltable" data-v="${r}" style="text-align:center;margin:0">Таблица</button><button class="btn" data-a="lhist" data-v="${r}" style="text-align:center;margin:0">История</button></div></div></div>`;
 }
+// нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
+function navBar() {
+  const cur = ['more', 'shop', 'inv', 'coll', 'weeks'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
+  const nb = (id, a, v, label, extra, dis) => `<button class="${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''}><b>${label}</b>${extra ? `<small>${extra}</small>` : ''}</button>`;
+  const freeB = freeBureau(S);
+  return `<nav class="nav">${nb('map', 'nav', 'map', 'Карта')}${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '1 действие', S.actions <= 0 && !freeB)}${nb('room', 'nav', 'room', 'Комната')}${nb('more', 'nav', 'more', 'Ещё')}</nav>`;
+}
 function viewMain() {
   const done = S.actions <= 0;
   const ind = [0, 1, 2].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
   const rows = S.hand.length
-    ? S.hand.map((c, i) => `<div class="arow" data-a="card" data-v="${i}">${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="${esc(c.t)}" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${TEXT}</div></div></div>`).join('')
-    : '<div class="dim">Набор на неделю пуст.</div>';
-  return wrap(`
-    <div class="card week">
-      <div><h2>Неделя ${S.turn}</h2><div class="dim" style="font-size:13px">Сезон ${seasonNo()}${seasonPhase() ? ' · ' + seasonPhase() : ''}</div><div class="inds">${ind}</div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг!</div>' : ''}</div>
-      <div class="nextm"><div class="dim">Предстоящие матчи</div><b>${nextMatchText()}</b></div>
-    </div>
-    <div class="card">
+    ? S.hand.map((c, i) => { const E = cardExpect(c); return `<button class="arow" data-a="card" data-v="${i}">${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${c.desc ? esc(c.desc) : TEXT}</div><div class="tag ${E.cls}">${E.kind}</div></div></button>`; }).join('')
+    : '<div class="dim">Все действия этой недели выполнены.</div>';
+  const week = `<div class="card week">
+      <div><h2>Неделя ${S.turn}</h2><div class="dim">Сезон ${seasonNo()}${seasonPhase() ? ' · ' + seasonPhase() : ''}</div>
+        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из 3</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: −5 к силе до любого действия</div>' : ''}</div>
+      <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
+    </div>`;
+  const map = `<div class="card mapcard">
       <h2>${S.inRoom ? 'Моя комната' : 'Карта мира'}</h2>
       ${S.inRoom ? roomHtml() : mapHtml()}
-      <div class="loc"><img src="img/logo_${S.region}.webp" alt="${esc(REGIONS[S.region].league)}"><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span></div>
-    </div>
-    <div class="card">
-      <h2>Повседневные действия</h2>
-      <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Сходить в библиотеку</button>
-      <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых</button>
-      <button class="btn" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''}>Сходить в бюро${freeBureau(S) ? ' <span class="dim" style="font-size:12px">· бесплатно</span>' : ''}</button>
-      <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион</button>
-      <button class="btn" data-a="pass">Пропустить неделю</button>
-      ${done ? '<button class="btn gold" data-a="next">Следующая неделя</button>' : ''}
-    </div>
-    <div class="card">
-      <h2>Действия региона</h2>
-      ${rows}
-    </div>
-    ${trophiesHtml()}
-    ${S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div><button class="btn" data-a="weeks" style="text-align:center">История недель</button></div>` : ''}
-    <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" data-a="shop" style="text-align:center;padding-left:6px;padding-right:6px">Магазин</button><button class="btn" data-a="inv" style="text-align:center;padding-left:6px;padding-right:6px">Инвентарь</button><button class="btn" data-a="room" style="text-align:center;padding-left:6px;padding-right:6px">${S.inRoom ? 'Открыть карту' : 'В комнату'}</button></div>
-    <button class="btn" data-a="menu">Главное меню</button>`);
+      <div class="loc"><img src="img/logo_${S.region}.webp" alt=""><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span></div>
+    </div>`;
+  const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
+  const daily = `<div class="card"><h2>Повседневные действия</h2>
+      <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Библиотека <span class="dim">· 1 действие</span></button>
+      <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых <span class="dim">· 1 действие</span></button>
+      <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион <span class="dim">· 1 действие</span></button>
+      ${done ? '<button class="btn gold" data-a="next" style="text-align:center">Следующая неделя</button>' : '<button class="btn" data-a="pass">Пропустить неделю</button>'}
+    </div>`;
+  const news = S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div></div>` : '';
+  return wrap(`<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
 }
-function viewCard() {
+function viewMore() {   // «Ещё»: библиотека, магазин, инвентарь, коллекция, история, настройки
+  const it = (a, t, d, dis) => `<button class="btn morei" data-a="${a}" ${dis ? 'disabled' : ''}><b>${t}</b><span class="dim">${d}</span></button>`;
+  return wrap(`<div class="card">
+      ${it('lib', 'Библиотека', 'Заметки о регионе, досье Элиты, команды лиг · 1 действие', S.actions <= 0)}
+      ${it('shop', 'Магазин', 'Жильё и артефакты за рейтинг')}
+      ${it('inv', 'Инвентарь', 'Надетый артефакт и коллекция предметов')}
+      ${it('coll', 'Коллекция', 'Кубки и медали')}
+      ${it('weeks', 'История недель', 'Все события и результаты')}
+    </div>
+    <div class="card"><h2>Настройки</h2>
+      ${it('orient', 'Повернуть экран', ORIENT === 'land' ? 'Сейчас: альбомный формат' : 'Сейчас: книжный формат')}
+      ${it('menu', 'Главное меню', 'Игра сохраняется автоматически')}
+    </div>`) + navBar();
+}
+function viewColl() { return wrap(`<div class="card">${trophiesHtml() || '<div class="dim">Пока нет ни одного трофея.</div>'}</div>`) + navBar(); }
+function viewCard() {   // до выполнения: картинка, описание, ожидаемый эффект, одна жёлтая кнопка
   const c = S.hand[S.sel];
   if (!c) { S.view = 'main'; return viewMain(); }
-  return wrap(`
-    <div class="card" style="text-align:center">
-      ${picOf(c) ? `<img class="bigpic${c.desc ? ' tall' : ''}" src="${picOf(c)}" alt="${esc(c.t)}">` : `<div class="sq big" style="margin:0 auto">${esc(c.t)}</div>`}
-      <h2>${esc(c.t)}</h2>
-      <div style="text-align:left">${c.desc ? esc(c.desc) : TEXT}</div>
-      ${labelOf(c)}
-    </div>
-    <button class="btn gold" data-a="use" ${S.actions <= 0 ? 'disabled' : ''}>Использовать (1 действие)</button>
-    ${back}`);
+  const E = cardExpect(c), none = S.actions <= 0;
+  return wrap(`<div class="card evt">
+      <div class="evtpic">${picOf(c) ? `<img src="${picOf(c)}" alt="${esc(c.t)}">` : `<div class="sq big">${esc(c.t)}</div>`}</div>
+      <div class="evtinfo"><h2>${esc(c.t)}</h2><p>${c.desc ? esc(c.desc) : TEXT}</p>
+        <div class="effbox ${E.cls}"><span>${E.kind}</span><b>${E.txt}</b></div>
+        ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
+        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>Провести время · 1 действие</button>
+        ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
+    </div>`);
+}
+function viewCardRes() {   // после выполнения: точный итог, срок и фраза героя
+  const R = S.cardRes;
+  if (!R) { S.view = 'main'; return viewMain(); }
+  return wrap(`<div class="card evt">
+      <div class="evtpic">${picOf(R.c) ? `<img src="${picOf(R.c)}" alt="${esc(R.c.t)}">` : ''}</div>
+      <div class="evtinfo"><h2>${esc(R.c.t)}</h2>
+        <div class="effbox ${R.cls}"><span>${R.kind}</span><b>${R.txt}</b></div>
+        <div class="quote"><div class="ava">${faceImg(S.face)}</div><p>${esc(R.phrase)}</p></div>
+        <button class="btn gold evtgo" data-a="cardback">Вернуться</button></div>
+    </div>`);
 }
 // ---------- описания команд для библиотеки: ключ — логотип команды ----------
 const TEAM_INFO = {   // us_* — полупрофессиональные команды Америки
@@ -2369,7 +2469,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -2433,7 +2533,10 @@ function act(a, v) {
     case 'menu': save(); G = null; S = null; SETUP = null; F = null; break;
     case 'card': S.view = 'card'; S.sel = +v; break;
     case 'league': S.view = 'league'; S.sel = +v; break;
-    case 'use': useCard(S.sel); break;
+    case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
+    case 'cardback': S.cardRes = null; S.view = 'main'; break;
+    case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
+    case 'coll': S.view = 'coll'; break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
     case 'rest': if (spend()) { clearJet(); addEff(5, 'turn'); logMsg('Отдых: бонус до конца недели.'); S.view = 'rest'; } break;
@@ -2478,6 +2581,7 @@ function act(a, v) {
     case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
     case 'wcview': S.view = 'wc'; break;
     case 'weeks': S.view = 'weeks'; break;
+    case 'more': S.view = 'more'; break;
     case 'hdrfull': S.hdrFull = !S.hdrFull; break;
     case 'orient': toggleOrient(); return;
     case 'wfview': S.view = 'wf'; break;
