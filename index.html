@@ -737,6 +737,12 @@ html.land .fyl .flog{max-height:110px}
 .top .coins.top,.top .coins.top b{all:unset}
 .top .coins.top{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:2px;font-size:13px;font-weight:800;color:#FFE7A3}
 .top .coins.top .coin{width:14px;height:14px}
+.offer{text-align:center}
+.offlogo{width:120px;height:120px;border-radius:18px;display:block;margin:4px auto 10px;box-shadow:0 0 24px rgba(245,200,76,.25)}
+.offl{text-align:left;padding-left:18px;line-height:1.5;margin:10px 0 14px}
+.offl li{margin:4px 0}
+.ctline{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--dim)}
+.ctline img{width:26px;height:26px;border-radius:6px}.ctline b{color:var(--gold)}.ctline.pro{color:var(--gold)}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1043,9 +1049,9 @@ function roomHtml() {
 }
 const itemIcon = (H, i) => artImg(i);
 const TIERS = [
-  { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1 },
-  { name: 'Любительский турнир', lo: 22, hi: 37, gain: 3 },
-  { name: 'Полупрофессиональный турнир', lo: 40, hi: 55, gain: 5 }
+  { name: 'Турнир новичков', lo: 10, hi: 25, gain: 1, cap: 40 },
+  { name: 'Любительский турнир', lo: 22, hi: 37, gain: 3, cap: 52 },
+  { name: 'Полупрофессиональный турнир', lo: 40, hi: 55, gain: 5, cap: 65 }
 ];
 const POWER_TOURNEY_CAP = 65, POWER_MAX = 100, TROPHY_GAIN = 1, DH_GAIN = 5;
 // До 65 — прокачка турнирами. Дальше: каждый новый кубок +1 (3 турнира + лига × 5 регионов = +20 → 85),
@@ -1110,7 +1116,10 @@ const BEAST = { gapLo: 20, gapHi: 28, coins: 250 };
 const COIN_SVG = '<svg viewBox="0 0 20 20" class="coin"><circle cx="10" cy="10" r="9" fill="#2A1F05" stroke="#F5C84C" stroke-width="1.6"/><path d="M10 3.6l4.2 6.4L10 16.4 5.8 10z" fill="#32D5E7"/><path d="M10 3.6l4.2 6.4H5.8z" fill="#C9FBFF"/></svg>';
 const coinHtml = (n, cls = '') => `<span class="coins ${cls}">${COIN_SVG}<b>${(n | 0).toLocaleString('ru-RU')}</b></span>`;
 const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; if (why) logTo(H, `${why}: +${n} ОЛ.`); };
-const TOUR_COINS = [50, 120, 600];   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
+const TOUR_COINS = [50, 120, 600];
+const TOUR_PRIZE = TOUR_COINS;   // приз за победу; места: финал 40%, полуфинал 20%, четвертьфинал 10%, участие 5%
+const PRIZE_PART = { W: 1, F: 0.4, SF: 0.2, QF: 0.1 }, PRO_BONUS = 0.7, TEAM_BONUS = 0.5, SIGN_COINS = 200, SEMI_CT_WEEKS = 3, WC_GAME = 100, WF_GAME = 400;
+const prizeBase = R => R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
 const LG_COINS = { win: 50, champ: 2000, second: 1000, third: 600 }, WC_COINS = 1500, WF_COINS = 4000, ESL_COINS = 500, DH_COINS = 1500, LADDER_COINS = 30, ELITE_COINS = 100;
 const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'ворон', 'олень'];   // обезумевшие звери: img/beast/<i>.webp
 const DUEL_WIN = 50, CONTRACT_WIN = 250;   // дуэль — рейтинг; контракт — очки лиги
@@ -1142,6 +1151,7 @@ const npcRating = p => p * 30;                 // у соперников рей
 function endTurn() {
   S.lgBonus = heroPower(S) - S.power - gameBonus(S);   // бонусы и минусы на конец своей недели — с ними играются матчи лиги (бонус на бой — отдельно)
   S.turn++; S.actions = S.weekMax = maxActs(S);
+  semiTick(S);
   S.effects = S.effects.filter(e => e.game || e.to >= S.turn);
   S.hand = drawHand();
   S.view = 'main'; S.sel = null;
@@ -1858,7 +1868,7 @@ function lgDraftEU(L) {
   for (const o of humans) {
     const ti = L.teams.findIndex(T => T.h === o.h);
     o.H.draft = null;
-    if (ti >= 0) { o.H.league = r; logTo(o.H, `Драфт: тебя взяла команда ${L.teams[ti].name}! Лига ${LSHORT[r]} стартует со следующей недели.`); histTo(o.H, r, 'Драфт: команда ' + L.teams[ti].name); }
+    if (ti >= 0) { o.H.league = r; logTo(o.H, `Драфт: тебя взяла команда ${L.teams[ti].name}! Лига ${LSHORT[r]} стартует со следующей недели.`); proSigned(o.H, r, L.teams[ti].name); histTo(o.H, r, 'Драфт: команда ' + L.teams[ti].name); }
     else logTo(o.H, `Драфт ${LSHORT[r]}: не хватило рейтинга. Подними рейтинг в бюро и попробуй в следующем сезоне.`);
   }
   // посев «змейкой» по силе команды
@@ -1927,7 +1937,7 @@ function lgDraft(L) {
   for (const o of humans) {
     const ti = L.teams.findIndex(T => T.h === o.h);
     o.H.draft = null;
-    if (ti >= 0) { o.H.league = r; logTo(o.H, `Драфт: тебя взяла команда ${L.teams[ti].name}! Лига ${LSHORT[r]} стартует со следующей недели.`); histTo(o.H, r, 'Драфт: команда ' + L.teams[ti].name); }
+    if (ti >= 0) { o.H.league = r; logTo(o.H, `Драфт: тебя взяла команда ${L.teams[ti].name}! Лига ${LSHORT[r]} стартует со следующей недели.`); proSigned(o.H, r, L.teams[ti].name); histTo(o.H, r, 'Драфт: команда ' + L.teams[ti].name); }
     else logTo(o.H, `Драфт ${LSHORT[r]}: не хватило рейтинга. Подними рейтинг в бюро и попробуй в следующем сезоне.`);
   }
   // два круга по системе «по кругу»
@@ -2263,7 +2273,7 @@ function lgAfterGame(L, m) {
   const done = m.done;
   if (done) for (const i of [m.a, m.b]) if (lgHum(L, i)) {
     const H = G.players[L.teams[i].h], wa = m.g.filter(x => x === m.a).length;
-    if (m.w === i && !L.wc && !L.wf) H.coins = (H.coins || 0) + LG_COINS.win;
+    if (m.w === i) H.coins = (H.coins || 0) + (L.wf ? WF_GAME : L.wc ? WC_GAME : LG_COINS.win);   // победа в серии: лига 50, Wild Card 100, чемпионат мира 400
     histTo(H, L.title ? H.region : L.r, `${L.title || LSHORT[L.r]} · ${lgTeamName(L, m.a)} ${wa}:${m.g.length - wa} ${lgTeamName(L, m.b)}`);
   }
   if (!lgPending(L)) G.lview = 'match';
@@ -2338,8 +2348,9 @@ function playTour(t) {
     Object.assign(genSpectre(r, tk, rnd(T.lo, T.hi)), { id: hums.length + i, seed: Math.random() })));
   if (semiT) {   // бойцы под флагами команд
     const teams = shuffle(SEMI.map((_, i) => i)), humT = {};
-    ps.filter(x => x.h != null).forEach(x => {   // 10%: игрока с рейтингом выше 1500 берёт команда (+1 к силе на турнир)
+    ps.filter(x => x.h != null).forEach(x => {   // контракт — всегда за свою команду; иначе 10%: игрока с рейтингом выше 1500 берёт команда
       const H = G.players[x.h];
+      if (H.semi && teams.includes(H.semi.team)) { const ti = H.semi.team; teams.splice(teams.indexOf(ti), 1); x.team = ti; x.tb = SEMI_PICK_BONUS; humT[x.h] = ti; logTo(H, `Ты выступаешь за ${SEMI_TEAMS[ti]} по контракту.`); return; }
       if (H.rating > SEMI_PICK_RATING && Math.random() < SEMI_PICK_CHANCE && teams.length) {
         const ti = teams.shift(); x.team = ti; x.tb = SEMI_PICK_BONUS; humT[x.h] = ti;
         logTo(H, `Команда ${SEMI_TEAMS[ti]} пригласила тебя выступить за неё на турнире! Бонус к силе на турнир.`);
@@ -2511,6 +2522,51 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
   }
 }
 const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
+// приз за место; в профессиональной команде +70%, в составе любой другой команды (полупро-контракт, приглашение) +50%
+function payPrize(R, x, H, place) {
+  const base = Math.max(5, Math.round(prizeBase(R) * (PRIZE_PART[place] || 0.05)));
+  const pro = H.league != null, team = !pro && (x.team != null || R.kind === 'contract');
+  const extra = Math.round(base * (pro ? PRO_BONUS : team ? TEAM_BONUS : 0));
+  H.coins = (H.coins || 0) + base + extra;
+  return `Призовые: +${base + extra} ОЛ${extra ? ` (в т.ч. +${extra} — бонус ${pro ? 'профессиональной' : ''} команды)`.replace('бонус  команды', 'бонус команды') : ''}.`;
+}
+// ---------- полупрофессиональные контракты: после хорошего полупро-турнира команда предлагает контракт на 3 недели ----------
+function semiAfter(H, R, x) {
+  if (H.semi && x.team === H.semi.team) { H.semi.worked = true; logTo(H, `Контракт с ${SEMI_TEAMS[H.semi.team]} отработан: ты сыграл полупрофессиональный турнир за команду.`); }
+  if (H.league != null || H.semi || H.offer != null) return;   // в профкоманде и на действующем контракте предложений нет
+  const o = R.winner === x.id ? 'W' : R.outs && R.outs[x.id], ch = { W: 1, F: 0.6, SF: 0.3, QF: 0.1 }[o] || 0;
+  if (Math.random() >= ch) return;
+  const inT = [...new Set(R.ps.filter(y => y.team != null && y.h == null).map(y => y.team))];
+  H.offer = (inT.length ? inT : SEMI.map((_, i) => i))[rnd(0, (inT.length || SEMI.length) - 1)];
+}
+function semiTick(H) {   // начало недели героя: истёк ли контракт
+  if (!H.semi || H.turn <= H.semi.until) return;
+  const c = H.semi; H.semi = null;
+  let d = `Срок контракта с командой ${SEMI_TEAMS[c.team]} истёк, контракт расторгнут.`;
+  if (!c.worked) { const f = Math.min(H.coins || 0, SIGN_COINS); H.coins -= f; d += ` Ты не сыграл за команду полупрофессиональный турнир — бонус за подписание (${f} ОЛ) возвращён.`; }
+  else d += ' Команда благодарит за сотрудничество.';
+  logTo(H, d); H.notice = { t: 'Контракт расторгнут', d, team: c.team };
+}
+function proSigned(H, r, team) {   // драфт: профессиональная команда, бонус за подписание, полупро-контракт отменяется
+  H.coins = (H.coins || 0) + SIGN_COINS;
+  if (H.semi) { logTo(H, `Контракт с ${SEMI_TEAMS[H.semi.team]} расторгнут: ты перешёл в профессиональную команду.`); H.semi = null; }
+  H.offer = null;
+  logTo(H, `Бонус за подписание контракта с ${team}: +${SIGN_COINS} ОЛ. Пока идёт сезон, все призовые +70%.`);
+}
+function viewOffer() {
+  const t = S.offer;
+  return wrap(`<div class="card offer"><img class="offlogo" src="img/team/${SEMI[t][1]}.webp" alt="">
+    <h2>${esc(SEMI_TEAMS[t])} предлагает вам контракт на ${SEMI_CT_WEEKS} недели</h2>
+    <div class="dim" style="text-align:left">${esc(SEMI_INFO[SEMI_TEAMS[t]] || '')}</div>
+    <ul class="offl"><li>Сразу: ${coinHtml(SIGN_COINS)} за подписание</li><li>На полупрофессиональном турнире ты выступаешь под флагом команды: бонус к силе и +50% к призовым</li>
+      <li>Условие: за ${SEMI_CT_WEEKS} недели сыграть за команду хотя бы один полупрофессиональный турнир. Иначе бонус за подписание вернётся команде</li><li>Через ${SEMI_CT_WEEKS} недели контракт расторгается</li></ul>
+    <button class="btn gold" data-a="offyes" style="text-align:center">Подписать</button><button class="btn" data-a="offno" style="text-align:center">Отказаться</button></div>`);
+}
+function viewNotice() {
+  const N = S.notice;
+  return wrap(`<div class="card offer">${N.team != null ? `<img class="offlogo" src="img/team/${SEMI[N.team][1]}.webp" alt="">` : ''}<h2>${esc(N.t)}</h2><p style="text-align:left">${esc(N.d)}</p>
+    <button class="btn gold" data-a="noteok" style="text-align:center">Понятно</button></div>`);
+}
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
@@ -2527,22 +2583,20 @@ function finishTour() {
       let msg = T.name + ': победа!';
       if (R.kind == null) {
         if (R.tier + 1 > H.tiers[r] && R.tier + 1 <= 2) { H.tiers[r] = R.tier + 1; msg += ' Открыт следующий турнир.'; }
-        if (H.power < POWER_TOURNEY_CAP) H.power = Math.min(POWER_TOURNEY_CAP, H.power + T.gain);   // до 65 — прокачка
+        if (H.power < T.cap) H.power = Math.min(T.cap, H.power + T.gain);   // каждый уровень растит силу только до своего потолка: 40 / 52 / 65
       }
-      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, H.rating += 200, H.coins = (H.coins || 0) + ESL_COINS, 'esl')
-        : R.kind === 'contract' ? (H.coins = (H.coins || 0) + CONTRACT_WIN, 'contract')
-        : R.kind === 'dh' ? (H.coins = (H.coins || 0) + DH_COINS, H.dhWon ? 'dhagain' : (H.dhWon = true, H.power = Math.min(POWER_MAX, H.power + DH_GAIN), 'dh'))
+      const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, H.rating += 200, 'esl')
+        : R.kind === 'contract' ? 'contract'
+        : R.kind === 'dh' ? (H.dhWon ? 'dhagain' : (H.dhWon = true, H.power = Math.min(POWER_MAX, H.power + DH_GAIN), 'dh'))
         : awardTrophy(H, r, T.name);
       if (tr === 'dh') msg += ' Ты достиг вершины силы!';
-      if (tr === 'contract') msg += ` +${CONTRACT_WIN} ОЛ.`;
-      if (tr === 'dh' || tr === 'dhagain') msg += ` +${DH_COINS} ОЛ.`;
-      if (R.kind == null) { H.coins = (H.coins || 0) + TOUR_COINS[R.tier]; msg += ` Приз: +${TOUR_COINS[R.tier]} ОЛ.`; }
-      msg += tr === 'contract' ? '' : tr === 'esl' ? ` +200 рейтинга, +${ESL_COINS} ОЛ и медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
+      msg += ' ' + payPrize(R, x, H, 'W');
+      msg += tr === 'contract' ? '' : tr === 'esl' ? ` +200 рейтинга и медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id));
-      const o = R.outs && R.outs[x.id], pz = R.kind == null && (o === 'F' || o === 'SF') ? Math.round(TOUR_COINS[R.tier] * (o === 'F' ? 0.4 : 0.2)) : 0;
-      if (pz) H.coins = (H.coins || 0) + pz;
-      logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '.' + (pz ? ` Призовые: +${pz} ОЛ.` : '')); }
+      const o = R.outs && R.outs[x.id];
+      logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '. ' + payPrize(R, x, H, PRIZE_PART[o] ? o : 'P')); }
+    if (R.kind == null && R.tier === 2) semiAfter(H, R, x);   // полупро: отработка контракта и предложения команд
   }
   S.view = S.trun.kind === 'esl' ? 'bureau' : (S.trun.kind === 'dh' || S.trun.kind === 'contract') ? 'main' : 'tour'; S.trun = null;
 }
@@ -2658,7 +2712,7 @@ function viewMain() {
     : '<div class="dim">Все действия этой недели выполнены.</div>';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2>${(([st, eta]) => `<div class="dim">Сезон ${seasonNo()} · ${esc(st)}</div><div class="sstat">${esc(eta)}</div>`)(seasonStatus())}
-        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
+        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.semi ? `<div class="ctline"><img src="img/team/${SEMI[S.semi.team][1]}.webp" alt=""><span>Контракт: <b>${esc(SEMI_TEAMS[S.semi.team])}</b> · до конца недели ${S.semi.until}${S.semi.worked ? ' · отработан' : ' · нужен полупро-турнир'}</span></div>` : S.league != null ? `<div class="ctline pro"><span>Профессиональная команда · призовые +70%</span></div>` : ''}${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
 </div>
       <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
     ${done ? '<button class="btn gold nextwk" data-a="next">Следующая неделя ▶</button>' : `<button class="btn nextwk soft" data-a="pass">Завершить неделю · осталось ${S.actions} ${actWord(S.actions)}</button>`}
@@ -3111,7 +3165,7 @@ function viewTour() {   // три карточки уровней: назван�
     return `<button class="tcard ${ok ? '' : 'locked'}" data-a="play" data-v="${i}" ${ok ? '' : 'disabled'} aria-label="${t.name}">
       <img src="img/tier_${i}.webp" alt="">
       <span class="tci"><b>${t.name}</b>
-        <span class="tcm"><span class="${ok ? 'okc' : 'noc'}">${ok ? 'Доступен' : 'Закрыт'}</span><span>Оплачен: 1 действие</span>${has(t.name) ? '<span class="gold">🏆 Трофей есть</span>' : '<span class="dim">Трофея пока нет</span>'}</span>
+        <span class="tcm"><span class="${ok ? 'okc' : 'noc'}">${ok ? 'Доступен' : 'Закрыт'}</span><span>Оплачен: 1 действие</span><span>${S.power >= t.cap ? 'Сила здесь больше не растёт' : 'Растит силу'}</span><span>Приз: ${coinHtml(TOUR_PRIZE[i])}</span>${has(t.name) ? '<span class="gold">🏆 Трофей есть</span>' : '<span class="dim">Трофея пока нет</span>'}</span>
         ${why ? `<span class="tcw">${why}</span>` : ''}</span></button>`;
   }).join('');
   return wrap(`<div class="card"><img class="scene tbanner" src="img/tours.webp" alt="Турнирная сетка">
@@ -3478,7 +3532,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -3486,7 +3540,9 @@ function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
   if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); stageTop(); } lastView = null; return; }
   if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); stageTop(); lastView = null; return; }
-  if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';   // экран большой победы — при первом возвращении на главный
+  if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';
+  else if (S.notice && !F && (S.view === 'main' || !S.view)) S.view = 'notice';
+  else if (S.offer != null && !F && (S.view === 'main' || S.view === 'tour' || S.view === 'bureau' || !S.view)) S.view = 'offer';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
   const bkt = app.querySelector('.bkt');   // сетка: прокрутить к текущему раунду
@@ -3550,6 +3606,9 @@ function act(a, v) {
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
     case 'cupview': S.view = 'cup'; break;
+    case 'offyes': if (S.offer != null) { const t = S.offer; S.offer = null; S.semi = { team: t, from: S.turn, until: S.turn + SEMI_CT_WEEKS - 1, worked: false }; S.coins = (S.coins || 0) + SIGN_COINS; logMsg(`Подписан контракт с ${SEMI_TEAMS[t]} на ${SEMI_CT_WEEKS} недели: +${SIGN_COINS} ОЛ.`); S.view = 'main'; } break;
+    case 'offno': if (S.offer != null) { logMsg(`Ты отказался от контракта с ${SEMI_TEAMS[S.offer]}.`); S.offer = null; S.view = 'main'; } break;
+    case 'noteok': S.notice = null; S.view = 'main'; break;
     case 'vicok': S.vic = null; S.view = 'main'; break;
     case 'ivans': if (S.iv) { if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
