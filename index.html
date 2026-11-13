@@ -700,6 +700,7 @@ const proCount = r => ONLY_ELITE[r] ? Object.keys(ELITE_DATA[r] || {}).length : 
 const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [['Seoul Phoenix', null, 2], ['Busan Titans', null, 1]];
 const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
 const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал',
+  K1: 'Этап 1 · отбор · 100 → 50', K2: 'Этап 1 · отбор · 50 → 25',
   W1: 'Wild Card · этап 1 · раунд 1', W2: 'Wild Card · этап 1 · раунд 2', W3: 'Wild Card · этап 1 · раунд 3', W4: 'Wild Card · этап 1 · раунд 4', W5: 'Wild Card · этап 1 · раунд 5',
   R64: '1/32 финала', R32: '1/16 финала', R16: '1/8 финала',
   RPA: 'Плей-ин · первый раунд', RPB: 'Плей-ин · второй раунд', RPC: 'Плей-ин · финал',
@@ -898,9 +899,9 @@ const lgTeamName = (L, i) => { const T = L.teams[i]; return T.h != null ? G.play
 const lgRating = (L, i) => { const T = L.teams[i]; return T.h != null ? G.players[T.h].rating : T.f.rating; };
 const lgHum = (L, i) => L.teams[i].h != null;
 function lgFighter(L, i) {
-  const T = L.teams[i];
-  if (T.h != null) { const H = G.players[T.h]; return fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus : heroPower(H)) + T.bonus, H.rating, true, H.ability, H.face); }
-  return fighter(T.f.name, T.f.p + T.bonus, npcRating(T.f.p + T.bonus), false, T.f.abil, T.f.face);   // рейтинг — по силе вместе с бонусом команды
+  const T = L.teams[i], bonus = T.bonus + (L.wc && L.phase !== 'B' ? (T.wcPlus || 0) : 0);   // полупро в 1-м этапе Wild Card: +2
+  if (T.h != null) { const H = G.players[T.h]; return fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus : heroPower(H)) + bonus, H.rating, true, H.ability, H.face); }
+  return fighter(T.f.name, T.f.p + bonus, npcRating(T.f.p + bonus), false, T.f.abil, T.f.face);   // рейтинг — по силе вместе с бонусом команды
 }
 function lgTable(L) {
   const t = L.teams.map((T, i) => ({ i, pts: 0, w: 0, d: 0, l: 0, gw: 0, gl: 0, pl: 0 }));
@@ -934,7 +935,8 @@ function lgNextRound(L) {   // создать следующий «матч ли
 // ---------- Wild Card: единый турнир за 3 хода ----------
 // Этап 1 — швейцарка Bo1 (5 раундов) для занявших 2 последних места лиг и групп; лучшие добирают сетку до степени двойки.
 // Этап 2 — сетка single elimination Bo3: 1/32, 1/16, 1/8. Этап 3 — 1/4, полуфинал (Bo3) и финал Bo5. Победителю +5 к силе (один раз).
-const WC_GAIN = 5, WC_SW_ROUNDS = 5;
+const WC_GAIN = 5, WC_SW_ROUNDS = 5, WC_S1 = 100, WC_SEMI_PLUS = 2;
+const WC_FILL_C = ['US', 'CA', 'BR', 'DE', 'FR', 'GB', 'ES', 'PL', 'SE', 'RU', 'UA', 'KZ', 'CN', 'KR', 'JP'];
 function wcCollect(L) {   // кто из лиги идёт в Wild Card
   const order = lgTable(L).map(x => x.i), last = new Set();
   if (L.groups && (L.fmt === 'eu40' || L.fmt === 'ru20')) L.groups.forEach((_, g) => lgGroupTable(L, g).slice(L.fmt === 'ru20' ? -4 : -2).forEach(x => last.add(x.i)));
@@ -945,8 +947,16 @@ function wcCollect(L) {   // кто из лиги идёт в Wild Card
   if (REGIONS.every((_, r) => G.wcPool[r])) {   // все лиги сыграли — Wild Card стартует со следующего хода лиг
     const P = REGIONS.map((_, r) => G.wcPool[r]);
     const s1 = [].concat(...P.map(x => x.s1)), s2 = [].concat(...P.map(x => x.s2));
+    const taken = new Set([].concat(s1, s2, ...P.map(x => x.wf || [])).map(e => (e.f ? e.f.name : G.players[e.h].nick).toLowerCase()));
+    for (const [name, logo] of SEMI) {   // у каждой полупро-команды один боец в первом этапе (+2 к силе только там)
+      const e = s1.find(x => x.name === name);
+      if (e) { e.wcPlus = WC_SEMI_PLUS; continue; }
+      if (s2.some(x => x.name === name)) continue;   // её боец уже во втором этапе
+      s1.push({ h: null, f: euFiller(taken, WC_FILL_C), bonus: 0, name, logo, r: -1, wcPlus: WC_SEMI_PLUS });
+    }
+    while (s1.length < WC_S1) s1.push({ h: null, f: euFiller(taken, WC_FILL_C), bonus: 0, name: 'Свободный боец', logo: null, r: -1 });
     G.wfIn = [].concat(...P.map(x => x.wf || []));
-    G.wc = { r: -1, wc: true, title: 'Wild Card', fmt: 'wc', phase: 'W', stage: 1, teams: s2.concat(s1), n2: s2.length, sw: s1.map((_, k) => s2.length + k), M: [], cur: null, left: 0, wsr: 0 };
+    G.wc = { r: -1, wc: true, title: 'Wild Card', fmt: 'wc', phase: 'K1', stage: 1, teams: s2.concat(s1), n2: s2.length, ko: s1.map((_, k) => s2.length + k), sw: [], bye: {}, M: [], cur: null, left: 0, wsr: 0 };
     G.wcPool = null;
     G.players.forEach(H => { if (G.wc.teams.some(T => T.h === G.players.indexOf(H))) logTo(H, 'Ты в Wild Card! Турнир начнётся со следующего хода лиг.'); });
   }
@@ -959,15 +969,24 @@ function wcSwissTable(L) {
     if (A) A.opp.push(m.b); if (B) B.opp.push(m.a);
     const W = t.find(x => x.i === m.w), Lo = t.find(x => x.i === (m.w === m.a ? m.b : m.a)); if (W) W.w++; if (Lo) Lo.l++;
   }
+  t.forEach(x => { x.w += (L.bye || {})[x.i] || 0; });
   const wins = i => (t.find(x => x.i === i) || { w: 0 }).w;
   t.forEach(x => { x.bh = x.opp.reduce((a, o) => a + wins(o), 0); });
   return t.sort((a, b) => b.w - a.w || b.bh - a.bh || wcRating(L, b.i) - wcRating(L, a.i));
 }
 function wcNext(L) {
   const W = m => m.w;
+  if (L.phase === 'K1' || L.phase === 'K2') {   // этап 1, часть 1: отбор Bo3 — 100 → 50 → 25
+    const st = L.phase, ent = st === 'K1' ? L.ko : lgStage(L, 'K1').map(W);
+    const o = ent.slice().sort((a, b) => wcRating(L, b) - wcRating(L, a)), out = [];
+    for (let k = 0; k < Math.floor(o.length / 2); k++) out.push(lgAdd(L, st, o[k], o[o.length - 1 - k], 3, 'Этап 1 · отбор'));
+    L.phase = st === 'K1' ? 'K2' : 'KD'; return out;
+  }
+  if (L.phase === 'KD') { L.sw = lgStage(L, 'K2').map(W); L.phase = 'W'; }   // этап 1, часть 2: швейцарка для 25
   if (L.phase === 'W' && L.wsr < WC_SW_ROUNDS && L.sw.length > 1) {   // раунд швейцарки
     const t = wcSwissTable(L), free = t.map(x => x.i), out = [];
     L.wsr++;
+    if (free.length % 2) { const b = free.pop(); L.bye = L.bye || {}; L.bye[b] = (L.bye[b] || 0) + 1; }   // нечётное число — последний в таблице отдыхает с победой
     while (free.length > 1) {
       const a = free.shift(), played = t.find(x => x.i === a).opp;
       let k = free.findIndex(b => !played.includes(b)); if (k < 0) k = 0;
@@ -994,7 +1013,9 @@ function wcNext(L) {
   const out = L.pairs.filter(([a, b]) => a != null && b != null).map(([a, b]) => lgAdd(L, st, a, b, st === 'F' ? 5 : 3, 'Wild Card'));
   return out.length ? out : wcNext(L);
 }
-const wcNextStage = L => L.phase === 'W' ? (L.wsr < WC_SW_ROUNDS && L.sw.length > 1 ? 1 : 2) : (L.pairs ? (L.pairs.length * 2 > 16 ? 2 : 3) : 2);
+const wcNextStage = L => L.phase === 'K1' || L.phase === 'K2' ? 1 : L.phase === 'KD' ? 2 : L.phase === 'W' ? (L.wsr < WC_SW_ROUNDS && L.sw.length > 1 ? 2 : 3) : (L.pairs ? (L.pairs.length * 2 > 16 ? 3 : 4) : 3);
+const WC_PART = ['', 'этап 1 · отбор Bo3', 'этап 1 · швейцарская система', 'этап 2 · сетка Bo3', 'этап 3 · плей-офф'];
+const wcPartNow = L => WC_PART[Math.min(4, L.stopAt ? L.stopAt - 1 : wcNextStage(L))];
 function wcFinish(L) {
   const f = lgStage(L, 'F')[0], champ = f.w, T = L.teams[champ];
   L.done = true; G.wcLast = { champ: lgTeamName(L, champ), team: T.name, week: G.week };
@@ -1884,14 +1905,15 @@ function wcCardHtml() {   // карточка Wild Card в бюро
   if (!G.wc && !G.wcLast) return '';
   const L = G.wc, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
   const pend = G.wcPool ? REGIONS.filter((_, r) => !G.wcPool[r]).map((_, r) => LSHORT[r]) : [];
-  return `<div class="card"><h3>Wild Card</h3><div class="dim">${L ? `Идёт турнир: этап ${L.phase === 'W' ? 1 : wcNextStage(L) >= 3 ? 3 : 2} из 3, ${L.teams.length} бойцов.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Прошлый Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}).`}</div>
+  return `<div class="card"><h3>Wild Card</h3><div class="dim">${L ? `Идёт турнир: ${wcPartNow(L)}, ${L.teams.length} бойцов.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Прошлый Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}).`}</div>
     ${L ? `<button class="btn" data-a="wcview" style="text-align:center">Сетка Wild Card</button>` : ''}</div>`;
 }
 const wcQualN = L => { let B = 1; while (B < L.n2 + 1) B *= 2; return Math.max(0, B - L.n2); };
 function viewWC() {
   const L = G.wc;
   if (!L) return wrap(`<div class="card">Wild Card сейчас не идёт.</div>${back}`);
-  let h = `<div class="card"><h2>Wild Card</h2><div class="dim">Бойцы лиг, не попавшие на чемпионат мира. Этап 1 — швейцарская система Bo1 для занявших 2 последних места. Этап 2 и 3 — сетка на выбывание Bo3, финал Bo5. Каждый этап — один ход.</div></div>`;
+  let h = `<div class="card"><h2>Wild Card</h2><div class="dim">Бойцы лиг, не попавшие на чемпионат мира. Этап 1: отбор Bo3 на 100 бойцов (последние места лиг, по бойцу от каждой полупро-команды с +2 к силе и свободные бойцы) — 100 → 50 → 25, затем 25 играют швейцарку Bo1. Этап 2 — сетка на 64 Bo3, этап 3 — плей-офф, финал Bo5. Каждая часть — один ход.</div></div>`;
+  for (const st of ['K1', 'K2']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   if (L.sw.length) h += `<div class="card"><h3>Этап 1 · швейцарская система</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${wcSwissTable(L).map((x, k) => `<tr class="${k < wcQualN(L) ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.w}-${x.l}</td></tr>`).join('')}</table></div>`;
   for (const st of ['R64', 'R32', 'R16', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   h += `<div class="card dim">Во втором этапе сразу играют ${L.n2} бойцов, ещё ${wcQualN(L)} мест — лучшим из швейцарки. Победителю Wild Card +${WC_GAIN} к силе.</div>`;
@@ -1948,7 +1970,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
   const L = lgQ(G.lq[0]), m = lgPending(L);
   if (!m) return '';
   if ((L.wc || L.wf) && G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
-    <div class="logo" style="font-size:30px;margin:18px 0 6px">${L.wf ? 'Чемпионат мира!' : 'Играет Wild Card!'}</div><div class="dim">${L.wf ? (m.label || LG_STAGE[m.st]) : `Этап ${Math.min(3, L.phase === 'W' ? 1 : wcNextStage(L))} из 3 · ${LG_STAGE[m.st] || ''}`}</div>
+    <div class="logo" style="font-size:30px;margin:18px 0 6px">${L.wf ? 'Чемпионат мира!' : 'Играет Wild Card!'}</div><div class="dim">${L.wf ? (m.label || LG_STAGE[m.st]) : `${wcPartNow(L)[0].toUpperCase() + wcPartNow(L).slice(1)} · ${LG_STAGE[m.st] || ''}`}</div>
     <button class="btn gold" data-a="lgo" style="margin-top:14px">Начать</button></div>`;
   if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
     <img src="img/logo_${L.r}.webp" alt="" style="width:120px;height:120px;border-radius:16px;margin:14px auto;display:block">
