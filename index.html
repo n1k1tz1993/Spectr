@@ -4,18 +4,19 @@
 <meta name="theme-color" content="#0E1220">
 <title>Спектр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&family=Noto+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-:root{--bg:#0E1220;--panel:#171D30;--line:#2A3350;--txt:#E8ECF8;--dim:#8A93B0;--gold:#F5C542;--good:#3DDC84;--bad:#FF5A5A;--nt:#9AA3BF}
+:root{--bg:#0B1020;--panel:#151E32;--nest:#202B43;--line:#2A3858;--txt:#F2F5FA;--dim:#B6C1D2;--cyan:#32D5E7;--gold:#F5C84C;--good:#65D979;--bad:#FF8B7B;--nt:#B6C1D2}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:Rubik,system-ui,-apple-system,sans-serif;min-height:100vh}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Noto Sans',Rubik,system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.4;min-height:100vh}
 #app{max-width:520px;margin:0 auto;padding:12px 16px 40px}
+.dim{color:var(--dim);font-size:14px}
 /* ориентация: кнопка поворота и альбомная раскладка (две колонки, бой — поле слева, журнал справа) */
 #orient{position:fixed;right:10px;bottom:10px;z-index:50;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(20,26,44,.9);color:var(--gold);font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}
 html.land #app{max-width:1240px;column-count:2;column-gap:16px;padding-top:4px}
 html.land #app>*{break-inside:avoid}
 html.land #app>.card,html.land #app>.btn{display:block}
-html.land #app>.card:first-child{column-span:all}
+html.land #app>.card:first-child,html.land #app>.hdr{column-span:all}
 html.land #app[data-view=fight],html.land #app[data-view=setup],html.land #app[data-view=menu]{column-count:1}
 html.land #app[data-view=menu],html.land #app[data-view=setup]{max-width:760px}
 html.land .ffwrap{max-width:1240px;display:flex;gap:16px;align-items:flex-start}
@@ -25,7 +26,25 @@ html.rot{overflow:hidden}
 html.rot body{overflow:hidden}
 html.rot #stage{position:fixed;top:0;left:100vw;width:100vh;height:100vw;transform:rotate(90deg);transform-origin:top left;overflow:auto;background:var(--bg)}
 html.rot #orient{right:auto;left:10px;bottom:10px;transform:rotate(90deg)}
-.top{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px}
+.top{position:relative;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 10px 12px;overflow:hidden}
+.top .ava{width:40px;height:40px}
+.topid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;background:none;border:0;padding:0;color:var(--txt);font-family:inherit;text-align:left;cursor:pointer}
+.topid .nick{font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.topid .dim{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.top .rate{margin-left:0;flex:0 0 auto}
+.top .lg{font-size:11px}
+.topor{flex:0 0 auto;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--cyan);font-size:20px;cursor:pointer}
+.tgrow{position:absolute;left:0;right:0;bottom:0;height:5px;background:#0A0F1E}
+.tgrow i{display:block;height:100%;background:linear-gradient(90deg,#2C7BE5,var(--cyan))}
+.tgrow.done i{background:linear-gradient(90deg,#C9962C,var(--gold))}
+.sub{display:flex;align-items:center;gap:10px;margin-top:12px}
+.sub h1{margin:0;font-size:22px;font-weight:700;line-height:1.2}
+.subback{width:44px;height:44px;flex:0 0 auto;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font-size:20px;cursor:pointer}
+.news>div:nth-child(2){margin-top:4px;line-height:1.4}
+.wk{padding:8px 0;border-bottom:1px solid var(--line);line-height:1.4}
+.wk:last-child{border-bottom:0}
+html.ingame #orient{display:none}
+html.land #app>.hdr{column-span:all}
 .ava{width:44px;height:44px;border-radius:10px;background:var(--bg);overflow:hidden;flex:0 0 auto;border:1px solid var(--line)}
 .ava img{width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block}
 .faceone{padding:0;border:2px solid var(--gold);border-radius:12px;background:var(--bg);cursor:pointer;width:140px;height:140px;overflow:hidden;display:block}
@@ -34,10 +53,10 @@ html.rot #orient{right:auto;left:10px;bottom:10px;transform:rotate(90deg)}
 .rate{margin-left:auto;text-align:right}
 .rate b{font-size:20px}
 .lg{font-size:12px;font-weight:700}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
-h2{font-size:17px;margin:16px 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:16px}
+h2{font-size:18px;margin:4px 0 8px}
 h3{font-size:16px;margin:12px 0 6px}
-.btn{display:block;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#222A44;color:var(--txt);font-size:15px;margin-top:8px;cursor:pointer;text-align:left;font-family:inherit}
+.btn{display:block;width:100%;min-height:48px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font-size:16px;margin-top:8px;cursor:pointer;text-align:left;font-family:inherit}
 .btn:disabled{opacity:.4;cursor:default}
 .btn.gold{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700;text-align:center}
 .btn.here{border-color:var(--gold)}
@@ -48,7 +67,7 @@ h3{font-size:16px;margin:12px 0 6px}
 .bonus{font-weight:700;margin-top:10px;font-size:15px}
 .plus{color:var(--good)}.minus{color:var(--bad)}.rand{color:var(--gold)}.nt{color:var(--nt)}
 .dim{color:var(--dim);font-size:13px}
-.log{font-size:14px;line-height:1.45;background:#11162A;border-radius:10px;padding:10px;margin-top:10px}
+.log{font-size:14px;line-height:1.45;background:var(--nest);border-radius:10px;padding:10px;margin-top:10px}
 .log div{margin-bottom:4px}
 .trophy{display:inline-block;margin:4px 4px 0 0;padding:6px 8px;border:1px solid var(--gold);border-radius:8px;color:var(--gold);font-size:12px}
 .tile{display:flex;justify-content:space-between;align-items:center}
@@ -65,7 +84,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .ind{width:34px;height:12px;border-radius:3px;background:#3A7BFF;display:inline-block}
 .ind.off{background:#2A3350;opacity:.7}
 .mapph{height:180px;background:#fff;color:#111;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:8px}
-.arow{display:flex;gap:12px;align-items:stretch;background:#222A44;border-radius:12px;padding:8px;margin-top:8px;cursor:pointer}
+.arow{display:flex;gap:12px;align-items:stretch;background:var(--nest);border-radius:12px;padding:8px;margin-top:8px;cursor:pointer}
 .pic{width:84px;height:116px;background:#fff;color:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:12px;padding:4px;flex:0 0 84px}
 .arow .tx{flex:1;min-width:0}
 .ttl{font-weight:700;font-size:15px}
@@ -113,7 +132,7 @@ img.pic{object-fit:cover;padding:0;background:#fff}
 .fx{position:absolute;left:0;right:0;top:30%;font-size:22px;font-weight:800;text-shadow:0 2px 6px #000;opacity:0;pointer-events:none}
 .fx.go{animation:fxup .8s ease-out forwards}
 @keyframes fxup{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-30px)}}
-.flog{font-size:13px;line-height:1.5;background:#11162A;border-radius:10px;padding:8px 10px;margin-top:10px;min-height:100px}
+.flog{font-size:13px;line-height:1.5;background:var(--nest);border-radius:10px;padding:8px 10px;margin-top:10px;min-height:100px}
 .aic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;font-size:16px;color:#fff;flex:0 0 auto}
 .iconpick{padding:3px;border:2px solid transparent;border-radius:10px;background:none;cursor:pointer}
 .iconpick .aic{width:40px;height:40px;font-size:22px}
@@ -209,7 +228,7 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .ltbl td{vertical-align:middle}
 .ltbl tr.z1 td:first-child{color:var(--gold);font-weight:700}
 .ltbl tr.z2 td:first-child{color:#7DE8FF}
-.erow{display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:#1B2238;color:var(--txt);font-family:inherit;font-size:14px;cursor:pointer}
+.erow{display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--nest);color:var(--txt);font-family:inherit;font-size:14px;cursor:pointer}
 .erow.on{border-color:var(--gold);background:rgba(245,197,66,.08)}
 .erow .ava{width:34px;height:34px}
 .erow .chk{width:18px;color:var(--gold);font-weight:700}
@@ -233,7 +252,7 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .tmbonus{margin:4px 0 6px;font-size:15px}
 .tmbonus b{color:var(--gold);font-size:18px}
 .tmletter{display:flex;align-items:center;justify-content:center;font-size:72px;font-weight:800;color:var(--gold);background:#0B0F1C;border-radius:24px}
-.tmx{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1B2238;color:var(--txt);font-size:16px;cursor:pointer}
+.tmx{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--nest);color:var(--txt);font-size:16px;cursor:pointer}
 .spons{display:flex;flex-direction:column;gap:6px;text-align:left}
 .spon{display:flex;align-items:center;gap:8px}
 .spon i{font-style:normal;width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#0B0F1C;font-weight:800;font-size:13px}
@@ -559,10 +578,10 @@ const effPower = () => heroPower(S);
 const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: from }); };
 const clearJet = () => { S.jetlag = 0; };
 const spend = () => { if (S.actions <= 0) return false; S.actions--; return true; };
-const logMsg = m => { S.log.unshift(m); S.log = S.log.slice(0, 6); };
+const logMsg = m => { S.log.unshift(m); S.log = S.log.slice(0, 40); };
 const histAdd = t => { S.hist.unshift({ r: S.region, t }); S.hist = S.hist.slice(0, 40); };
 const histTo = (H, r, t) => { H.hist.unshift({ r, t }); H.hist = H.hist.slice(0, 40); };
-const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 6); };
+const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 40); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
 function endTurn() {
@@ -792,7 +811,7 @@ function viewEsl() {
       return `<button class="erow ${on ? 'on' : ''}" data-a="eslpick" data-v="${key}"><span class="ava">${faceImg(f.face)}</span><span style="flex:1;text-align:left"><b>${esc(f.name)}</b> ${flagOf(f.country)}</span>${rateHtml(f.rating)}<span class="chk">${on ? '✓' : ''}</span></button>`;
     }).join('')}</div>`;
   }
-  return wrap(h + `<button class="btn" data-a="toBureau">Назад в бюро</button>`);
+  return wrap(h);
 }
 
 // ---------- DreamHack: выпадает среди трёх действий недели; играют все игроки; 32 бойца; победа — +5 силы, кубка нет ----------
@@ -1653,12 +1672,20 @@ const growBar = () => {
   const pct = Math.max(0, Math.min(1, (S.power - GROW_FROM) / (GROW_TO - GROW_FROM))) * 100, done = pct >= 100;
   return `<div class="grow"><div class="dim">${done ? 'Прокачка завершена — дальше расти можно только трофеями и турнирами' : 'Прогресс прокачки'}</div><div class="gbar"><i style="width:${pct.toFixed(1)}%"></i></div><b>${Math.floor(pct)}%</b></div>`;
 };
-const topBar = () => {
-  const lg = leagueOf(S.rating);
+const topBar = () => {   // компактная шапка: портрет 40×40, ник и регион слева, рейтинг справа, прогресс прокачки по нижнему краю
+  const lg = leagueOf(S.rating), pct = Math.max(0, Math.min(1, (S.power - GROW_FROM) / (GROW_TO - GROW_FROM))) * 100;
+  const full = S.hdrFull ? REGIONS[S.region].league : LSHORT[S.region];
   return `<div class="top"><div class="ava">${faceImg(S.face)}</div>
-    <div><div class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· игрок ${G.cur + 1}/${G.players.length}</span>` : ''}</div><div class="dim">${REGIONS[S.region].name} · ${REGIONS[S.region].league}</div></div>
-    <div class="rate">${rateHtml(S.rating, 'big')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div></div>${growBar()}`;
+    <button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· ${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="dim">${REGIONS[S.region].name} · ${esc(full)}</span></button>
+    <div class="rate">${rateHtml(S.rating, 'mid')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div>
+    <button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
+    <div class="tgrow ${pct >= 100 ? 'done' : ''}" title="${pct >= 100 ? 'Прокачка завершена' : 'Прогресс прокачки ' + Math.round(pct) + '%'}"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
 };
+// строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
+const VIEW_TITLE = { card: ['Действие', 'back'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+  bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
+  ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'back'], weeks: ['История недель', 'back'] };
+const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
   if (c.k === 'm') return '<div class="bonus minus">Эффект!</div>';
@@ -1673,8 +1700,8 @@ const labelOf = c => {
 };
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
 const trophiesHtml = () => S.troph.length || S.eslWins ? `<h2>Коллекция</h2><div class="coll"><div>${S.troph.map(t => `<span class="trophy">${esc(REGIONS[t.r].name)} · ${esc(t.n)}</span>`).join('')}</div>${S.eslWins ? `<div class="eslmed"><img src="img/esl.webp" alt="ESL ONE"><b>×${S.eslWins}</b></div>` : ''}</div>` : '';
-const back = `<button class="btn" data-a="back">Назад</button>`;
-const wrap = inner => `${topBar()}${inner}`;
+const back = '';   // «Назад» — стрелка в строке раздела под шапкой
+const wrap = inner => `<div class="hdr">${topBar()}${subBar()}</div>${inner}`;
 
 // ближайший матч недели: лиги и расписание ещё не сделаны, поэтому пока список пуст
 const nextMatchText = () => {
@@ -1736,7 +1763,7 @@ function viewMain() {
       ${rows}
     </div>
     ${trophiesHtml()}
-    ${logHtml()}
+    ${S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div><button class="btn" data-a="weeks" style="text-align:center">История недель</button></div>` : ''}
     <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" data-a="shop" style="text-align:center;padding-left:6px;padding-right:6px">Магазин</button><button class="btn" data-a="inv" style="text-align:center;padding-left:6px;padding-right:6px">Инвентарь</button><button class="btn" data-a="room" style="text-align:center;padding-left:6px;padding-right:6px">${S.inRoom ? 'Открыть карту' : 'В комнату'}</button></div>
     <button class="btn" data-a="menu">Главное меню</button>`);
 }
@@ -2042,7 +2069,7 @@ function viewTour() {
       <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3 </div><div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
     </div>
     ${G.mode === 'coop' && S.tourPass ? inviteHtml() + invadeHtml() : ''}
-    <div class="card">${banners}</div>${logHtml()}<button class="btn" data-a="toBureau">Назад в бюро</button>`);
+    <div class="card">${banners}</div>`);
 }
 function viewBureau() {
   const lg = leagueOf(S.rating);
@@ -2060,8 +2087,9 @@ function viewBureau() {
       <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с Элитным Спектром региона (1 действие)</button>
       <button class="btn" data-a="fight" data-v="ladder" ${S.actions <= 0 ? 'disabled' : ''}>Лестничный матч на рейтинг (1 действие)</button>
       <div class="dim" style="margin-top:6px">Лестничный матч: соперник по твоему рейтингу (±200). Первые 10 матчей +150 или −150, дальше +75 или −75. Бой с Элитным Спектром региона: +100 или −100.</div>
-    </div>${logHtml()}${back}`);
+    </div>`);
 }
+function viewWeeks() { return wrap(`<div class="card">${S.log.length ? S.log.map(m => `<div class="wk">${esc(m)}</div>`).join('') : '<div class="dim">Пока пусто.</div>'}</div>`); }
 function viewFlight() {
   return wrap(`<div class="card"><h2>Перелёт</h2><div class="dim">Перелёт стоит 1 действие. Затем джетлаг до конца хода.</div>
     ${REGIONS.map((r, i) => `<button class="btn" data-a="fly" data-v="${i}" ${i === S.region ? 'disabled' : ''}>${r.name}</button>`).join('')}
@@ -2305,14 +2333,14 @@ function viewLTable() {
         + (ru ? `<div class="card dim">Bo1 в два круга. 1-е место — сразу в полуфинал, места 2–6 играют плей-ин Bo3 (5-е с 6-м, затем 3-е с 4-м и 2-е с победителем, затем финал), из группы выходит один. Полуфинал и финал Bo5. Топ-3 — на чемпионат мира, последние 4 места групп — в первый этап Wild Card.</div>`
           : `<div class="card dim">Bo1 в два круга. 1-е место — сразу в плей-офф, 2–5 — плей-ин Bo3 с нижней сеткой, из него выходит один. Плей-офф и финал Bo5. Топ-3 — на чемпионат мира.</div>`);
       for (const st of ru ? ['RPA', 'RPB', 'RPC', 'SF', 'F'] : ['EPA', 'EPB', 'EPC', 'EPD', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => (m.label ? `<div class="dim" style="font-size:12px;margin-top:6px">${esc(m.label)}</div>` : '') + lgSeries(L, m)).join('')}</div>`; }
-      return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
+      return wrap(h);
     }
     const t = lgTable(L);
     h += `<div class="card"><h3>Таблица</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-Н-П</td><td>О</td></tr>${t.map((x, k) => `<tr class="${k < 2 ? 'z1' : k < (L.fmt === 'kr12' ? 6 : 10) ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.d}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table>
       <div class="dim" style="margin-top:6px">${L.fmt === 'kr12' ? 'Bo1 в два круга. 1–2 — сразу в полуфинал, 3–6 — плей-ин Bo3 (3-е с 6-м, 4-е с 5-м) за два места.' : '1–2 — сразу в полуфинал, 3–10 — плей-ин.'} Топ-3 по итогам — на чемпионат мира.</div></div>`;
     for (const st of ['KP', 'PI1', 'PI2', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   }
-  return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
+  return wrap(h);
 }
 function viewLHist() {
   const r = S.sel, L = G.leagues[r], weeks = {};
@@ -2321,7 +2349,7 @@ function viewLHist() {
   let h = `<div class="card"><h2>История · ${LSHORT[r]}</h2><div class="dim">Сезон ${L.season}. Все сыгранные матчи по неделям.</div></div>`;
   h += ks.length ? ks.map(k => `<div class="card"><h3>Неделя ${k}</h3>${weeks[k].map(m => `<div class="dim" style="font-size:12px;margin-top:6px">${LG_STAGE[m.st]}${m.label && m.st !== 'RR' ? ' · ' + esc(m.label) : ''}</div>${lgSeries(L, m)}`).join('')}</div>`).join('')
     : '<div class="card dim">Матчей пока не было.</div>';
-  return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
+  return wrap(h);
 }
 function viewLTurn() {   // ход лиг: объявление и матчи игроков
   const L = lgQ(G.lq[0]), m = lgPending(L);
@@ -2341,9 +2369,10 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
+  document.documentElement.classList.toggle('ingame', !!G);
   app.dataset.view = !G ? (SETUP ? 'setup' : 'menu') : G.lq ? (F ? 'fight' : 'lturn') : G.handoff ? 'handoff' : (S.view || 'main');
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
   if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); stageTop(); } lastView = null; return; }
@@ -2448,6 +2477,9 @@ function act(a, v) {
     }
     case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
     case 'wcview': S.view = 'wc'; break;
+    case 'weeks': S.view = 'weeks'; break;
+    case 'hdrfull': S.hdrFull = !S.hdrFull; break;
+    case 'orient': toggleOrient(); return;
     case 'wfview': S.view = 'wf'; break;
     case 'teams': S.treg = +v; S.tsel = null; S.view = 'teams'; break;
     case 'tsel': S.tsel = v || null; break;
