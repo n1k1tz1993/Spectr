@@ -380,6 +380,9 @@ html.land .fza b{font-size:14px}
 .effbox.plus{border-color:rgba(101,217,121,.6)}.effbox.plus span{color:var(--good)}
 .effbox.minus{border-color:rgba(255,139,123,.6)}.effbox.minus span{color:var(--bad)}
 .effbox.rand span{color:var(--gold)}.effbox.nt span{color:var(--dim)}
+.ivq{padding:12px 14px;border-radius:12px;background:var(--nest);border-left:3px solid var(--cyan);font-size:16px;line-height:1.45;margin:8px 0 10px}
+.ivopt{display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:8px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:inherit;font:inherit;font-size:15px;line-height:1.4;cursor:pointer}
+.ivopt.on{border-color:var(--cyan);background:rgba(34,211,238,.12);box-shadow:0 0 0 1px var(--cyan)}
 .quote{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--nest);margin-bottom:10px}
 .quote .ava{width:48px;height:48px}
 .quote p{margin:0;font-style:italic;line-height:1.45}
@@ -969,10 +972,14 @@ function cardExpect(c) {   // ожидаемый эффект до нажати�
   if (c.k === 'fans') return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(...FANS_B)) };
   return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(1, 'turn')) };
 }
-function useCard(i) {
+function useCard(i, ivDone) {
   const c = S.hand[i];
-  if (!c || !spend()) return;
-  const jet = !!S.jetlag; clearJet();   // любое действие недели снимает джетлаг
+  if (!c || (!ivDone && !spend())) return;
+  if (isIv(c) && !ivDone) {   // интервью: сначала три вопроса, эффект — после ответов
+    S.iv = { sel: i, q: shuffle([...IV_Q.keys()]).slice(0, 3), n: 0, a: null, tones: [], jet: !!S.jetlag };
+    clearJet(); S.view = 'iv'; save(); return;
+  }
+  const jet = ivDone ? S.iv.jet : !!S.jetlag; clearJet();   // любое действие недели снимает джетлаг
   if (c.k === 'dh') { S.hand.splice(i, 1); dhStart(); save(); return; }
   if (c.k === 'beast' || c.k === 'duel') { S.hand.splice(i, 1); specialFight(c.k); save(); return; }
   if (c.k === 'contract') { S.hand.splice(i, 1); contractStart(); save(); return; }
@@ -997,10 +1004,41 @@ function useCard(i) {
     R = { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(v, d)), phrase: CARD_PHRASE[d === 'next' ? 'nnext' : d] };
   }
   if (jet) R.txt += '. Джетлаг снят';
+  if (ivDone) { const t = [0, 1, 2].sort((a, b) => S.iv.tones.filter(x => x === b).length - S.iv.tones.filter(x => x === a).length)[0]; R.phrase = IV_END[t]; S.iv = null; }
   S.hand.splice(i, 1);
   logMsg(c.t + ': ' + R.kind.toLowerCase() + ' — ' + R.txt + '.');
   S.cardRes = Object.assign({ c }, R); S.view = 'cardres'; S.sel = null; save();
 }
+
+// ---------- интервью: 3 случайных вопроса из 20, у каждого три ответа (0 — скромно, 1 — уверенно, 2 — дерзко) ----------
+const IV_Q = [
+  ['Ты совсем недавно в Бюро, а о тебе уже говорят. Как ты сам объясняешь такой интерес?', ['Мне просто повезло с первыми боями. Впереди ещё много работы.', 'Я много тренируюсь, и это видно на арене.', 'Привыкайте. Это только начало.']],
+  ['Какой у тебя дар и как ты его впервые почувствовал?', ['Это личное. Скажу только, что тогда я сильно испугался.', 'Он проснулся сам, и я сразу понял, что хочу на арену.', 'Мой дар — побеждать. Остальное детали.']],
+  ['Многие Спектры носят камень в кольце или часах. А где твой?', ['Держу его поближе к сердцу. Буквально.', 'Там, где он не мешает в бою. Удобство важнее красоты.', 'Покажу на арене. Если соперник успеет разглядеть.']],
+  ['Кто из Элитных Спектров для тебя пример?', ['У каждого из них есть чему поучиться. Выбрать одного не могу.', 'Я внимательно изучаю их бои и беру лучшее.', 'Скоро они будут брать пример с меня.']],
+  ['Как ты готовишься к важному бою?', ['Стараюсь выспаться и не думать о результате.', 'Разбираю записи соперника и отрабатываю план.', 'Никак. Пусть соперник готовится ко мне.']],
+  ['Чего ты боишься больше всего на арене?', ['Подвести тех, кто за меня болеет.', 'Потерять контроль над потоком Цы. Это страшнее любого удара.', 'Заскучать. Пока что все соперники предсказуемы.']],
+  ['Что для тебя значат очки рейтинга?', ['Это оценка моей работы. Я стараюсь её заслужить.', 'Это путь к контракту и большим турнирам.', 'Это цифра, которая показывает, кто здесь главный.']],
+  ['Ходят слухи, что тобой интересуются команды лиги. Это правда?', ['Мне пока рано об этом думать.', 'Я открыт к предложениям, но выберу команду с умом.', 'Конечно. Вопрос только в том, кто предложит больше.']],
+  ['Твой последний бой обсуждают в сети. Что скажешь критикам?', ['Они во многом правы. Я сделаю выводы.', 'Критика полезна. Я уже работаю над ошибками.', 'Пусть сначала выйдут на арену сами.']],
+  ['Как ты отдыхаешь от боёв?', ['Гуляю, читаю, звоню семье. Самые обычные вещи.', 'Отдых — часть тренировки. Сон и восстановление важнее всего.', 'Отдыхаю, пока соперники тренируются.']],
+  ['Что бы ты сказал молодым Спектрам, которые только пробуждают дар?', ['Не спешите. Дар никуда не денется.', 'Найдите хорошего тренера и не бойтесь Бюро.', 'Смотрите мои бои. Это лучший учебник.']],
+  ['Ты веришь в удачу на арене?', ['Немного. Без неё порой не обойтись.', 'Удача приходит к тем, кто готов.', 'Удача нужна тем, кому не хватает силы.']],
+  ['Какой бой ты считаешь главным в своей карьере?', ['Самый первый. Я тогда еле стоял на ногах.', 'Тот, который я проиграл. Он научил меня больше всего.', 'Главный бой ещё впереди. Он будет за титул.']],
+  ['Есть ли у тебя соперник, которого ты особенно хочешь победить?', ['Я уважаю всех соперников одинаково.', 'Есть пара имён. Но я не буду их называть.', 'Есть. И он сейчас смотрит это интервью.']],
+  ['Что ты думаешь о Разрыве потока? Тебе приходилось терять контроль?', ['Бывало. Это очень страшно, и я никому не пожелаю.', 'Я слежу за своим ритмом, чтобы такого не случилось.', 'Разрыв — проблема тех, кто не умеет держать силу.']],
+  ['Чем ты займёшься, если однажды твой дар исчезнет?', ['Наверное, буду помогать новичкам в Бюро.', 'Стану тренером. Опыт не исчезнет вместе с даром.', 'Такого не будет. Мой дар со мной навсегда.']],
+  ['Фанаты пишут тебе письма. Ты их читаешь?', ['Читаю все. Это очень трогательно.', 'Стараюсь отвечать хотя бы на часть.', 'Читаю. Особенно те, где меня называют лучшим.']],
+  ['Чемпионат мира — это мечта или цель?', ['Пока мечта. Но очень большая.', 'Цель. У меня есть план, как туда попасть.', 'Это просто следующая остановка.']],
+  ['Корпорации платят Спектрам огромные деньги. Как ты к этому относишься?', ['Деньги не главное. Главное — делать то, что любишь.', 'Это честная плата за риск на арене.', 'Пусть платят больше. Я того стою.']],
+  ['И последний вопрос: что ты пожелаешь нашим зрителям?', ['Берегите себя и своих близких.', 'Приходите на арену. Вживую всё совсем иначе.', 'Запомните моё имя. Скоро его будут кричать трибуны.']]
+];
+const IV_END = [   // итоговая фраза героя: какой тон он выбирал чаще
+  'Кажется, я был слишком скромен. Но лучше так, чем пообещать лишнего.',
+  'Хорошее вышло интервью. Сказал ровно то, что думаю.',
+  'Пожалуй, я немного перегнул. Зато теперь меня точно запомнят.'
+];
+const isIv = c => !!c && /^Интервью/.test(c.t);
 // ---------- бой ----------
 // Всё считается от одной характеристики — силы (10–125). Сила игроку не показывается.
 const FIGHT = {
@@ -2278,8 +2316,20 @@ function viewCard() {   // до выполнения: картинка, опис
       <div class="evtinfo"><h2>${esc(c.t)}</h2><p>${descOf(c) ? esc(descOf(c)) : TEXT}</p>
         <div class="effbox ${E.cls}"><span>${E.kind}</span><b>${E.txt}</b></div>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
-        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : 'Провести время'} · 1 действие</button>
+        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
+    </div>`);
+}
+function viewIv() {   // интервью: вопрос, три ответа, кнопка «Ответ»
+  const I = S.iv, c = I && S.hand[I.sel];
+  if (!c) { S.iv = null; S.view = 'main'; return viewMain(); }
+  const [q, ans] = IV_Q[I.q[I.n]];
+  return wrap(`<div class="card evt">
+      <div class="evtpic">${evtImg(c)}</div>
+      <div class="evtinfo"><h2>${esc(c.t)}</h2><div class="dim">Вопрос ${I.n + 1} из 3</div>
+        <div class="ivq">${esc(q)}</div>
+        ${ans.map((a, k) => `<button class="ivopt ${I.a === k ? 'on' : ''}" data-a="ivpick" data-v="${k}">${esc(a)}</button>`).join('')}
+        <button class="btn gold evtgo" data-a="ivans" ${I.a == null ? 'disabled' : ''}>Ответ</button></div>
     </div>`);
 }
 function viewCardRes() {   // после выполнения: точный итог, срок и фраза героя
@@ -2965,7 +3015,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -3031,6 +3081,8 @@ function act(a, v) {
     case 'league': S.view = 'league'; S.sel = +v; break;
     case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
+    case 'ivpick': if (S.iv) S.iv.a = +v; break;
+    case 'ivans': if (S.iv && S.iv.a != null) { S.iv.tones.push(S.iv.a); S.iv.a = null; if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
     case 'coll': S.view = 'coll'; break;
     case 'fame': S.view = 'fame'; break;
