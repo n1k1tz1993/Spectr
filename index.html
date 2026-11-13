@@ -510,6 +510,21 @@ html.land .lwrap{width:min(100%,1100px);display:flex;gap:16px;align-items:center
 html.land .lpanel{flex:0 0 auto;width:calc((100vh - 40px)*2/3)}
 html.land .lside{flex:1;min-width:0}
 html.land .lttl{display:flex}
+
+/* ---------- зал славы ---------- */
+#app[data-view=fame]{padding-bottom:96px}
+.fame{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fame:last-child{border-bottom:0}
+.fame .ava{width:44px;height:44px}
+.famei{flex:1;min-width:0;display:flex;flex-direction:column}
+.famei b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.famei small{font-size:13px;color:var(--dim);line-height:1.3}
+.fame.hum .famei b{color:var(--gold)}
+.famet{width:40px;height:40px;flex:0 0 auto}
+.famel{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;font-weight:700;color:var(--cyan);letter-spacing:.05em;text-transform:uppercase}
+.famel img{width:22px;height:22px;border-radius:5px}
+html.land #app[data-view=fame]{column-count:1;padding-left:112px;padding-bottom:40px}
+html.land .fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1244,7 +1259,25 @@ function lgPool(r) {   // все 20 бойцов региона, сильней�
 }
 const BREAK_WEEKS = 10;   // перерыв после чемпионата мира: драфт нового сезона открыт все эти недели
 const newSeason = (r, week, prev, brk) => ({ r, season: prev ? prev.season + 1 : 1, phase: 'draft', draftEnd: week + (brk || DRAFT_WEEKS) - 1, teams: null, M: [], sched: null, ri: 0, left: 0, champ: null, worlds: [] });
-const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues = REGIONS.map((_, r) => newSeason(r, 1)); };
+const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues = REGIONS.map((_, r) => newSeason(r, 1)); ensureFame(); };
+// ---------- зал славы: общий для всех игроков сессии ----------
+// чемпионы лиг (на старте — случайные Элитные Спектры), 3 последних чемпиона мира, 5 последних ESL ONE, все турниры сессии
+function fameEntry(name, face, country, team, extra) { return Object.assign({ name, face, country: country || null, team: team || null, week: G.week || 1 }, extra || {}); }
+function ensureFame() {
+  if (G.fame) return;
+  const elite = r => lgPool(r).slice(0, proCount(r));
+  const pickE = r => { const L = elite(r); return L[rnd(0, L.length - 1)]; };
+  const teamOf = r => { const T = regionTeams(r); const t = T[rnd(0, Math.min(5, T.length - 1))]; return t ? { name: t[0], logo: t[1] } : null; };
+  const rr = () => rnd(0, REGIONS.length - 1);
+  const used = new Set(), uniq = f => { let g = f(), n = 0; while (used.has(g.e.name) && n++ < 30) g = f(); used.add(g.e.name); return g; };
+  G.fame = {
+    leagues: REGIONS.map((_, r) => { const { e } = uniq(() => ({ e: pickE(r) })); return fameEntry(e.name, e.face, e.country, teamOf(r), { r, season: 0 }); }),
+    worlds: [0, 1, 2].map(i => { const { e, r } = uniq(() => { const r = rr(); return { e: pickE(r), r }; }); return fameEntry(e.name, e.face, e.country, teamOf(r), { r, season: -i }); }),
+    esl: [0, 1, 2, 3, 4].map(i => { const { e, r } = uniq(() => { const r = rr(); return { e: pickE(r), r }; }); return fameEntry(e.name, e.face, e.country, null, { r, season: -i }); }),
+    tours: []
+  };
+}
+const fameSeason = () => (G.leagues && G.leagues[0] ? G.leagues[0].season : 1);
 const heroIdx = H => G.players.indexOf(H);
 // бонус команды к силе бойца: от +20 у сильнейшей до +1 у слабейшей
 const TEAM_BONUS_12 = [20, 18, 16, 15, 13, 11, 10, 8, 6, 5, 3, 1];
@@ -1545,6 +1578,9 @@ function wfNext(L) {
 function wfFinish(L) {
   const f = lgStage(L, 'F')[0], champ = f.w, T = L.teams[champ];
   G.wfLast = { champ: lgTeamName(L, champ), team: T.name, season: (G.leagues[0] || {}).season };
+  { const H = T.h != null ? G.players[T.h] : null; ensureFame();
+    G.fame.worlds.unshift(fameEntry(lgTeamName(L, champ), H ? H.face : T.f.face, H ? H.country : T.f.country, T.logo ? { name: T.name, logo: T.logo } : null, { r: T.r, season: fameSeason(), hum: !!H }));
+    G.fame.worlds = G.fame.worlds.slice(0, 3); }
   L.teams.forEach((T, i) => {
     if (T.h == null) return;
     const H = G.players[T.h];
@@ -1578,6 +1614,8 @@ function lgFinish(L) {
   L.champ = champ; L.worlds = [champ, second, third]; L.phase = 'done';
   wcCollect(L);
   L.past = { season: L.season, champ: lgTeamName(L, champ), team: L.teams[champ].name };
+  { const T = L.teams[champ], H = T.h != null ? G.players[T.h] : null; ensureFame();
+    G.fame.leagues[L.r] = fameEntry(lgTeamName(L, champ), H ? H.face : T.f.face, H ? H.country : T.f.country, { name: T.name, logo: T.logo }, { r: L.r, season: L.season, hum: !!H }); }
   L.teams.forEach((T, i) => {
     if (T.h == null) return;
     const H = G.players[T.h], place = i === champ ? 'чемпион' : i === second ? '2-е место' : i === third ? '3-е место' : 'сезон окончен';
@@ -1869,6 +1907,12 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
 const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
+  { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
+    const team = x.team != null && SEMI[x.team] ? { name: SEMI[x.team][0], logo: SEMI[x.team][1] } : R.kind === 'contract' && H ? { name: SEMI[R.team][0], logo: SEMI[R.team][1] } : null;
+    const nm = R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'DreamHack' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
+    const e = fameEntry(H ? H.nick : x.name, H ? H.face : x.face, H ? H.country : x.country, team, { r: R.region, season: fameSeason(), hum: !!H, t: nm });
+    if (R.kind === 'esl') { G.fame.esl.unshift(e); G.fame.esl = G.fame.esl.slice(0, 5); }
+    G.fame.tours.unshift(e); G.fame.tours = G.fame.tours.slice(0, 30); }
   const T = R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
   for (const x of R.ps) {   // награды и история — каждому живому участнику
     const h = humOf(R, x.id); if (h == null) continue;
@@ -1909,7 +1953,7 @@ const topBar = () => {   // компактная шапка: портрет 40×
     <div class="tgrow ${pct >= 100 ? 'done' : ''}" title="${pct >= 100 ? 'Прокачка завершена' : 'Прогресс прокачки ' + Math.round(pct) + '%'}"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
 };
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'more'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
@@ -1964,7 +2008,7 @@ function viewLeague() {
 }
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
-  const cur = ['more', 'shop', 'inv', 'coll', 'weeks'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
+  const cur = ['more', 'shop', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
   const nb = (id, a, v, label, extra, dis) => `<button class="${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''}><b>${label}</b>${extra ? `<small>${extra}</small>` : ''}</button>`;
   const freeB = freeBureau(S);
   return `<nav class="nav">${nb('map', 'nav', 'map', 'Карта')}${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '1 действие', S.actions <= 0 && !freeB)}${nb('room', 'nav', 'room', 'Комната')}${nb('more', 'nav', 'more', 'Ещё')}</nav>`;
@@ -2001,6 +2045,7 @@ function viewMore() {   // «Ещё»: библиотека, магазин, и�
       ${it('lib', 'Библиотека', 'Заметки о регионе, досье Элиты, команды лиг · 1 действие', S.actions <= 0)}
       ${it('shop', 'Магазин', 'Жильё и артефакты за рейтинг')}
       ${it('inv', 'Инвентарь', 'Надетый артефакт и коллекция предметов')}
+      ${it('fame', 'Зал славы', 'Чемпионы лиг, чемпионы мира, ESL ONE и турниры сессии')}
       ${it('coll', 'Коллекция', 'Кубки и медали')}
       ${it('weeks', 'История недель', 'Все события и результаты')}
     </div>
@@ -2353,6 +2398,20 @@ function viewBureau() {   // слева — бюро и услуги, справ
     </div></div>
     <div class="bright">${lgCardHtml(S.region)}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
+function viewFame() {
+  ensureFame(); const F2 = G.fame;
+  const row = (e, sub) => `<div class="fame ${e.hum ? 'hum' : ''}"><span class="ava">${faceImg(e.face)}</span>
+    <span class="famei"><b>${esc(e.name)} ${flagOf(e.country || '')}</b><small>${sub}</small></span>
+    ${e.team && e.team.logo ? `<img class="tlogo famet" src="img/team/${e.team.logo}.webp" alt="" title="${esc(e.team.name)}">` : ''}</div>`;
+  const ss = e => e.season > 0 ? `сезон ${e.season}` : 'до начала карьеры';
+  return wrap(`<div class="fgrid">
+    <div class="card"><h2>Действующие чемпионы лиг</h2>${F2.leagues.map((e, r) => `<div class="famel"><img src="img/logo_${r}.webp" alt=""><span>${LSHORT[r]}</span></div>${row(e, (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))}`).join('')}</div>
+    <div class="fcol">
+    <div class="card"><h2>Чемпионы мира</h2>${F2.worlds.map((e, i) => row(e, (i === 0 ? 'Действующий чемпион · ' : '') + (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))).join('')}</div>
+    <div class="card"><h2>ESL ONE · последние 5</h2>${F2.esl.map(e => row(e, e.season > 0 ? 'Неделя ' + e.week + ' · ' + ss(e) : ss(e))).join('')}</div>
+    <div class="card"><h2>Турниры сессии</h2>${F2.tours.length ? F2.tours.map(e => row(e, esc(e.t) + ' · ' + REGIONS[e.r].name + ' · неделя ' + e.week)).join('') : '<div class="dim">Пока ни одного турнира. Победители всех турниров, сыгранных в этой игре, появятся здесь.</div>'}</div>
+    </div></div>`) + navBar();
+}
 function viewWeeks() { return wrap(`<div class="card">${S.log.length ? S.log.map(m => `<div class="wk">${esc(m)}</div>`).join('') : '<div class="dim">Пока пусто.</div>'}</div>`); }
 function viewFlight() {
   return wrap(`<div class="card"><h2>Перелёт</h2><div class="dim">Перелёт стоит 1 действие. Затем джетлаг до конца хода.</div>
@@ -2666,7 +2725,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -2734,6 +2793,7 @@ function act(a, v) {
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
     case 'coll': S.view = 'coll'; break;
+    case 'fame': S.view = 'fame'; break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
     case 'rest': if (spend()) { clearJet(); addEff(5, 'turn'); logMsg('Отдых: бонус до конца недели.'); S.view = 'rest'; } break;
