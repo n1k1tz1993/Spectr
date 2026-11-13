@@ -743,6 +743,12 @@ html.land .fyl .flog{max-height:110px}
 .offl li{margin:4px 0}
 .ctline{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--dim)}
 .ctline img{width:26px;height:26px;border-radius:6px}.ctline b{color:var(--gold)}.ctline.pro{color:var(--gold)}
+.tgrow{flex-wrap:wrap}
+.tgrow .tbar{position:relative;overflow:visible}
+.tmark{position:absolute;top:-3px;bottom:-3px;width:3px;margin-left:-1.5px;border-radius:2px;background:#F5C84C;box-shadow:0 0 0 1px #0B1020}
+.tmark.past{background:#3A4A70}
+.tgnext{flex:0 0 100%;font-size:11px;color:var(--dim)}
+.tgnext b{color:var(--gold);font-weight:700}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -2627,7 +2633,8 @@ const topBar = () => {   // компактная шапка: портрет 40×
     <button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· ${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="dim">${REGIONS[S.region].name} · ${esc(full)}</span></button>
     <div class="rate">${rateHtml(S.rating, 'mid')}<div class="lg" style="color:${lg.c}">${lg.n}</div>${coinHtml(S.coins, 'top')}${statusHtml(S)}</div>
     <button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
-    <div class="tgrow ${pct >= 100 ? 'done' : ''}"><span>${pct >= 100 ? 'Рост силы завершён' : 'Рост силы'}</span><div class="tbar"><i style="width:${pct.toFixed(1)}%"></i></div><b>${Math.round(pct)}%</b></div></div>`;
+    <div class="tgrow ${pct >= 100 ? 'done' : ''}"><span>${pct >= 100 ? 'Рост силы завершён' : 'Рост силы'}</span><div class="tbar"><i style="width:${pct.toFixed(1)}%"></i>${TIERS.slice(0, 2).map((t, k) => `<em class="tmark ${S.power >= t.cap ? 'past' : ''}" style="left:${((t.cap - GROW_FROM) / (GROW_TO - GROW_FROM) * 100).toFixed(1)}%" title="Потолок: ${t.name}"></em>`).join('')}</div><b>${Math.round(pct)}%</b>
+      ${pct < 100 ? `<div class="tgnext">${(() => { const k = TIERS.findIndex(t => S.power < t.cap); return k === 2 ? 'Сила растёт только на <b>полупрофессиональных</b> турнирах' : k === 1 ? 'Сила растёт на <b>любительских</b> и полупро турнирах' : 'Сила растёт на любых турнирах Бюро'; })()}</div>` : ''}</div></div>`;
 };
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
 const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
