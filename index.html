@@ -282,6 +282,10 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .room{position:relative;border-radius:10px;overflow:hidden;line-height:0;cursor:pointer;aspect-ratio:16/9}
 .room img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .roomph{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4;height:100%;border-radius:10px;background:linear-gradient(135deg,#2a1f4a,#12182a);color:var(--dim,#aab);padding:12px;box-sizing:border-box}
+.room img.rcar{inset:auto;left:20%;bottom:12%;width:66%;height:auto;max-height:62%;object-fit:contain;filter:drop-shadow(0 12px 14px rgba(0,0,0,.6))}
+.caricon{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;background:var(--nest);font-size:24px}
+.carrow{display:flex;gap:10px;align-items:center}
+.libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .rtag{position:absolute;left:8px;bottom:8px;line-height:1.3;font-size:12px;background:rgba(0,0,0,.55);color:#fff;padding:3px 8px;border-radius:8px}
 .item.prestige{background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(140,60,220,.14))}
 .item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
@@ -808,11 +812,12 @@ const ROOMS = [
 const ROOM_PICS = ['Интерьер', 'Вид из окна', 'Гараж'];
 // ---------- машины: стоят в гараже (третья картинка комнаты); дают дополнительные действия в неделю ----------
 const CARS = [
-  { n: 'Городской седан', cost: 1500, a: 1 },
-  { n: 'Внедорожник премиум-класса', cost: 2000, a: 1 },
-  { n: 'Дорогой спорткар', cost: 3000, a: 2 },
-  { n: 'Гиперкар', cost: 4500, a: 2 }
+  { n: 'Veltor S4', cost: 1500, a: 1, img: 'veltor', kind: 'Городской седан' },
+  { n: 'Norden X8', cost: 2000, a: 1, img: 'norden', kind: 'Внедорожник премиум-класса' },
+  { n: 'Vesper GT', cost: 3000, a: 2, img: 'vesper', kind: 'Спорткар гран-туризмо' },
+  { n: 'Astrion R1', cost: 4500, a: 2, img: 'astrion', kind: 'Гиперкар' }
 ];
+const carIcon = j => CARS[j].img ? `<img class="caricon" src="img/car/${CARS[j].img}_icon.webp" alt="">` : '<span class="caricon ph">🚗</span>';
 const carLvl = H => (H.cars || []).reduce((m, j) => Math.max(m, j + 1), 0);   // в гараже — самая дорогая машина; 0 — гараж пуст
 const carBonus = H => (H.cars || []).reduce((m, j) => Math.max(m, CARS[j] ? CARS[j].a : 0), 0);
 const maxActs = H => 3 + carBonus(H);
@@ -826,8 +831,8 @@ function roomHtml() {
   const own = [-1, ...(S.rooms || [])];
   const k = own.includes(S.room) ? S.room : own[own.length - 1], v = (S.roomPic | 0) % 3, cl = carLvl(S);
   const ph = v === 2 ? (cl ? esc(CARS[cl - 1].n) : 'Гараж пуст') : esc(roomOf(k).n);
-  const src = v === 2 ? `img/room/garage_${cl}.webp` : roomImg(k, v);
-  return `<div class="room" data-a="rpic"><div class="roomph">${ph}<br>${ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">
+  const src = v === 2 ? 'img/room/garage.webp' : roomImg(k, v), car = v === 2 && cl && CARS[cl - 1].img;
+  return `<div class="room ${v === 2 ? 'garage' : ''}" data-a="rpic"><div class="roomph">${car ? '' : ph + '<br>' + ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">${car ? `<img class="rcar" src="img/car/${car}.webp" alt="${esc(CARS[cl - 1].n)}">` : ''}
       <div class="rtag">${ROOM_PICS[v]} · нажми, чтобы сменить</div></div>
     ${own.length > 1 ? `<div class="row" style="margin-top:8px;gap:6px">${own.slice().sort((a, b) => a - b).map(j => `<button class="btn ${j === k ? 'here' : ''}" data-a="rsel" data-v="${j}" style="width:auto;flex:1 1 45%;text-align:center;font-size:13px;margin:0">${esc(roomOf(j).n)}</button>`).join('')}</div>` : ''}`;
 }
@@ -2653,7 +2658,11 @@ const LIB_NOTES = [
   { t: "Борьба команд", d: "Команды сражаются за очки лиги не ради красивой таблицы. Именно ими корпорации оплачивают услуги Спектров: контракты, тренировки, переезды и экипировку. Чем больше очков у команды, тем сильнее бойцов она может себе позволить. Поэтому каждый матч сезона — это ещё и битва бюджетов." },
   { t: "Цифровая монета", d: "Мало кто знает, что очки лиги на самом деле криптовалюта. Её выпускают пять лиг, а каждую сделку с очками записывает распределённый реестр, который проверяет Бюро. Курс очков растёт вместе со славой региона. Некоторые Спектры копят их годами, словно сбережения." },
   { t: "Призовой фонд ESL ONE", d: "ESL ONE — турнир, на котором организаторы разыгрывают очки рейтинга. Победитель получает щедрую долю общего фонда, а вместе с ней — внимание скаутов и корпораций. Поэтому за приглашение на ESL ONE Спектры готовы бороться не меньше, чем за сам титул." },
-  { t: "Разрыв потока", d: "Иногда, не справившись со своей силой, Спектр может потерять контроль над потоком Цы. Потеря контроля делает Спектра совершенно беззащитным. Урон от двух своих атак получает тот, у кого получилось нанести три крита подряд." }
+  { t: "Разрыв потока", d: "Иногда, не справившись со своей силой, Спектр может потерять контроль над потоком Цы. Потеря контроля делает Спектра совершенно беззащитным. Урон от двух своих атак получает тот, у кого получилось нанести три крита подряд." },
+  { t: "Veltor", img: "img/car/veltor_logo.webp", d: "Veltor — самый массовый автобренд мира Спектров. Его серебряную букву V с бирюзовой вставкой видно на каждой улице. Седан Veltor S4 — первая машина почти любого молодого Спектра: удобный, экономичный и достаточно быстрый, чтобы успеть из Бюро на арену. Бирюзовые огни на бампере светятся в цвет потока Цы." },
+  { t: "Norden", img: "img/car/norden_logo.webp", d: "Norden — концерн с севера континента, выросший из мастерских, что чинили технику для экспедиций за метеоритной рудой. Его эмблема — горная вершина на щите. Внедорожник Norden X8 строят для тундры, бездорожья и ледяных трасс, а кузов усилен так, что выдерживает удар осколков руды. Спектры берут его за надёжность: X8 довезёт до арены в любую погоду." },
+  { t: "Vesper", img: "img/car/vesper_logo.webp", d: "Vesper — европейское ателье, где машины собирают вручную, как часы. Золотой сокол на капоте знают на всех трассах континента. Vesper GT — гран-туризмо для долгих переездов между аренами: кожаный салон, мягкий ход и мотор, который просыпается от одного касания педали. Говорят, в каждой машине прячется крошечная вставка из руды — на удачу владельцу." },
+  { t: "Astrion", img: "img/car/astrion_logo.webp", d: "Astrion — молодой бренд, который первым поставил метеоритную руду в сердце машины. Серебряная четырёхконечная звезда на носу означает падение метеорита. Гиперкар Astrion R1 питается накопителями из руды и разгоняется так, что пассажира вдавливает в кресло, как удар Спектра. Машин выпускают мало, и очередь на них расписана на годы вперёд." }
 ];
 function viewLib() {
   const r = REGIONS[S.region];
@@ -2664,7 +2673,8 @@ function viewLib() {
   const i = idx[rnd(0, idx.length - 1)];
   S.read[S.region] = [...(S.read[S.region] || []), i];
   save();
-  return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Библиотека</div>
+  const ni = LIB_NOTES[i].img;
+  return wrap(`<div class="card" style="text-align:center">${ni ? `<img class="libimg" src="${ni}" alt="">` : '<div class="sq big" style="margin:0 auto">Библиотека</div>'}
     <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${capF(effTxt(...LIB_B))}</div></div>
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
     <button class="btn gold" data-a="teams" data-v="${S.region}">Команды лиг</button>${back}`);
@@ -2677,12 +2687,12 @@ function itemCard(it, i, act, on) {
 }
 function viewShop() {   // магазин: только названия и цены; жильё и артефакты открываются за рейтинг один раз
   const own = S.items || [], ro = S.rooms || [];
-  const row = (name, cost, has, a, v, perk) => `<div class="srow"><span>${esc(name)}${perk ? `<div class="gold" style="font-size:12px">${esc(perk)}</div>` : ''}</span>${has ? '<span class="dim">✓ Куплено</span>'
+  const row = (name, cost, has, a, v, perk, ico) => `<div class="srow"><span class="${ico ? 'carrow' : ''}">${ico || ''}<span>${esc(name)}${perk ? `<div class="gold" style="font-size:12px">${esc(perk)}</div>` : ''}</span></span>${has ? '<span class="dim">✓ Куплено</span>'
     : `<button class="btn" data-a="${a}" data-v="${v}" ${S.rating < cost ? 'disabled' : ''}>${cost}</button>`}</div>`;
   return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются рейтингом. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
-    <div class="card"><h3>Машины</h3><div class="dim">Машина стоит в гараже и даёт дополнительные действия в неделю. Бонусы машин не складываются — работает лучшая.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `+${C2.a} ${actWord(C2.a)} в неделю`)).join('')}</div>
+    <div class="card"><h3>Машины</h3><div class="dim">Машина стоит в гараже и даёт дополнительные действия в неделю. Бонусы машин не складываются — работает лучшая.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `${C2.kind ? C2.kind + ' · ' : ''}+${C2.a} ${actWord(C2.a)} в неделю`, carIcon(j))).join('')}</div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>` + back);
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
