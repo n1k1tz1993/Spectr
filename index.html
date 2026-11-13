@@ -814,11 +814,12 @@ const ROOM_PICS = ['Интерьер', 'Вид из окна', 'Гараж'];
 const CARS = [
   { n: 'Veltor S4', cost: 1500, a: 1, img: 'veltor', kind: 'Городской седан' },
   { n: 'Norden X8', cost: 2000, a: 1, img: 'norden', kind: 'Внедорожник премиум-класса' },
-  { n: 'Vesper GT', cost: 3000, a: 2, img: 'vesper', kind: 'Спорткар гран-туризмо' },
-  { n: 'Astrion R1', cost: 4500, a: 2, img: 'astrion', kind: 'Гиперкар' }
+  { n: 'Vesper GT', cost: 3000, a: 1, img: 'vesper', kind: 'Спорткар гран-туризмо' },
+  { n: 'Astrion R1', cost: 4500, a: 1, img: 'astrion', kind: 'Гиперкар' },
+  { n: 'Вертолёт', cost: 7000, a: 2, kind: 'Личный вертолёт', emo: '🚁' }
 ];
-const carIcon = j => CARS[j].img ? `<img class="caricon" src="img/car/${CARS[j].img}_icon.webp" alt="">` : '<span class="caricon ph">🚗</span>';
-const carLvl = H => (H.cars || []).reduce((m, j) => Math.max(m, j + 1), 0);   // в гараже — самая дорогая машина; 0 — гараж пуст
+const carIcon = j => CARS[j].img ? `<img class="caricon" src="img/car/${CARS[j].img}_icon.webp" alt="">` : `<span class="caricon ph">${CARS[j].emo || '🚗'}</span>`;
+const carLvl = H => (H.cars || []).filter(j => CARS[j] && CARS[j].img).reduce((m, j) => Math.max(m, j + 1), 0);   // в гараже — самый дорогой транспорт с картинкой   // в гараже — самая дорогая машина; 0 — гараж пуст
 const carBonus = H => (H.cars || []).reduce((m, j) => Math.max(m, CARS[j] ? CARS[j].a : 0), 0);
 const maxActs = H => 3 + carBonus(H);
 const actWord = n => n === 1 ? 'действие' : n < 5 ? 'действия' : 'действий';
@@ -2692,7 +2693,7 @@ function viewShop() {   // магазин: только названия и це
   return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются рейтингом. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
-    <div class="card"><h3>Машины</h3><div class="dim">Машина стоит в гараже и даёт дополнительные действия в неделю. Бонусы машин не складываются — работает лучшая.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `${C2.kind ? C2.kind + ' · ' : ''}+${C2.a} ${actWord(C2.a)} в неделю`, carIcon(j))).join('')}</div>
+    <div class="card"><h3>Машины и вертолёт</h3><div class="dim">Транспорт стоит в гараже и даёт дополнительные действия в неделю: любая машина +1, вертолёт +2. Бонусы не складываются — работает лучший.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `${C2.kind ? C2.kind + ' · ' : ''}+${C2.a} ${actWord(C2.a)} в неделю`, carIcon(j))).join('')}</div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>` + back);
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
