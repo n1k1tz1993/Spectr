@@ -470,6 +470,44 @@ html.land .fzsq.ready em{color:var(--good)}
 html.land .fzsq.act{border-color:var(--gold)}html.land .fzsq.act em{color:var(--gold)}
 html.land .fzsq.cd .aic{filter:grayscale(1) brightness(.6)}
 html.land .fzsq:active{transform:scale(.96)}
+/* ---------- этап 4: бюро, турниры, лига ---------- */
+.svc{display:flex;flex-direction:column;gap:3px;width:100%;min-height:56px;margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font-family:inherit;text-align:left;cursor:pointer}
+.svct{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.svct b{font-size:16px;font-weight:600}
+.svct em{font-style:normal;font-size:12px;color:var(--cyan);white-space:nowrap}
+.svc .dim{font-size:13px;line-height:1.35}
+.svc:disabled{opacity:.55;cursor:default}
+.tcards{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.tcard{display:flex;flex-direction:column;padding:0;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--txt);font-family:inherit;text-align:left;overflow:hidden;cursor:pointer}
+.tcard img{display:block;width:100%}
+.tcard.locked{cursor:default}
+.tcard.locked img{filter:grayscale(1) brightness(.5)}
+.tci{display:flex;flex-direction:column;gap:6px;padding:10px 12px 12px}
+.tci b{font-size:17px}
+.tcm{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--dim)}
+.okc{color:var(--good);font-weight:700}.noc{color:var(--bad);font-weight:700}
+.tcw{font-size:13px;color:var(--dim);line-height:1.35;border-left:3px solid var(--bad);padding-left:8px}
+.tbanner{max-height:160px;object-fit:cover}
+.rules{margin-top:8px}
+.rules summary{cursor:pointer;color:var(--cyan);font-size:14px;min-height:32px;display:flex;align-items:center}
+.rules .dim{margin-top:4px;line-height:1.4}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:16px}
+.tabs button{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--nest);color:var(--dim);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.tabs button.on{border-color:var(--cyan);color:var(--cyan);background:rgba(50,213,231,.1)}
+.lside{margin-top:8px}
+.lttl{display:none;align-items:center;gap:10px;margin-bottom:6px}
+.lttl img{width:48px;height:48px;border-radius:10px}
+.lttl b{font-size:18px}
+html.land #app[data-view=bureau],html.land #app[data-view=tour],html.land #app[data-view=trun]{column-count:1}
+html.land .bgrid{display:grid;grid-template-columns:minmax(0,55fr) minmax(0,45fr);gap:16px;align-items:start}
+html.land .bgrid .card:first-child{margin-top:16px}
+html.land .bgrid .scene{max-height:240px;object-fit:cover}
+html.land .tcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+html.land .tgrid{display:grid;grid-template-columns:minmax(0,38fr) minmax(0,62fr);gap:16px;align-items:start}
+html.land .lwrap{width:min(100%,1100px);display:flex;gap:16px;align-items:center}
+html.land .lpanel{flex:0 0 auto;width:calc((100vh - 40px)*2/3)}
+html.land .lside{flex:1;min-width:0}
+html.land .lttl{display:flex}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1917,7 +1955,9 @@ function viewLeague() {
   const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '').concat(S.troph.some(x => x.r === r && x.n === 'Кубок лиги') ? ['Лига'] : ['']);
   const peds = P.ped.map((cx, i) => won[i] ? `<div class="lped" style="left:${pc(cx, 1024)};top:${pc(P.pedY, 1536)}">${won[i]}</div>` : '').join('');
   return viewMain() + `<div class="ovl" data-a="back"><div class="lwrap" data-a="noop"><div class="lpanel" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div>
-    <div class="row" style="flex-wrap:nowrap;margin-top:8px"><button class="btn" data-a="ltable" data-v="${r}" style="text-align:center;margin:0">Таблица</button><button class="btn" data-a="lhist" data-v="${r}" style="text-align:center;margin:0">История</button></div></div></div>`;
+    <div class="lside"><div class="lttl"><img src="img/logo_${r}.webp" alt=""><b>${esc(REGIONS[r].league)}</b></div>
+      <div class="dim">Трофеи региона: ${won.filter(Boolean).length} из 4</div>
+      <div class="row" style="flex-wrap:nowrap;margin-top:8px"><button class="btn" data-a="ltable" data-v="${r}" style="text-align:center;margin:0">Таблица</button><button class="btn" data-a="lhist" data-v="${r}" style="text-align:center;margin:0">История</button></div></div></div></div>`;
 }
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
@@ -2268,37 +2308,35 @@ function inviteHtml() {   // совместная игра: позвать иг�
     ${away.length ? `<div class="dim" style="margin-top:6px;font-size:12px">В других регионах: ${away.map(H => esc(H.nick) + ' (' + REGIONS[H.region].city + ')').join(', ')}</div>` : ''}
     ${inv.length ? '<div class="gold" style="margin-top:6px;font-size:13px">Приглашение спишет 1 действие при старте турнира.</div>' : ''}</div>`;
 }
-function viewTour() {
-  const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n), lg = leagueOf(S.rating);
-  const banners = TIERS.map((t, i) => {
-    const locked = i > S.tiers[r] || !S.tourPass;
-    return `<button class="tierbtn ${locked ? 'locked' : ''}" data-a="play" data-v="${i}" ${locked ? 'disabled' : ''} aria-label="${t.name}">
-      <img src="img/tier_${i}.webp" alt="${t.name}">${i > S.tiers[r] ? '<span class="tag">Закрыт</span>' : !S.tourPass ? '<span class="tag">Сыгран на этой неделе</span>' : has(t.name) ? '<span class="tag gold">Трофей есть</span>' : ''}</button>`;
+function viewTour() {   // три карточки уровней: название, доступность и причина блокировки, стоимость, трофей
+  const r = S.region, has = n => S.troph.some(x => x.r === r && x.n === n);
+  const cards = TIERS.map((t, i) => {
+    const closed = i > S.tiers[r], used = !S.tourPass, ok = !closed && !used;
+    const why = closed ? `Откроется после победы в турнире «${TIERS[i - 1].name.replace(' турнир', '').replace('Турнир ', '')}»` : used ? 'Турнир на этой неделе уже сыгран. Снова — через бюро' : '';
+    return `<button class="tcard ${ok ? '' : 'locked'}" data-a="play" data-v="${i}" ${ok ? '' : 'disabled'} aria-label="${t.name}">
+      <img src="img/tier_${i}.webp" alt="">
+      <span class="tci"><b>${t.name}</b>
+        <span class="tcm"><span class="${ok ? 'okc' : 'noc'}">${ok ? 'Доступен' : 'Закрыт'}</span><span>Оплачен: 1 действие</span>${has(t.name) ? '<span class="gold">🏆 Трофей есть</span>' : '<span class="dim">Трофея пока нет</span>'}</span>
+        ${why ? `<span class="tcw">${why}</span>` : ''}</span></button>`;
   }).join('');
-  return wrap(`<div class="card"><img class="scene" src="img/tours.webp" alt="Турнирная сетка">
-      <div style="margin-top:6px">Еженедельные турниры — отличный шанс набраться опыта и проявить себя!</div>
-      <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3 </div><div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
-    </div>
+  return wrap(`<div class="card"><img class="scene tbanner" src="img/tours.webp" alt="Турнирная сетка">
+      <div class="dim" style="margin-top:8px">${REGIONS[r].city} · открыто уровней: ${S.tiers[r] + 1} из 3. Победа открывает следующий уровень и даёт трофей.</div></div>
     ${G.mode === 'coop' && S.tourPass ? inviteHtml() + invadeHtml() : ''}
-    <div class="card">${banners}</div>`);
+    <div class="tcards">${cards}</div>`);
 }
-function viewBureau() {
-  const lg = leagueOf(S.rating);
-  return wrap(`
-    <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров"><h2>Бюро</h2>
-      <div class="dim">Всемирная организация Спектров: турниры, поединки, рейтинговая система. Рейтинг у игрока ведётся по боям здесь.</div>
-      <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div>
-    </div>
-    ${lgCardHtml(S.region)}
-    ${wcCardHtml()}
-    ${wfCardHtml()}
-    <div class="card">
-      <button class="btn" data-a="tour" ${S.actions <= 0 ? 'disabled' : ''}>Участвовать в местном турнире (1 действие)</button>
-      ${S.power >= ESL_MIN_POWER ? `<button class="btn" data-a="esl" ${S.actions <= 0 ? 'disabled' : ''}>ESL ONE — собрать свой турнир (1 действие)</button>` : '<button class="btn" disabled>ESL ONE — откроется, когда ты станешь сильнее</button>'}
-      <button class="btn" data-a="fight" data-v="pro" ${S.actions <= 0 ? 'disabled' : ''}>Бой с Элитным Спектром региона (1 действие)</button>
-      <button class="btn" data-a="fight" data-v="ladder" ${S.actions <= 0 ? 'disabled' : ''}>Лестничный матч на рейтинг (1 действие)</button>
-      <div class="dim" style="margin-top:6px">Лестничный матч: соперник по твоему рейтингу (±200). Первые 10 матчей +150 или −150, дальше +75 или −75. Бой с Элитным Спектром региона: +100 или −100.</div>
-    </div>`);
+function viewBureau() {   // слева — бюро и услуги, справа — лига и ближайшие события
+  const none = S.actions <= 0, esl = S.power >= ESL_MIN_POWER;
+  const svc = (a, v, t, d, dis, why) => `<button class="svc" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''}><span class="svct"><b>${t}</b><em>1 действие</em></span><span class="dim">${dis && why ? why : d}</span></button>`;
+  return wrap(`<div class="bgrid"><div class="bleft">
+    <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров">
+      <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
+    <div class="card"><h2>Услуги бюро</h2>
+      ${svc('tour', '', 'Местный турнир', 'Еженедельный турнир региона: новички, любители, полупрофессионалы.', none, 'Действия на неделю закончились.')}
+      ${svc('fight', 'ladder', 'Лестничный матч', 'Соперник по твоему рейтингу (±200). Первые 10 матчей ±150, дальше ±75.', none, 'Действия на неделю закончились.')}
+      ${svc('fight', 'pro', 'Бой с Элитным Спектром', 'Случайный Элитный Спектр региона. Победа +100, поражение −100.', none, 'Действия на неделю закончились.')}
+      ${svc('esl', '', 'ESL ONE', 'Собери свой турнир из Элиты любых регионов.', none || !esl, !esl ? 'Откроется, когда твоя сила станет достаточной для Элиты.' : 'Действия на неделю закончились.')}
+    </div></div>
+    <div class="bright">${lgCardHtml(S.region)}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
 function viewWeeks() { return wrap(`<div class="card">${S.log.length ? S.log.map(m => `<div class="wk">${esc(m)}</div>`).join('') : '<div class="dim">Пока пусто.</div>'}</div>`); }
 function viewFlight() {
@@ -2464,30 +2502,41 @@ function viewTRun() {
   const nm = id => teamTag(R.ps[id]) + (isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b> ${flagOf(G.players[humOf(R, id)].country)}` : esc(R.ps[id].name) + (R.ps[id].country ? ' ' + flagOf(R.ps[id].country) : ''));
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
-  let h = `<div class="card">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}<div class="dim">${R.tier === 2 ? '32 бойца: полупрофессиональные команды и свободные бойцы. 8 групп по 4, в группе двойное выбывание (Bo1), выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div>
+  const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
+  let h = `<div class="card thead">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · +${x.tb} к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">Все полупрофессиональные команды выставили по бойцу.</div>' : ''}
-    <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div></div>`;
+    <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
+    <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: полупрофессиональные команды и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div></details></div>`;
+  let side = '';
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
       <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} рейтинга, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
-      <button class="btn gold" data-a="tfinish">Завершить</button></div>`;
+      <button class="btn gold" data-a="tfinish" style="text-align:center">Завершить</button></div>`;
   } else if (me) {
     const L = isHum(R, me.a) ? me.a : me.b, Rr = L === me.a ? me.b : me.a, mine = me.g.filter(x => x === L).length;
     h += `<div class="card"><h3>${hums.length > 1 ? 'Матч игрока ' + esc(R.ps[L].name) : 'Твой матч'} · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
       <div class="tvs"><div>${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}</div></div>
       <div class="dim" style="text-align:center">Bo${me.bo}${me.bo === 2 ? ' · возможна ничья' : ''} · бой ${me.g.length + 1}</div>
-      <button class="btn gold" data-a="tplay">В бой</button><button class="btn" data-a="tauto">Досчитать турнир</button></div>`;
+      <button class="btn gold" data-a="tplay" style="text-align:center">В бой</button>
+      <button class="btn" data-a="tauto" style="text-align:center">Досчитать турнир</button><div class="dim" style="margin-top:4px">Все оставшиеся бои сыграются автоматически, без твоего участия.</div></div>`;
   }
+  const lead = h; h = '';
   if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
   const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW') || m.st.startsWith('DH')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
   if (myGroup.length) h += `<div class="card"><h3>${hums.length > 1 ? 'Бои игроков в группе' : 'Твои бои в группе'}</h3>${myGroup.map(series).join('')}</div>`;
+  const groups = h; h = '';
   for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW') && !k.startsWith('DH')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
-  return wrap(h);
+  const bracket = h;
+  const results = R.M.filter(m => m.done).slice().reverse().slice(0, 40);
+  const res = `<div class="card">${results.length ? results.map(m => `<div class="dim" style="font-size:12px;margin-top:6px">${stageName(m.st)}${m.label ? ' · ' + esc(m.label) : ''}</div>${series(m)}`).join('') : '<div class="dim">Матчей пока не было.</div>'}</div>`;
+  const tb = (k, t, dis) => `<button class="${tab === k ? 'on' : ''}" data-a="ttab" data-v="${k}" ${dis ? 'disabled' : ''}>${t}</button>`;
+  const body = tab === 'bracket' ? (bracket || '<div class="card dim">Сетка появится после групп.</div>') : tab === 'results' ? res : (groups || '<div class="card dim">В этом формате нет групп — смотри сетку.</div>');
+  return wrap(`<div class="tgrid"><div class="tleft">${lead}</div><div class="tright"><div class="tabs">${tb('groups', 'Группы')}${tb('bracket', 'Сетка')}${tb('results', 'Результаты')}</div>${body}</div></div>`);
 }
 
 function lgTeamCell(L, i, cls = '') {
@@ -2684,7 +2733,8 @@ function act(a, v) {
     case 'tinvade': { const h = +v, a2 = S.tourInvade = S.tourInvade || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else a2.push(h); break; }
     case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (S.actions >= 1 && G.players[h].region === S.region) a2.push(h); break; }
     case 'tauto': if (S.trun) tRun(S.trun, true); break;
-    case 'tfinish': finishTour(); break;
+    case 'tfinish': finishTour(); S.ttab = null; break;
+    case 'ttab': S.ttab = v; return render();
     case 'fspeed': if (F) { F.speed = +v; fightPaint(); } return;
     case 'flast': { const lg = document.getElementById('flog'); if (lg) { lg.scrollTop = lg.scrollHeight; document.getElementById('flast').hidden = true; } return; }
     case 'fskip': if (F) { finishFight(); fightPaint(); } return;
