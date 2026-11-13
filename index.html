@@ -872,9 +872,12 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
 const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
-const heroPower = H => { let p = H.power + itemBonus(H); for (const e of H.effects) if (e.from <= H.turn && H.turn <= e.to) p += e.v; if (H.jetlag) p -= 5; return p; };
+const heroPower = H => { let p = H.power + itemBonus(H); for (const e of H.effects) if (e.game || (e.from <= H.turn && H.turn <= e.to)) p += e.v; if (H.jetlag) p -= 5; return p; };
+const gameBonus = H => H.effects.reduce((a, e) => a + (e.game ? e.v : 0), 0);   // бонусы «на следующий бой»
+const useGame = f => { if (f && f.H) f.H.effects = f.H.effects.filter(e => !e.game); };   // бой сыгран — бонус на бой израсходован
+const heroF = (H, f) => Object.defineProperty(f, 'H', { value: H, enumerable: false });   // ссылка на героя (не сохраняется)
 const effPower = () => heroPower(S);
-const addEff = (v, d) => { const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: from }); };
+const addEff = (v, d) => { if (d === 'game') { S.effects.push({ v, game: true }); return; } const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: d === 'two' ? from + 1 : from }); };
 const clearJet = () => { S.jetlag = 0; };
 const spend = () => { if (S.actions <= 0) return false; S.actions--; return true; };
 const logMsg = m => { S.log.unshift(m); S.log = S.log.slice(0, 40); };
@@ -884,9 +887,9 @@ const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 40); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
 function endTurn() {
-  S.lgBonus = heroPower(S) - S.power;   // бонусы и минусы на конец своей недели — с ними играются матчи лиги
+  S.lgBonus = heroPower(S) - S.power - gameBonus(S);   // бонусы и минусы на конец своей недели — с ними играются матчи лиги (бонус на бой — отдельно)
   S.turn++; S.actions = 3;
-  S.effects = S.effects.filter(e => e.to >= S.turn);
+  S.effects = S.effects.filter(e => e.game || e.to >= S.turn);
   S.hand = drawHand();
   S.view = 'main'; S.sel = null;
   logMsg('Неделя ' + S.turn + '.');
@@ -895,27 +898,59 @@ function endTurn() {
   if (G && roundDone) lgStartTurn();   // все сходили — играют лиги
   save();
 }
+// у каждого действия есть польза. Длительность: game — следующий бой, turn — до конца недели, next — следующая неделя, two — эта и следующая неделя
+const NB_V = { game: 2, turn: 1, next: 1, two: 1 };
+const NB = {   // нейтральные действия: небольшой бонус
+  'Пляж': 'turn', 'Атракционы': 'game', 'Комик-кон': 'next', 'Прогулка по Голливуду': 'turn', 'Визит в музей': 'next', 'Кинопросмотр': 'game', 'Гастро-тур по Нью-Йорку': 'two', 'Поход в национальный парк': 'two',
+  'Пляж в Ницце': 'turn', 'Экскурсия по Риму': 'next', 'Концерт в Вене': 'game', 'Прогулка по Лондону': 'turn', 'Поход в Лувр': 'next', 'Фестиваль пива в Мюнхене': 'turn', 'Визит в Эрмитаж': 'next', 'Поход в Альпы': 'two', 'Шоппинг в Милане': 'game',
+  'Пляж в Сочи': 'turn', 'Экскурсия по Красной площади': 'next', 'Поход на балет': 'game', 'Прогулка по парку': 'turn', 'Поход в Третьяковскую галерею': 'next', 'Фестиваль в Казани': 'two', 'Вечер с настолками с друзьями': 'game', 'Поездка в Кижи': 'two', 'Шопинг в ГУМе': 'game',
+  'Пляж в Санье': 'turn', 'Экскурсия на Великую китайскую стену': 'two', 'Поход в Запретный город': 'next', 'Прогулка по Бунду': 'turn', 'Чайная церемония': 'game', 'Поход на китайский рынок': 'turn', 'Фестиваль фонариков': 'next', 'Поход на оперу в Пекине': 'game', 'Шоппинг на Нанкинской улице': 'game',
+  'Пляж на Чеджу': 'turn', 'Попробовать местную кухню': 'next', 'Поход на башню Намсан': 'game', 'Прогулка по Ханоку': 'turn', 'Поход на K-pop шоу': 'game', 'Посетить игровое кафе': 'game', 'Фестиваль весенних цветов': 'next', 'Поход в горы Букхан': 'two', 'Шопинг в Мёндоне': 'turn',
+  'Прогулка по городу': 'turn', 'Визит к массажисту': 'two', 'Поход в кафе': 'turn', 'Чтение новостей о турнирах': 'game', 'Просмотр стримов соперников': 'game', 'Встреча с фанатами': 'next', 'Фотосессия для журнала': 'next', 'Ремонт экипировки': 'game',
+  'Поход в магазин': 'turn', 'Прослушивание музыки перед боем': 'game', 'Звонок семье': 'next', 'Осмотр метеоритного камня': 'two', 'Выставка технологий': 'next', 'Экскурсия по лиге': 'next', 'Посещение спортзала': 'two', 'Игра в настолки с командой': 'turn'
+};
+const MB = {   // действия со штрафом: штраф + небольшой бонус потом (или сейчас, если штраф на следующую неделю)
+  'Бессонная ночь в Вегасе': [2, 'next'], 'Простуда после кондиционера': [1, 'next'],
+  'Бюрократия': [2, 'game'], 'Лондонский дождь и простуда': [1, 'next'],
+  'Пробка на МКАДе': [2, 'game'], 'Простуда': [1, 'next'],
+  'Поход в горы Чжанцзяцзе': [2, 'turn'], 'Отравление уличной едой': [1, 'next'],
+  'Бессонная ночь в караоке': [2, 'next'], 'Попробовать деликатес': [2, 'game'],
+  'Бессонная ночь': [2, 'game']
+};
+const R_LOSS = [2, 'next'], FANS_B = [1, 'game'], COND_B = [1, 'turn'], LIB_B = [1, 'game'];   // неудача в лотерее, письма фанатов, подкаст без прибавки, библиотека
+const nbOf = c => { const d = NB[c.t] || 'turn'; return [NB_V[d], d]; };
+const mbOf = c => MB[c.t] || [1, 'next'];
+const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
+const effTxt = (v, d) => `${sgn(v)} к силе ${effWhen(d)}`;
 // действие недели: выбор → выполнение → результат (точный эффект отдельно от фразы героя)
 const CARD_PHRASE = {
   next: 'Этот вечер придал мне уверенности. На следующей неделе выйду на арену с новым настроем.',
   plus: 'Чувствую прилив сил. На оставшиеся дни недели заряда точно хватит.',
   minus: 'Самочувствие так себе. Остаток недели придётся провести спокойнее.',
   minusNext: 'Чувствую, это ещё аукнется. На следующей неделе будет тяжелее собраться.',
-  rest: 'Хорошо провёл день и отвлёкся от соревнований. Теперь чувствую себя как обычно.'
+  rest: 'Хорошо провёл день и отвлёкся от соревнований. Теперь чувствую себя как обычно.',
+  game: 'Отличная разрядка. В следующем бою это точно пригодится.',
+  turn: 'Хорошо провёл время. Сил на эту неделю прибавилось.',
+  nnext: 'Хороший день. На следующей неделе это ещё скажется.',
+  two: 'Такое заряжает надолго: хватит и на эту неделю, и на следующую.',
+  mixNow: 'Неприятно вышло. Но нет худа без добра — из этого тоже можно извлечь пользу.',
+  mixNext: 'Сейчас мне хорошо, но чувствую, на следующей неделе это аукнется.',
+  rLoss: 'Не повезло. Зато теперь я точно знаю, что удача — не мой путь. Соберусь.'
 };
-const effWhen = d => d === 'next' ? 'на следующую неделю' : 'до конца недели';
+const effWhen = d => ({ next: 'на следующую неделю', game: 'на следующий бой', two: 'на эту и следующую неделю' })[d] || 'до конца недели';
 function cardExpect(c) {   // ожидаемый эффект до нажатия
   if (c.k === 'p') return { kind: 'Бонус', cls: 'plus', txt: `+${c.v} к силе ${effWhen(c.d)}` };
-  if (c.k === 'm') return { kind: 'Штраф', cls: 'minus', txt: `${c.v} к силе ${effWhen(c.d)}` };
-  if (c.k === 'r') return { kind: 'Случайно', cls: 'rand', txt: '+5 или −5 к силе до конца недели, вероятность 50/50' };
+  if (c.k === 'm') { const [b, bd] = mbOf(c); return { kind: 'Штраф и бонус', cls: 'minus', txt: `${effTxt(c.v, c.d)}, но ${effTxt(b, bd)}` }; }
+  if (c.k === 'r') return { kind: 'Случайно', cls: 'rand', txt: `+5 или −5 к силе до конца недели, вероятность 50/50. При неудаче — ${effTxt(...R_LOSS)}` };
+  if (c.k === 'n') { const [v, d] = nbOf(c); return { kind: 'Бонус', cls: 'plus', txt: effTxt(v, d) }; }
   if (c.k === 'fanp') return { kind: 'Бонус', cls: 'plus', txt: `+${c.v} к силе до конца недели` };
-  if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: 'Сила выше 65 — +20 рейтинга; иначе без прибавки' };
+  if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: `Сила выше 65 — +20 рейтинга; иначе ${effTxt(...COND_B)}` };
   if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — +5 к силе' };
   if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.win} рейтинга` };
   if (c.k === 'duel') return { kind: 'Бой', cls: 'rand', txt: `Дуэль · победа — +${DUEL_WIN} рейтинга` };
   if (c.k === 'contract') return { kind: 'Турнир', cls: 'rand', txt: `Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга` };
-  if (c.k === 'fans') return { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу' };
-  return { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу. Временные бонусы и штрафы снимаются' };
+  if (c.k === 'fans') return { kind: 'Бонус', cls: 'plus', txt: effTxt(...FANS_B) };
+  return { kind: 'Бонус', cls: 'plus', txt: effTxt(1, 'turn') };
 }
 function useCard(i) {
   const c = S.hand[i];
@@ -925,19 +960,24 @@ function useCard(i) {
   if (c.k === 'beast' || c.k === 'duel') { S.hand.splice(i, 1); specialFight(c.k); save(); return; }
   if (c.k === 'contract') { S.hand.splice(i, 1); contractStart(); save(); return; }
   let R;
-  if (c.k === 'p' || c.k === 'm' || c.k === 'r' || c.k === 'fanp') {
+  if (c.k === 'm') {   // штраф и небольшой бонус
+    const [b, bd] = mbOf(c); addEff(c.v, c.d); addEff(b, bd);
+    R = { kind: 'Штраф и бонус', cls: 'minus', txt: `${effTxt(c.v, c.d)}, но ${effTxt(b, bd)}`, phrase: c.d === 'next' ? CARD_PHRASE.mixNext : CARD_PHRASE.mixNow };
+  } else if (c.k === 'p' || c.k === 'r' || c.k === 'fanp') {
     const v = c.k === 'r' ? (Math.random() < 0.5 ? 5 : -5) : c.v, d = c.k === 'r' || c.k === 'fanp' ? 'turn' : c.d;
     addEff(v, d);
-    R = { kind: v > 0 ? 'Бонус' : 'Штраф', cls: v > 0 ? 'plus' : 'minus', txt: `${v > 0 ? '+' : ''}${v} к силе ${effWhen(d)}`,
-      phrase: v > 0 ? (d === 'next' ? CARD_PHRASE.next : CARD_PHRASE.plus) : (d === 'next' ? CARD_PHRASE.minusNext : CARD_PHRASE.minus) };
+    R = { kind: v > 0 ? 'Бонус' : 'Штраф', cls: v > 0 ? 'plus' : 'minus', txt: effTxt(v, d),
+      phrase: v > 0 ? (d === 'next' ? CARD_PHRASE.next : CARD_PHRASE.plus) : CARD_PHRASE.minus };
+    if (v < 0) { addEff(...R_LOSS); R.kind = 'Штраф и бонус'; R.txt += ', но ' + effTxt(...R_LOSS); R.phrase = CARD_PHRASE.rLoss; }
   } else if (c.k === 'cond') {
-    const ok = S.power > 65; if (ok) S.rating += 20;
-    R = ok ? { kind: 'Бонус', cls: 'plus', txt: '+20 рейтинга', phrase: CARD_PHRASE.plus } : { kind: 'Отдых', cls: 'nt', txt: 'Без прибавки: нужна сила выше 65', phrase: CARD_PHRASE.rest };
+    const ok = S.power > 65; if (ok) S.rating += 20; else addEff(...COND_B);
+    R = ok ? { kind: 'Бонус', cls: 'plus', txt: '+20 рейтинга', phrase: CARD_PHRASE.plus } : { kind: 'Бонус', cls: 'plus', txt: `Без рейтинга: нужна сила выше 65. Зато ${effTxt(...COND_B)}`, phrase: CARD_PHRASE.turn };
   } else if (c.k === 'fans') {
-    R = { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу', phrase: 'Приятно, когда тебя ждут и поддерживают.' };
-  } else {   // нейтральное действие: снимает временные бонусы и штрафы
-    const had = S.effects.length; S.effects = [];
-    R = { kind: 'Отдых', cls: 'nt', txt: 'Без влияния на силу' + (had ? '. Временные бонусы и штрафы сняты' : ''), phrase: CARD_PHRASE.rest };
+    addEff(...FANS_B);
+    R = { kind: 'Бонус', cls: 'plus', txt: effTxt(...FANS_B), phrase: 'Приятно, когда тебя ждут и поддерживают. В следующем бою не подведу.' };
+  } else {   // нейтральное действие: небольшой бонус
+    const [v, d] = nbOf(c); addEff(v, d);
+    R = { kind: 'Бонус', cls: 'plus', txt: effTxt(v, d), phrase: CARD_PHRASE[d === 'next' ? 'nnext' : d] };
   }
   if (jet) R.txt += '. Джетлаг снят';
   S.hand.splice(i, 1);
@@ -992,7 +1032,7 @@ const heroTeam = (H, hi) => { if (!G || !G.leagues || H.league == null) return n
 // команда Элитного Спектра в текущем сезоне его лиги
 const eliteTeam = (r, name) => { const L = G && G.leagues && G.leagues[r], T = L && L.teams && L.teams.find(t => t.f && t.f.name === name); return T ? { logo: T.logo, name: T.name } : null; };
 const withMeta = (f, country, team) => Object.assign(f, { country: country || f.country || null, team: team || f.team || null });
-function startFight(title, opp, onEnd) { startFightAB(title, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S))), opp, onEnd); }
+function startFight(title, opp, onEnd) { startFightAB(title, heroF(S, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S)))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
   F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;   // кто бьёт первым — случайно
@@ -1111,7 +1151,7 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
     opp = fighter('Обезумевший зверь', p, npcRating(p), false, { name: 'Яростный натиск', desc: 'Зверь бросается в бешеную атаку, не зная ни страха, ни боли!', icon: 10 }, `img/beast/${b}.webp`);
     opp.beast = true;
   } else {
-    const p = Math.max(10, effPower() - 20); title = 'Дуэль'; win = DUEL_WIN;
+    const p = Math.max(10, effPower() - gameBonus(S) - 20); title = 'Дуэль'; win = DUEL_WIN;
     { const g = genSpectre(S.region, takenSet([S.nick]), p); opp = fighter(g.name, p, npcRating(p), false, g.abil, g.face); opp.country = g.country; }
   }
   startFight(title, opp, won => {
@@ -1543,7 +1583,7 @@ const lgHum = (L, i) => L.teams[i].h != null;
 function lgFighter(L, i) {
   const T = L.teams[i], bonus = T.bonus + (L.wc && L.phase !== 'B' ? (T.wcPlus || 0) : 0);   // полупро в 1-м этапе Wild Card: +2
   const team = T.logo || T.name ? { logo: T.logo, name: T.name } : null;
-  if (T.h != null) { const H = G.players[T.h]; return withMeta(fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus : heroPower(H)) + bonus, H.rating, true, H.ability, H.face), H.country, team); }
+  if (T.h != null) { const H = G.players[T.h]; return heroF(H, withMeta(fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus + gameBonus(H) : heroPower(H)) + bonus, H.rating, true, H.ability, H.face), H.country, team)); }
   return withMeta(fighter(T.f.name, T.f.p + bonus, npcRating(T.f.p + bonus), false, T.f.abil, T.f.face), T.f.country, team);   // рейтинг — по силе вместе с бонусом команды
 }
 function lgTable(L) {
@@ -1932,13 +1972,14 @@ function tFighter(R, id) {   // боец турнира: флаг и логот�
   const semi = t => t != null && SEMI[t] ? { logo: SEMI[t][1], name: SEMI[t][0] } : null;
   if (h == null) return withMeta(fighter(x.name, x.p, x.rating, false, x.abil, x.face), x.country, semi(x.team));
   const H = G.players[h];
-  return withMeta(fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face), H.country, semi(x.team != null ? x.team : R.kind === 'contract' ? R.team : null) || heroTeam(H, h));
+  return heroF(H, withMeta(fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face), H.country, semi(x.team != null ? x.team : R.kind === 'contract' ? R.team : null) || heroTeam(H, h)));
 }
 function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
   const keep = F;
   F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;
   finishFight();
+  useGame(F.a); useGame(F.b);
   const w = F.won; F = keep; return w;
 }
 function tSimGame(R, a, b) { return simAB(tFighter(R, a), tFighter(R, b)) ? a : b; }
@@ -2103,7 +2144,7 @@ const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', '
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
-  if (c.k === 'm') return '<div class="bonus minus">Эффект!</div>';
+  if (c.k === 'm') return '<div class="bonus minus">Эффект и бонус</div>';
   if (c.k === 'r') return '<div class="bonus rand">Случайно: бонус или эффект</div>';
   if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — +5 к силе.</div>';
   if (c.k === 'beast') return `<div class="bonus rand">Бой со зверем · победа — +${BEAST.win} рейтинга</div>`;
@@ -2111,7 +2152,7 @@ const labelOf = c => {
   if (c.k === 'fanp') return '<div class="bonus plus">Бонус! +1 к силе до конца недели</div>';
   if (c.k === 'contract') return `<div class="bonus rand">Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга</div>`;
   if (c.k === 'cond') return '<div class="bonus nt">Условие: сила выше 65</div>';
-  return '<div class="bonus nt">Без эффекта</div>';
+  return '<div class="bonus plus">Бонус!</div>';
 };
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
 const trophiesHtml = () => S.troph.length || S.eslWins ? `<h2>Коллекция</h2><div class="coll"><div>${S.troph.map(t => `<span class="trophy">${esc(REGIONS[t.r].name)} · ${esc(t.n)}</span>`).join('')}</div>${S.eslWins ? `<div class="eslmed"><img src="img/esl.webp" alt="ESL ONE"><b>×${S.eslWins}</b></div>` : ''}</div>` : '';
@@ -2473,7 +2514,7 @@ function viewLib() {
   S.read[S.region] = [...(S.read[S.region] || []), i];
   save();
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Библиотека</div>
-    <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus nt">Без эффекта</div></div>
+    <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${effTxt(...LIB_B)}</div></div>
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
     <button class="btn gold" data-a="teams" data-v="${S.region}">Команды лиг</button>${back}`);
 }
@@ -2965,7 +3006,7 @@ function act(a, v) {
     case 'coll': S.view = 'coll'; break;
     case 'fame': S.view = 'fame'; break;
     case 'back': S.view = 'main'; S.sel = null; break;
-    case 'lib': if (spend()) { clearJet(); S.view = 'lib'; } break;
+    case 'lib': if (spend()) { clearJet(); addEff(...LIB_B); S.view = 'lib'; } break;
     case 'rest': if (spend()) { clearJet(); addEff(5, 'turn'); logMsg('Отдых: бонус до конца недели.'); S.view = 'rest'; } break;
     case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.tourInv = []; S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
@@ -2990,7 +3031,7 @@ function act(a, v) {
       if (x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct) { useAbility(x, y); fightPaint(); }
       return;
     }
-    case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; F = null; cb(won); break; }
+    case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; useGame(F.a); useGame(F.b); F = null; cb(won); break; }
     case 'bureau': if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // своё жильё: бюро рядом, действие не тратится
     case 'toBureau': S.view = 'bureau'; break;
     case 'inv': S.view = 'inv'; S.renaming = null; break;
