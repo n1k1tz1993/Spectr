@@ -504,7 +504,6 @@ const FIGHT = {
   qiProc: 0.02, qiProcMin: 0.05, qiProcMax: 0.10,   // 2% за удар: прилив Цы 5–10%
   thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
-const NICKS = ['Raven', 'Vortex', 'Kaito', 'Nova', 'Blaze', 'Shade', 'Orion', 'Zephyr', 'Mira', 'Drake', 'Lynx', 'Hex', 'Riven', 'Sora', 'Viper', 'Echo', 'Nyx', 'Talon', 'Ember', 'Frost'];
 const ABIL_LIST = [   // способности соперников: название и что делает
   ['Громовой разлом', 'раскалывает землю громовым ударом'], ['Ледяная спираль', 'закручивает вокруг врага ледяную спираль'],
   ['Пылающий шквал', 'обрушивает шквал пылающих ударов'], ['Теневой рывок', 'исчезает в тени и бьёт со спины'],
@@ -590,7 +589,7 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
     opp.beast = true;
   } else {
     const p = Math.max(10, effPower() - 20); title = 'Дуэль'; win = DUEL_WIN;
-    opp = fighter(NAMES[rnd(0, NAMES.length - 1)], p, npcRating(p), false);
+    opp = fighter(regionNames(S.region)[0], p, npcRating(p), false);
   }
   startFight(title, opp, won => {
     if (won) S.rating += win;
@@ -602,7 +601,7 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
 function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
   const teams = shuffle(SEMI.map((_, i) => i)).slice(0, 4), my = teams[0];
   const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
-  const taken = G.players.map(H => H.nick), names = shuffle(NAMES.filter(x => !taken.includes(x))).slice(0, 15);
+  const taken = G.players.map(H => H.nick), names = regionNames(S.region).filter(x => !taken.includes(x)).slice(0, 15);
   names.forEach((name, i) => {
     const p = rnd(TIERS[2].lo, TIERS[2].hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
     ps.push({ id: i + 1, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } });
@@ -616,7 +615,7 @@ function bureauFight(kind) {
   let opp, name;
   if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55
     const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 30)));
-    name = NAMES[rnd(0, NAMES.length - 1)];
+    name = regionNames(S.region)[0];
     opp = fighter(name, p, npcRating(p), false);
   } else {                   // один из 12 про-игроков региона
     const f = lgPool(S.region)[rnd(0, proCount(S.region) - 1)];
@@ -893,8 +892,8 @@ const teamBonus = (i, n, r) => TEAM_BONUS_MIN[r] != null ? Math.round(20 - i * (
 const allRegionTeams = r => LDB.teams.filter(t => t[0] === r).map(t => [t[1], t[2], t[3], t[4]]).concat(r === 4 ? LG_EXTRA : []).sort((a, b) => b[2] - a[2]);
 const regionTeams = r => EU40(r) ? allRegionTeams(r) : allRegionTeams(r).slice(0, LG_SIZE(r));   // в лиге играют сильнейшие LG_SIZE команд
 const teamBonusOf = (r, name) => { const T = allRegionTeams(r), i = T.findIndex(t => t[0] === name); return i < 0 ? 0 : teamBonus(i, T.length, r); };
-function euFiller(taken, C) {   // случайный боец 40–55 — дозаполняет драфт Европы
-  const pool = NAMES.filter(x => !taken.has(x.toLowerCase())), name = pool.length ? pool[rnd(0, pool.length - 1)] : 'Spectre' + rnd(100, 999);
+function euFiller(taken, C, r) {   // случайный боец 40–55 — дозаполняет драфт Европы
+  const pool = (r != null ? regionNames(r) : shuffle(NAMES)).filter(x => !taken.has(x.toLowerCase())), name = pool.length ? pool[0] : 'Spectre' + rnd(100, 999);
   taken.add(name.toLowerCase());
   const p = rnd(40, 55), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
   return { name, p, rating: npcRating(p), country: (C || EU_FILL_C)[rnd(0, (C || EU_FILL_C).length - 1)], face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) }, filler: true };
@@ -912,7 +911,7 @@ function lgDraftEU(L) {
   const humans = G.players.map((H, h) => ({ h, H })).filter(o => o.H.draft === r);
   const pool = lgPool(r).map(f => ({ f, rating: f.rating })).concat(humans.map(o => ({ h: o.h, rating: o.H.rating })));
   const taken = new Set(pool.map(o => (o.f ? o.f.name : G.players[o.h].nick).toLowerCase()));
-  while (pool.length < n) { const f = euFiller(taken, cfg.fill); pool.push({ f, rating: f.rating }); }
+  while (pool.length < n) { const f = euFiller(taken, cfg.fill, r); pool.push({ f, rating: f.rating }); }
   pool.sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
   const picked = pool.slice(0, n);
   const pro = allRegionTeams(r).slice(0, cfg.pro).map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, cfg.pro, r), city: null }));
@@ -1281,8 +1280,19 @@ function lgAfterGame(L, m) {
 
 // ---------- турниры ----------
 // Любой турнир играется по случайному формату из четырёх.
-const NAMES = [...NICKS, 'Kira', 'Ronin', 'Jinx', 'Axel', 'Luna', 'Rex', 'Zane', 'Ivy', 'Onyx', 'Sable',
-  'Talon', 'Ghost', 'Volt', 'Ash', 'Frost', 'Echo', 'Riven', 'Sol', 'Hex', 'Dusk', 'Blitz', 'Cobra', 'Nomad', 'Spark', 'Titan', 'Wolf', 'Zero', 'Pyro', 'Saber', 'Halo'];
+// ники сгенерированных бойцов: общий список + свой у Северной лиги, Китая и Кореи (серьёзные и весёлые)
+const GEN_NAMES = ['Vex', 'Nyx', 'Ziro', 'Raze', 'Kairo', 'Omen', 'Nox', 'Silex', 'Vael', 'Hex', 'Riftborn', 'BlackHalo', 'NullSaint', 'ColdSnap', 'GrimPulse', 'NeonFang', 'VoidRush', 'GhostVein', 'PaleCrown', 'RedStatic', 'Noctis', 'Revenant', 'Onyx', 'Havoc', 'Cipher', 'Wraith', 'Vandal', 'Zenith', 'Ruin', 'Nemesis', 'Ashfall', 'SoulRift', 'ZeroMercy', 'NightVow', 'IronWisp', 'FrostBite', 'VenomRay', 'StarScar', 'SilentHex', 'DuskReign', 'Overdrive', 'DeadSignal', 'DarkMatter', 'LastOrbit', 'MeteorVice', 'VioletReign', 'BrokenSaint', 'Crownless', 'Aftershock', 'Godless', 'Vorn', 'Kyro', 'Sorn', 'Axx', 'Veil', 'Drax', 'Rhex', 'Skar', 'Aion', 'Zekt', 'Kain', 'Exil', 'Vyr', 'Teneb', 'Flint', 'Sunder', 'Mav', 'Quell', 'Rook', 'Strix', 'Vanta', 'Cinder', 'Talon', 'Aegis', 'Styx', 'Bonk', 'Pups', 'Lagich', 'Oopsie', 'Bublik', 'Boop', 'Kus', 'TofuGG', 'Kek', 'Sleepy', 'Paf', 'Wut', 'NoAim', 'Cheb', 'Zzz', 'Plop', 'Grechka', 'Oof', 'Tyap', 'Bubz', 'Misclick', 'Smol', 'NomNom', 'Panik', 'Chpok'];
+const REGION_NAMES = {
+  2: ['Sever', 'Groza', 'Krom', 'Vektor', 'Moroz', 'Oskolok', 'Sumerak', 'Zatvor', 'Kobalt', 'Prizrak', 'DedLag', 'BatyinTapok', 'Pelmenator', 'BorshBoss', 'NuTipa', 'Kotleta', 'Shashlik', 'PivoMage', 'ZhmiAlt', 'VotTakDa'],
+  3: ['LongWei', 'TianFang', 'Xuan', 'JadeFang', 'HeiLong', 'YunBlade', 'LeiShen', 'Qing', 'ShenWu', 'BaiYe', 'BaoBoom', 'WokThis', 'TofuTank', 'PandaBonk', 'DimSumDoom', 'NoodleAFK', 'BaoBao', 'WokNroll', 'TeaBagFu', 'XiaoOops'],
+  4: ['SeoK', 'TaeRin', 'Haneul', 'JinZero', 'Baek', 'Hyeon', 'KwonX', 'DaeHan', 'MoonEdge', 'SiOn', 'KimchiCrit', 'OppaOops', 'SeoulLag', 'RamenRaid', 'KpopFlop', 'GGimbap', 'TteokTok', 'OppaAFK', 'AigoAim', 'ManduMood']
+};
+const NAMES = [...GEN_NAMES, ...Object.values(REGION_NAMES).flat()];
+const regionNames = r => {   // уже перемешаны: в регионе со своими никами — через одного свой и общий
+  const a = shuffle(REGION_NAMES[r] || []), b = shuffle(GEN_NAMES), out = [];
+  while (a.length || b.length) { if (a.length) out.push(a.shift()); if (b.length) out.push(b.shift()); }
+  return out;
+};
 const FMT = {
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
@@ -1308,7 +1318,7 @@ function playTour(t) {
   S.tourInvade = [];
   const hums = [G.cur, ...inv, ...invd];   // живые игроки: тот, чья неделя, приглашённые и вторгшиеся
   const taken = G.players.map(H => H.nick);
-  const names = shuffle(NAMES.filter(x => !taken.includes(x))).slice(0, n - hums.length);
+  const names = regionNames(r).filter(x => !taken.includes(x)).slice(0, n - hums.length);
   const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() })).concat(names.map((name, i) => {
     const p = rnd(T.lo, T.hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
     return { id: hums.length + i, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
