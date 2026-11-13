@@ -406,6 +406,9 @@ html.land .evtinfo{flex:1;min-width:0}
 .fzl .flog div.ab{border-left-color:#B98CFF;font-weight:600}
 .fzl .flog div.nt{border-left-color:#5B6B8F;color:var(--dim)}
 .fzl .flog div.qi{border-left-color:var(--cyan);color:#9FEFFF}
+.fzl .flog div.hp50{border-left-color:#F5C84C;font-style:italic}
+.fzl .flog div.hp30{border-left-color:#FF9F5A;color:#FFD0A8;font-style:italic}
+.fzl .flog div.hp10{border-left-color:var(--bad);color:#FFB3A8;font-weight:700}
 .fzlast{align-self:center;margin-top:6px;min-height:36px;padding:4px 14px;border-radius:10px;border:1px solid var(--cyan);background:var(--nest);color:var(--cyan);font-family:inherit;font-size:13px;cursor:pointer}
 html.land .fzl .flog{max-height:none;flex:1;min-height:0}
 html.land .fzl{height:100%;min-height:0;max-height:calc(100vh - 210px)}
@@ -834,6 +837,24 @@ function rollHit(x, y) {
   if (r <= 6) return { kind: 'block', dmg: 0 };
   return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)) };
 }
+// журнал боя: только яркие моменты без цифр — урон виден на портретах. {a} — кто действует, {b} — соперник
+const FL_CRIT = ['{a} проводит разрушительную атаку!', '{a} находит брешь в защите и бьёт со всей силы!', '{a} обрушивает мощнейший удар — арена содрогается!', '{a} вкладывает в удар всю Цы. {b} отлетает назад!'];
+const FL_CRIT2 = ['{a} не сбавляет темп — ещё один сокрушительный удар!', '{a} проводит серию разрушительных атак!', 'Второй крит подряд! {a} в ударе!'];
+const FL_DODGE = ['{b} легко уходит от атаки.', '{b} в последний миг уклоняется!', 'Удар рассекает пустоту — {b} уже в стороне.'];
+const FL_BLOCK = ['{b} принимает удар на блок.', '{b} блокирует и не отступает ни на шаг.', '{b} выдерживает атаку.'];
+const FL_NOQI = ['{a} выдыхается: Цы иссякла, нужна передышка.', '{a} растратил всю Цы и отходит, чтобы перевести дух.', 'Цы на нуле! {a} вынужден отступить на пару мгновений.'];
+const FL_QI = ['{a} чувствует прилив Цы!', '{a} ловит второе дыхание — Цы вспыхивает с новой силой.', '{a} собирается с силами, Цы прибывает.'];
+const FL_HP = {
+  50: ['{a} потерял половину здоровья — бой становится серьёзным.', '{a} пропустил немало ударов. Дальше будет только жёстче.', '{a} уже ранен, но взгляд всё ещё твёрдый.'],
+  30: ['{a} получил много урона — теперь придётся драться осторожнее.', '{a} тяжело дышит и уходит в глухую оборону.', '{a} почти без сил. Каждая ошибка может стать последней.'],
+  10: ['{a} едва держится на ногах! Ещё один удар — и всё кончено.', '{a} на грани поражения, но не сдаётся!', 'Трибуны замерли: {a} держится из последних сил!']
+};
+const pick = (arr, x, y) => arr[rnd(0, arr.length - 1)].replace(/\{a\}/g, x.name).replace(/\{b\}/g, y ? y.name : '');
+function hpMark(y) {   // отметки 50%, 30%, 10% здоровья — по одной за бой
+  if (y.hp <= 0) return;
+  y.mk = y.mk || {}; const k = y.hp / y.hpMax;
+  for (const t of [10, 30, 50]) if (k <= t / 100 && !y.mk[t]) { [10, 30, 50].forEach(u => { if (u >= t) y.mk[u] = true; }); fev(pick(FL_HP[t], y), t <= 10 ? 'hp10' : t <= 30 ? 'hp30' : 'hp50'); return; }
+}
 const fev = (m, c = '') => { F.ev.push({ t: m, c }); if (F.ev.length > 120) { F.ev.shift(); F.evCut = (F.evCut || 0) + 1; } };   // журнал: новые строки внизу
 const fxPush = (who, text, cls, layer) => { F.fx.push({ who: who === F.a ? 'fa' : 'fb', text, cls, layer }); };
 function useAbility(x, y) {
@@ -846,8 +867,8 @@ function useAbility(x, y) {
   y.hp = Math.max(0, y.hp - dmg);
   // в журнал — что делает удар (фраза, которую придумал игрок), и урон от него
   const what = (x.abil.desc || 'наносит серию из пяти ударов').replace(/[.!\s]+$/, '');
-  fev(`${x.name} → ${y.name}: «${x.abil.name}» — ${dmg} урона${mult > 1 ? ' · сокрушительная мощь ×' + mult.toFixed(1) : ''}`, 'ab');
-  x.abT = F.t;
+  fev(`${x.name} применяет «${x.abil.name}» — ${what.charAt(0).toLowerCase() + what.slice(1)}!${mult > 1 ? ' Сокрушительная мощь!' : ''}`, 'ab');
+  x.abT = F.t; hpMark(y);
   fxPush(y, `${x.abil.name}${mult > 1 ? ' ×' + mult.toFixed(1) : ''}! −${dmg}`, 'rand', 1);
   if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
 }
@@ -859,21 +880,21 @@ function fightStep(dt) {
     x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
     x.cd -= dt;
     if (x.cd > 0) continue;
-    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ' выдыхается — Цы иссякла', 'qi'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
+    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(pick(FL_NOQI, x, y), 'qi'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
     x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
     const r = rollHit(x, y);
     y.hp = Math.max(0, y.hp - r.dmg);
     // в журнал — только яркие моменты; обычные удары видны цифрами на портрете
-    if (r.kind === 'crit') fev(`${x.name} → ${y.name}: ${r.dmg} урона · крит!`, 'crit');
-    else if (r.kind === 'dodge') fev(`${y.name} уклоняется от удара ${x.name}`, 'nt');
-    else if (r.kind === 'block') fev(`${y.name} блокирует удар ${x.name}`, 'nt');
-    else fev(`${x.name} → ${y.name}: ${r.dmg} урона`);
+    if (r.kind === 'crit') fev(pick(x.lastCrit ? FL_CRIT2 : FL_CRIT, x, y), 'crit');
+    else if (r.kind === 'dodge') fev(pick(FL_DODGE, x, y), 'nt');
+    else if (r.kind === 'block') fev(pick(FL_BLOCK, x, y), 'nt');
+    if (r.dmg > 0) hpMark(y);
     x.lastCrit = r.kind === 'crit';
     fxPush(y, { crit: 'Крит! −' + r.dmg, dodge: 'Уклон!', block: 'Блок!', hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
     if (Math.random() < FIGHT.qiProc) {          // шанс как у крита: прилив Цы 5–10%
       const g = FIGHT.qiProcMin + Math.random() * (FIGHT.qiProcMax - FIGHT.qiProcMin);
       x.qi = Math.min(x.qiMax, x.qi + x.qiMax * g);
-      fev(`${x.name} восстанавливает ${Math.round(g * 100)} Цы`, 'qi'); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
+      fev(pick(FL_QI, x, y), 'qi'); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
     }
     if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
     // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
