@@ -406,6 +406,7 @@ html.land .evtinfo{flex:1;min-width:0}
 .fzl .flog div.ab{border-left-color:#B98CFF;font-weight:600}
 .fzl .flog div.nt{border-left-color:#5B6B8F;color:var(--dim)}
 .fzl .flog div.qi{border-left-color:var(--cyan);color:#9FEFFF}
+.fzl .flog div.rupture{border-left-color:#FF5AD8;color:#FFB8F0;font-weight:800;text-transform:none;background:linear-gradient(90deg,rgba(255,90,216,.12),transparent)}
 .fzl .flog div.hp50{border-left-color:#F5C84C;font-style:italic}
 .fzl .flog div.hp30{border-left-color:#FF9F5A;color:#FFD0A8;font-style:italic}
 .fzl .flog div.hp10{border-left-color:var(--bad);color:#FFB3A8;font-weight:700}
@@ -856,7 +857,10 @@ const FIGHT = {
   abilCrit: 0.2,                            // шанс крита способности
   abilCd: 28,                               // перезарядка способности, секунд: за бой ~60 с — 2–3 применения
   abilStart: 10,                            // способность готова только через 10 с после начала боя
-  qiProc: 0.02, qiProcMin: 0.05, qiProcMax: 0.10,   // 2% за удар: прилив Цы 5–10%
+  qiProc: 0.02, qiProcMin: 0.20, qiProcMax: 0.20,   // 2% за удар: прилив Цы +20%
+  double: 0.03,                             // двойная атака: 3% — сразу ещё один удар
+  blockMin: 0.4,                            // блок гасит 40–100% урона, иногда весь
+  ruptureMult: 4,                           // «Разрыв потока» после трёх критов подряд: урон ×4 от базового
   thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
 const ABIL_LIST = [   // способности соперников: название и что делает
@@ -886,18 +890,27 @@ function startFightAB(title, a, b, onEnd) {
   S.view = 'fight';
 }
 function rollHit(x, y) {
-  const roll = rnd(1, 20), r = roll + Math.round((x.p - y.p) / FIGHT.diceDiv);  // бросок кубика d20 с поправкой на разницу сил
+  // d20: 19–20 крит (10%), 1–3 уклон (15%), 4 парирование (5%), 5–6 блок (10%), остальное — удар
+  const roll = rnd(1, 20), r = roll + Math.round((x.p - y.p) / FIGHT.diceDiv);
   const base = FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p));
-  if (roll === 20 || r >= 19) return { kind: 'crit', dmg: Math.round(base * 2) };
-  if (roll === 1 || r <= 3) return { kind: 'dodge', dmg: 0 };
-  if (r <= 6) return { kind: 'block', dmg: 0 };
-  return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)) };
+  if (roll === 20 || r >= 19) return { kind: 'crit', dmg: Math.round(base * 2), base };
+  if (roll === 1 || r <= 3) return { kind: 'dodge', dmg: 0, base };
+  if (r === 4) return { kind: 'parry', dmg: 0, base };
+  if (r <= 6) {   // блок гасит часть урона: от 40% до 100%, примерно в трети случаев — весь
+    const cut = Math.random() < 0.33 ? 1 : FIGHT.blockMin + Math.random() * (1 - FIGHT.blockMin);
+    return { kind: 'block', dmg: Math.round(base * (1 - cut)), full: cut >= 1, base };
+  }
+  return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)), base };
 }
 // журнал боя: только яркие моменты без цифр — урон виден на портретах. {a} — кто действует, {b} — соперник
 const FL_CRIT = ['{a} проводит разрушительную атаку!', '{a} находит брешь в защите и бьёт со всей силы!', '{a} обрушивает мощнейший удар — арена содрогается!', '{a} вкладывает в удар всю Цы. {b} отлетает назад!'];
 const FL_CRIT2 = ['{a} не сбавляет темп — ещё один сокрушительный удар!', '{a} проводит серию разрушительных атак!', 'Второй крит подряд! {a} в ударе!'];
 const FL_DODGE = ['{b} легко уходит от атаки.', '{b} в последний миг уклоняется!', 'Удар рассекает пустоту — {b} уже в стороне.'];
-const FL_BLOCK = ['{b} принимает удар на блок.', '{b} блокирует и не отступает ни на шаг.', '{b} выдерживает атаку.'];
+const FL_BLOCK = ['{b} принимает удар на блок — урон погашен полностью.', '{b} блокирует и не отступает ни на шаг.', '{b} выдерживает атаку, не пропустив ни капли урона.'];
+const FL_BLOCKP = ['{b} частично блокирует удар.', '{b} успевает подставить блок, но часть удара проходит.', '{b} гасит удар, хоть и не до конца.'];
+const FL_PARRY = ['{b} парирует удар и тут же контратакует! Критический удар!', '{b} отводит клинок {a} в сторону и бьёт в ответ — крит!', 'Парирование! {b} ловит момент и наносит сокрушительный ответ!'];
+const FL_DOUBLE = ['{a} проводит двойную атаку!', '{a} бьёт дважды подряд — {b} не успевает опомниться!', 'Молниеносная двойная атака от {a}!'];
+const FL_RUPTURE = ['Разрыв потока! {a} выбивает три крита подряд — вся Цы взрывается и обрушивается на соперника!', 'Разрыв потока! {a} сжигает всю Цы в одном ударе — {b} принимает страшный урон!', 'Разрыв потока! {a} не удерживает поток Цы — и вся сила разом обрушивается на {b}!'];
 const FL_NOQI = ['{a} выдыхается: Цы иссякла, нужна передышка.', '{a} растратил всю Цы и отходит, чтобы перевести дух.', 'Цы на нуле! {a} вынужден отступить на пару мгновений.'];
 const FL_QI = ['{a} чувствует прилив Цы!', '{a} ловит второе дыхание — Цы вспыхивает с новой силой.', '{a} собирается с силами, Цы прибывает.'];
 const FL_HP = {
@@ -938,19 +951,37 @@ function fightStep(dt) {
     if (x.cd > 0) continue;
     if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(pick(FL_NOQI, x, y), 'qi'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
     x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
-    const r = rollHit(x, y);
-    y.hp = Math.max(0, y.hp - r.dmg);
-    // в журнал — только яркие моменты; обычные удары видны цифрами на портрете
-    if (r.kind === 'crit') fev(pick(x.lastCrit ? FL_CRIT2 : FL_CRIT, x, y), 'crit');
-    else if (r.kind === 'dodge') fev(pick(FL_DODGE, x, y), 'nt');
-    else if (r.kind === 'block') fev(pick(FL_BLOCK, x, y), 'nt');
-    if (r.dmg > 0) hpMark(y);
-    x.lastCrit = r.kind === 'crit';
-    fxPush(y, { crit: 'Крит! −' + r.dmg, dodge: 'Уклон!', block: 'Блок!', hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
-    if (Math.random() < FIGHT.qiProc) {          // шанс как у крита: прилив Цы 5–10%
-      const g = FIGHT.qiProcMin + Math.random() * (FIGHT.qiProcMax - FIGHT.qiProcMin);
-      x.qi = Math.min(x.qiMax, x.qi + x.qiMax * g);
-      fev(pick(FL_QI, x, y), 'qi'); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
+    const swings = Math.random() < FIGHT.double ? 2 : 1;   // редкая двойная атака
+    if (swings === 2) { fev(pick(FL_DOUBLE, x, y), 'crit'); fxPush(x, 'Двойная атака!', 'rand', 2); }
+    for (let sw = 0; sw < swings && !F.done; sw++) {
+      const r = rollHit(x, y);
+      if (r.kind === 'parry') {   // парирование: удар не проходит, защитник отвечает критом
+        const back = Math.round(FIGHT.dmg(y.p) * 100 / (100 + FIGHT.def(x.p)) * 2);
+        x.hp = Math.max(0, x.hp - back); x.critRun = 0;
+        fev(pick(FL_PARRY, x, y), 'crit'); fxPush(y, 'Парирование!', 'nt', 1); fxPush(x, 'Крит! −' + back, 'minus', 1);
+        hpMark(x);
+        if (x.hp <= 0) { F.done = true; F.won = y === F.a; return; }
+        continue;
+      }
+      y.hp = Math.max(0, y.hp - r.dmg);
+      // в журнал — только яркие моменты; обычные удары видны цифрами на портрете
+      if (r.kind === 'crit') fev(pick(x.lastCrit ? FL_CRIT2 : FL_CRIT, x, y), 'crit');
+      else if (r.kind === 'dodge') fev(pick(FL_DODGE, x, y), 'nt');
+      else if (r.kind === 'block') fev(pick(r.full ? FL_BLOCK : FL_BLOCKP, x, y), 'nt');
+      x.critRun = r.kind === 'crit' ? (x.critRun || 0) + 1 : 0;
+      x.lastCrit = r.kind === 'crit';
+      fxPush(y, { crit: 'Крит! −' + r.dmg, dodge: 'Уклон!', block: r.full ? 'Блок!' : 'Блок −' + r.dmg, hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
+      if (x.critRun >= 3 && y.hp > 0) {   // «Разрыв потока»: три крита подряд — вся Цы в ноль и мощный удар
+        const boom = Math.round(r.base * FIGHT.ruptureMult);
+        y.hp = Math.max(0, y.hp - boom); x.qi = 0; x.critRun = 0; x.lastCrit = false;
+        fev(pick(FL_RUPTURE, x, y), 'rupture'); fxPush(y, 'Разрыв потока! −' + boom, 'rand', 1); fxPush(x, 'Цы: 0', 'qi', 2);
+      }
+      if (r.dmg > 0) hpMark(y);
+      if (y.hp <= 0) break;
+    }
+    if (Math.random() < FIGHT.qiProc && x.qi > 0) {   // редкий прилив Цы: +20%
+      x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.qiProcMin);
+      fev(pick(FL_QI, x, y), 'qi'); fxPush(x, '+20% Цы', 'qi', 2);
     }
     if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
     // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
@@ -2295,6 +2326,10 @@ function viewTeams() {   // библиотека: команды лиг по р�
   }
   return wrap(h + back);
 }
+// заметки библиотеки: общие для всех регионов (пока 1 из 10 написана)
+const LIB_NOTES = {
+  0: { t: 'Разрыв потока', d: 'Три критических удара подряд разрывают поток Цы: вся она высвобождается в одном сокрушительном ударе. Рискнув разорвать поток, Спектр рискует остаться без Цы. Но шанс крита маленький, а три подряд — большая редкость.' }
+};
 function viewLib() {
   const r = REGIONS[S.region];
   const seen = S.read[S.region] || [];
@@ -2304,7 +2339,7 @@ function viewLib() {
   S.read[S.region] = [...(S.read[S.region] || []), i];
   save();
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Библиотека</div>
-    <h2>Заметка ${i + 1} · ${esc(r.name)}</h2><div style="text-align:left">${TEXT}</div><div class="bonus nt">Без эффекта</div></div>
+    <h2>${LIB_NOTES[i] ? esc(LIB_NOTES[i].t) : 'Заметка ' + (i + 1) + ' · ' + esc(r.name)}</h2><div style="text-align:left">${LIB_NOTES[i] ? esc(LIB_NOTES[i].d) : TEXT}</div><div class="bonus nt">Без эффекта</div></div>
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
     <button class="btn gold" data-a="teams" data-v="${S.region}">Команды лиг</button>${back}`);
 }
