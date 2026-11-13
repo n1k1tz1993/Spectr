@@ -26,7 +26,7 @@ html.rot{overflow:hidden}
 html.rot body{overflow:hidden}
 html.rot #stage{position:fixed;top:0;left:100vw;width:100vh;height:100vw;transform:rotate(90deg);transform-origin:top left;overflow:auto;background:var(--bg)}
 html.rot #orient{right:auto;left:10px;bottom:10px;transform:rotate(90deg)}
-.top{position:relative;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 10px 12px;overflow:hidden}
+.top{position:relative;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 10px;overflow:hidden}
 .top .ava{width:40px;height:40px}
 .topid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;background:none;border:0;padding:0;color:var(--txt);font-family:inherit;text-align:left;cursor:pointer}
 .topid .nick{font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -34,9 +34,23 @@ html.rot #orient{right:auto;left:10px;bottom:10px;transform:rotate(90deg)}
 .top .rate{margin-left:0;flex:0 0 auto}
 .top .lg{font-size:11px}
 .topor{flex:0 0 auto;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--cyan);font-size:20px;cursor:pointer}
-.tgrow{position:absolute;left:0;right:0;bottom:0;height:5px;background:#0A0F1E}
-.tgrow i{display:block;height:100%;background:linear-gradient(90deg,#2C7BE5,var(--cyan))}
-.tgrow.done i{background:linear-gradient(90deg,#C9962C,var(--gold))}
+.top{flex-wrap:wrap}
+.tgrow{flex:0 0 100%;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted,#8A93AD);margin-top:2px}
+.tgrow span{white-space:nowrap}
+.tgrow b{font-size:11px;color:var(--cyan);min-width:30px;text-align:right}
+.tgrow .tbar{flex:1;height:6px;border-radius:3px;background:#0A0F1E;overflow:hidden}
+.tgrow .tbar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#2C7BE5,var(--cyan))}
+.tgrow.done .tbar i{background:linear-gradient(90deg,#C9962C,var(--gold))}
+.tgrow.done b{color:var(--gold)}
+.stat{display:flex;gap:4px;justify-content:flex-end;margin-top:2px}
+.sti{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#1A2238;color:#3A4560;font-style:normal}
+.sti svg{width:12px;height:12px}
+.sti.on.g{background:rgba(46,204,113,.18);color:#2ECC71;box-shadow:0 0 0 1px #2ECC71}
+.sti.on.r{background:rgba(255,77,79,.18);color:#FF4D4F;box-shadow:0 0 0 1px #FF4D4F}
+.evtph{position:relative;width:100%;aspect-ratio:4/3;border-radius:12px;background:repeating-linear-gradient(45deg,#141B2E 0 12px,#18203A 12px 24px);border:1px dashed #2A3350;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.evtph span{color:#5A6585;font-weight:700;padding:12px;text-align:center}
+.evtph img.big{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none;border-radius:0}
+html.land .evtph img.big{width:100%;height:100%;max-height:none}
 .sub{display:flex;align-items:center;gap:10px;margin-top:12px}
 .sub h1{margin:0;font-size:22px;font-weight:700;line-height:1.2}
 .subback{width:44px;height:44px;flex:0 0 auto;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font-size:20px;cursor:pointer}
@@ -649,7 +663,8 @@ IMGBY['DreamHack'] = 'img/act/dh.webp';
 const picOf = c => IMGBY[c.t] || '';
 // большие картинки событий (4:3, комикс 1–4 панели): img/evt/<ключ>.webp — пока их нет, показывается миниатюра
 const bigOf = c => { const m = picOf(c).match(/img\/act\/(.+)\.webp$/); return m ? `img/evt/${m[1]}.webp` : ''; };
-const evtImg = c => picOf(c) ? `<img class="big" src="${bigOf(c)}" alt="${esc(c.t)}" onerror="this.onerror=null;this.src='${picOf(c)}';this.className='thumb'">` : `<div class="sq big">${esc(c.t)}</div>`;
+// внутри действия — своя картинка img/evt/<key>.webp; пока её нет — заглушка (иконки действий только в меню выбора)
+const evtImg = c => `<div class="evtph"><span>${esc(c.t)}</span>${bigOf(c) ? `<img class="big" src="${bigOf(c)}" alt="" onerror="this.remove()">` : ''}</div>`;
 // описания действий: рассказывают мир Спектров (ключ — как у картинки)
 const EVT_DESC = {
   "r0_0": "Вечеринка на крыше нью-йоркского небоскрёба собрала звёзд лиги USA. Здесь рождаются союзы, слухи и контракты — а ты уходишь домой с ощущением, что следующая неделя будет твоей.",
@@ -921,7 +936,9 @@ const R_LOSS = [2, 'next'], FANS_B = [1, 'game'], COND_B = [1, 'turn'], LIB_B = 
 const nbOf = c => { const d = NB[c.t] || 'turn'; return [NB_V[d], d]; };
 const mbOf = c => MB[c.t] || [1, 'next'];
 const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
-const effTxt = (v, d) => `${sgn(v)} к силе ${effWhen(d)}`;
+const effTxt = (v, d) => `${v > 0 ? 'бонус' : 'штраф'} ${effWhen(d)}`;   // величину силы не показываем
+const bonusWord = v => v >= 15 ? 'огромный' : v >= 10 ? 'большой' : v >= 5 ? 'средний' : 'небольшой';
+const capF = t => t.charAt(0).toUpperCase() + t.slice(1);
 // действие недели: выбор → выполнение → результат (точный эффект отдельно от фразы героя)
 const CARD_PHRASE = {
   next: 'Этот вечер придал мне уверенности. На следующей неделе выйду на арену с новым настроем.',
@@ -939,18 +956,18 @@ const CARD_PHRASE = {
 };
 const effWhen = d => ({ next: 'на следующую неделю', game: 'на следующий бой', two: 'на эту и следующую неделю' })[d] || 'до конца недели';
 function cardExpect(c) {   // ожидаемый эффект до нажатия
-  if (c.k === 'p') return { kind: 'Бонус', cls: 'plus', txt: `+${c.v} к силе ${effWhen(c.d)}` };
-  if (c.k === 'm') { const [b, bd] = mbOf(c); return { kind: 'Штраф и бонус', cls: 'minus', txt: `${effTxt(c.v, c.d)}, но ${effTxt(b, bd)}` }; }
-  if (c.k === 'r') return { kind: 'Случайно', cls: 'rand', txt: `+5 или −5 к силе до конца недели, вероятность 50/50. При неудаче — ${effTxt(...R_LOSS)}` };
-  if (c.k === 'n') { const [v, d] = nbOf(c); return { kind: 'Бонус', cls: 'plus', txt: effTxt(v, d) }; }
-  if (c.k === 'fanp') return { kind: 'Бонус', cls: 'plus', txt: `+${c.v} к силе до конца недели` };
-  if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: `Сила выше 65 — +20 рейтинга; иначе ${effTxt(...COND_B)}` };
-  if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — +5 к силе' };
+  if (c.k === 'p') return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(c.v, c.d)) };
+  if (c.k === 'm') { const [b, bd] = mbOf(c); return { kind: 'Штраф и бонус', cls: 'minus', txt: `${capF(effTxt(c.v, c.d))}, но ${effTxt(b, bd)}` }; }
+  if (c.k === 'r') return { kind: 'Случайно', cls: 'rand', txt: `Бонус или штраф до конца недели, 50 на 50. При неудаче — ещё и ${effTxt(...R_LOSS)}` };
+  if (c.k === 'n') { const [v, d] = nbOf(c); return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(v, d)) }; }
+  if (c.k === 'fanp') return { kind: 'Бонус', cls: 'plus', txt: 'Бонус до конца недели' };
+  if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: `Прокачка завершена — +20 рейтинга; иначе ${effTxt(...COND_B)}` };
+  if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе' };
   if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.win} рейтинга` };
   if (c.k === 'duel') return { kind: 'Бой', cls: 'rand', txt: `Дуэль · победа — +${DUEL_WIN} рейтинга` };
   if (c.k === 'contract') return { kind: 'Турнир', cls: 'rand', txt: `Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга` };
-  if (c.k === 'fans') return { kind: 'Бонус', cls: 'plus', txt: effTxt(...FANS_B) };
-  return { kind: 'Бонус', cls: 'plus', txt: effTxt(1, 'turn') };
+  if (c.k === 'fans') return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(...FANS_B)) };
+  return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(1, 'turn')) };
 }
 function useCard(i) {
   const c = S.hand[i];
@@ -962,22 +979,22 @@ function useCard(i) {
   let R;
   if (c.k === 'm') {   // штраф и небольшой бонус
     const [b, bd] = mbOf(c); addEff(c.v, c.d); addEff(b, bd);
-    R = { kind: 'Штраф и бонус', cls: 'minus', txt: `${effTxt(c.v, c.d)}, но ${effTxt(b, bd)}`, phrase: c.d === 'next' ? CARD_PHRASE.mixNext : CARD_PHRASE.mixNow };
+    R = { kind: 'Штраф и бонус', cls: 'minus', txt: `${capF(effTxt(c.v, c.d))}, но ${effTxt(b, bd)}`, phrase: c.d === 'next' ? CARD_PHRASE.mixNext : CARD_PHRASE.mixNow };
   } else if (c.k === 'p' || c.k === 'r' || c.k === 'fanp') {
     const v = c.k === 'r' ? (Math.random() < 0.5 ? 5 : -5) : c.v, d = c.k === 'r' || c.k === 'fanp' ? 'turn' : c.d;
     addEff(v, d);
-    R = { kind: v > 0 ? 'Бонус' : 'Штраф', cls: v > 0 ? 'plus' : 'minus', txt: effTxt(v, d),
+    R = { kind: v > 0 ? 'Бонус' : 'Штраф', cls: v > 0 ? 'plus' : 'minus', txt: capF(effTxt(v, d)),
       phrase: v > 0 ? (d === 'next' ? CARD_PHRASE.next : CARD_PHRASE.plus) : CARD_PHRASE.minus };
     if (v < 0) { addEff(...R_LOSS); R.kind = 'Штраф и бонус'; R.txt += ', но ' + effTxt(...R_LOSS); R.phrase = CARD_PHRASE.rLoss; }
   } else if (c.k === 'cond') {
     const ok = S.power > 65; if (ok) S.rating += 20; else addEff(...COND_B);
-    R = ok ? { kind: 'Бонус', cls: 'plus', txt: '+20 рейтинга', phrase: CARD_PHRASE.plus } : { kind: 'Бонус', cls: 'plus', txt: `Без рейтинга: нужна сила выше 65. Зато ${effTxt(...COND_B)}`, phrase: CARD_PHRASE.turn };
+    R = ok ? { kind: 'Бонус', cls: 'plus', txt: '+20 рейтинга', phrase: CARD_PHRASE.plus } : { kind: 'Бонус', cls: 'plus', txt: `Без рейтинга: прокачка ещё не завершена. Зато ${effTxt(...COND_B)}`, phrase: CARD_PHRASE.turn };
   } else if (c.k === 'fans') {
     addEff(...FANS_B);
-    R = { kind: 'Бонус', cls: 'plus', txt: effTxt(...FANS_B), phrase: 'Приятно, когда тебя ждут и поддерживают. В следующем бою не подведу.' };
+    R = { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(...FANS_B)), phrase: 'Приятно, когда тебя ждут и поддерживают. В следующем бою не подведу.' };
   } else {   // нейтральное действие: небольшой бонус
     const [v, d] = nbOf(c); addEff(v, d);
-    R = { kind: 'Бонус', cls: 'plus', txt: effTxt(v, d), phrase: CARD_PHRASE[d === 'next' ? 'nnext' : d] };
+    R = { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(v, d)), phrase: CARD_PHRASE[d === 'next' ? 'nnext' : d] };
   }
   if (jet) R.txt += '. Джетлаг снят';
   S.hand.splice(i, 1);
@@ -1713,7 +1730,7 @@ function wcFinish(L) {
     if (i === champ) {
       const first = !H.wcWon; H.wcWon = (H.wcWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WC_GAIN);
-      logTo(H, `Ты выиграл Wild Card!${first ? ' +' + WC_GAIN + ' к силе.' : ''}`);
+      logTo(H, `Ты выиграл Wild Card!${first ? ' Постоянный бонус к силе.' : ''}`);
       histTo(H, H.region, 'Wild Card: победа');
     } else histTo(H, H.region, 'Wild Card: турнир окончен');
   });
@@ -1771,7 +1788,7 @@ function wfFinish(L) {
     if (i === champ) {
       const first = !H.wfWon; H.wfWon = (H.wfWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WF_GAIN);
-      logTo(H, `Ты чемпион мира!${first ? ' +' + WF_GAIN + ' к силе.' : ''}`);
+      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''}`);
       histTo(H, H.region, 'Чемпионат мира: победа');
     } else histTo(H, H.region, 'Чемпионат мира: турнир окончен');
   });
@@ -1921,7 +1938,7 @@ function playTour(t) {
       const H = G.players[x.h];
       if (H.rating > SEMI_PICK_RATING && Math.random() < SEMI_PICK_CHANCE && teams.length) {
         const ti = teams.shift(); x.team = ti; x.tb = SEMI_PICK_BONUS; humT[x.h] = ti;
-        logTo(H, `Команда ${SEMI_TEAMS[ti]} пригласила тебя выступить за неё на турнире! +${SEMI_PICK_BONUS} к силе.`);
+        logTo(H, `Команда ${SEMI_TEAMS[ti]} пригласила тебя выступить за неё на турнире! Бонус к силе на турнир.`);
       }
     });
     const nT = rnd(5, 10) - Object.keys(humT).length;   // на турнире выступают 5–10 случайных полупро-команд, остальные — свободные бойцы
@@ -2128,14 +2145,26 @@ const growBar = () => {
   const pct = Math.max(0, Math.min(1, (S.power - GROW_FROM) / (GROW_TO - GROW_FROM))) * 100, done = pct >= 100;
   return `<div class="grow"><div class="dim">${done ? 'Прокачка завершена — дальше расти можно только трофеями и турнирами' : 'Прогресс прокачки'}</div><div class="gbar"><i style="width:${pct.toFixed(1)}%"></i></div><b>${Math.floor(pct)}%</b></div>`;
 };
+// статус героя под рейтингом: зелёный — бонус, красный — штраф и джетлаг (без величин)
+const ICO_UP = '<svg viewBox="0 0 16 16"><path d="M8 3l5 6H9.5v4h-3V9H3z" fill="currentColor"/></svg>';
+const ICO_DN = '<svg viewBox="0 0 16 16"><path d="M8 13l5-6H9.5V3h-3v4H3z" fill="currentColor"/></svg>';
+const ICO_JET = '<svg viewBox="0 0 16 16"><path d="M14.5 6.6c.6.3.6 1.3 0 1.6L10 10l-1.7 4.3H6.9l.6-3.8-3 .9-1 1.5H2.3l.5-2.4-1.3-1.1L2.6 9l1.9.6 3-.9-2.4-3.2h1.4l3.6 2.4z" fill="currentColor"/></svg>';
+function heroStatus(H) {
+  const now = H.effects.filter(e => e.game || (e.from <= H.turn && H.turn <= e.to));
+  return { up: now.some(e => e.v > 0), dn: now.some(e => e.v < 0), jet: !!H.jetlag };
+}
+const statusHtml = H => {
+  const st = heroStatus(H), it = (on, cls, ico, t) => `<i class="sti ${cls} ${on ? 'on' : ''}" title="${t}">${ico}</i>`;
+  return `<div class="stat">${it(st.up, 'g', ICO_UP, st.up ? 'Есть бонус' : 'Бонуса нет')}${it(st.dn, 'r', ICO_DN, st.dn ? 'Есть штраф' : 'Штрафа нет')}${it(st.jet, 'r', ICO_JET, st.jet ? 'Джетлаг' : 'Джетлага нет')}</div>`;
+};
 const topBar = () => {   // компактная шапка: портрет 40×40, ник и регион слева, рейтинг справа, прогресс прокачки по нижнему краю
   const lg = leagueOf(S.rating), pct = Math.max(0, Math.min(1, (S.power - GROW_FROM) / (GROW_TO - GROW_FROM))) * 100;
   const full = S.hdrFull ? REGIONS[S.region].league : LSHORT[S.region];
   return `<div class="top"><div class="ava">${faceImg(S.face)}</div>
     <button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400">· ${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="dim">${REGIONS[S.region].name} · ${esc(full)}</span></button>
-    <div class="rate">${rateHtml(S.rating, 'mid')}<div class="lg" style="color:${lg.c}">${lg.n}</div></div>
+    <div class="rate">${rateHtml(S.rating, 'mid')}<div class="lg" style="color:${lg.c}">${lg.n}</div>${statusHtml(S)}</div>
     <button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
-    <div class="tgrow ${pct >= 100 ? 'done' : ''}" title="${pct >= 100 ? 'Прокачка завершена' : 'Прогресс прокачки ' + Math.round(pct) + '%'}"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+    <div class="tgrow ${pct >= 100 ? 'done' : ''}"><span>${pct >= 100 ? 'Рост силы завершён' : 'Рост силы'}</span><div class="tbar"><i style="width:${pct.toFixed(1)}%"></i></div><b>${Math.round(pct)}%</b></div></div>`;
 };
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
 const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
@@ -2146,10 +2175,10 @@ const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
   if (c.k === 'm') return '<div class="bonus minus">Эффект и бонус</div>';
   if (c.k === 'r') return '<div class="bonus rand">Случайно: бонус или эффект</div>';
-  if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — +5 к силе.</div>';
+  if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе.</div>';
   if (c.k === 'beast') return `<div class="bonus rand">Бой со зверем · победа — +${BEAST.win} рейтинга</div>`;
   if (c.k === 'duel') return `<div class="bonus rand">Дуэль · победа — +${DUEL_WIN} рейтинга</div>`;
-  if (c.k === 'fanp') return '<div class="bonus plus">Бонус! +1 к силе до конца недели</div>';
+  if (c.k === 'fanp') return '<div class="bonus plus">Бонус до конца недели</div>';
   if (c.k === 'contract') return `<div class="bonus rand">Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга</div>`;
   if (c.k === 'cond') return '<div class="bonus nt">Условие: сила выше 65</div>';
   return '<div class="bonus plus">Бонус!</div>';
@@ -2206,7 +2235,7 @@ function viewMain() {
     : '<div class="dim">Все действия этой недели выполнены.</div>';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2><div class="dim">Сезон ${seasonNo()}${seasonPhase() ? ' · ' + seasonPhase() : ''}</div>
-        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из 3</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: −5 к силе до любого действия</div>' : ''}</div>
+        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из 3</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}</div>
       <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
     </div>`;
   const map = `<div class="card mapcard">
@@ -2469,7 +2498,7 @@ function viewTeams() {   // библиотека: команды лиг по р�
       <button class="tmx" data-a="tsel" data-v="" aria-label="Закрыть">✕</button>
       ${T[2] ? `<img class="tmlogo" src="img/team/${T[2]}.webp" alt="${esc(T[1])}">` : `<div class="tmlogo tmletter">${esc(T[1][0])}</div>`}
       <h2>${esc(T[1])}</h2>
-      ${T[0] < 0 ? '<div class="dim">Полупрофессиональная команда · объединение Спектров</div>' : `<div class="tmbonus">Бонус к силе при подписании: <b>+${teamBonusOf(T[0], T[1])}</b></div>`}
+      ${T[0] < 0 ? '<div class="dim">Полупрофессиональная команда · объединение Спектров</div>' : `<div class="tmbonus">Бонус к силе при подписании: <b>${bonusWord(teamBonusOf(T[0], T[1]))}</b></div>`}
       ${I ? `${I.city ? `<div class="gold">${esc(I.city)}</div>` : ''}
       <p>${esc(I.desc)}</p>
       ${I.idea ? `<h3>Коротко</h3><ul>${I.idea.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
@@ -2514,7 +2543,7 @@ function viewLib() {
   S.read[S.region] = [...(S.read[S.region] || []), i];
   save();
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Библиотека</div>
-    <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${effTxt(...LIB_B)}</div></div>
+    <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${capF(effTxt(...LIB_B))}</div></div>
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
     <button class="btn gold" data-a="teams" data-v="${S.region}">Команды лиг</button>${back}`);
 }
@@ -2789,7 +2818,7 @@ function viewTRun() {
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
   let h = `<div class="card thead">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
-    ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · +${x.tb} к силе</span></div>`).join('')}
+    ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
     <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: 5–10 полупрофессиональных команд и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div></details></div>`;
@@ -2848,7 +2877,7 @@ function wfCardHtml() {   // карточка чемпионата мира в �
 function viewWF() {
   const L = G.wf;
   if (!L) return wrap(`<div class="card">Чемпионат мира сейчас не идёт.</div>${back}`);
-  let h = `<div class="card"><h2>Чемпионат мира</h2><div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю +${WF_GAIN} к силе.</div></div>`;
+  let h = `<div class="card"><h2>Чемпионат мира</h2><div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю — постоянный бонус к силе.</div></div>`;
   h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 2 ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('');
   for (const st of ['QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   return wrap(h + back);
@@ -2864,11 +2893,11 @@ const wcQualN = L => { let B = 1; while (B < L.n2 + 1) B *= 2; return Math.max(0
 function viewWC() {
   const L = G.wc;
   if (!L) return wrap(`<div class="card">Wild Card сейчас не идёт.</div>${back}`);
-  let h = `<div class="card"><h2>Wild Card</h2><div class="dim">Бойцы лиг, не попавшие на чемпионат мира. Этап 1: отбор Bo3 на 100 бойцов (последние места лиг, по бойцу от каждой полупро-команды с +2 к силе и свободные бойцы) — 100 → 50 → 25, затем 25 играют швейцарку Bo1. Этап 2 — сетка на 64 Bo3, этап 3 — плей-офф, финал Bo5. Каждая часть — один ход.</div></div>`;
+  let h = `<div class="card"><h2>Wild Card</h2><div class="dim">Бойцы лиг, не попавшие на чемпионат мира. Этап 1: отбор Bo3 на 100 бойцов (последние места лиг, по бойцу от каждой полупро-команды с небольшим бонусом к силе и свободные бойцы) — 100 → 50 → 25, затем 25 играют швейцарку Bo1. Этап 2 — сетка на 64 Bo3, этап 3 — плей-офф, финал Bo5. Каждая часть — один ход.</div></div>`;
   for (const st of ['K1', 'K2']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   if (L.sw.length) h += `<div class="card"><h3>Этап 1 · швейцарская система</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${wcSwissTable(L).map((x, k) => `<tr class="${k < wcQualN(L) ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.w}-${x.l}</td></tr>`).join('')}</table></div>`;
   for (const st of ['R64', 'R32', 'R16', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
-  h += `<div class="card dim">Во втором этапе сразу играют ${L.n2} бойцов, ещё ${wcQualN(L)} мест — лучшим из швейцарки. Победителю Wild Card +${WC_GAIN} к силе.</div>`;
+  h += `<div class="card dim">Во втором этапе сразу играют ${L.n2} бойцов, ещё ${wcQualN(L)} мест — лучшим из швейцарки. Победителю Wild Card — постоянный бонус к силе.</div>`;
   return wrap(h + back);
 }
 function lgCardHtml(r) {
