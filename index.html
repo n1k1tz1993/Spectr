@@ -637,7 +637,7 @@ const GENERIC = [
   C('Утренняя пробежка', 'p', 1, 'turn'), C('Лекция у тренера', 'p', 2, 'turn'), C('Ночной разбор записей', 'p', 3, 'turn'), C('Бессонная ночь', 'm', -3, 'turn'),
   C('Прогулка по городу', 'n'), C('Визит к массажисту', 'n'), C('Поход в кафе', 'n'), C('Чтение новостей о турнирах', 'n'), C('Просмотр стримов соперников', 'n'),
   C('Встреча с фанатами', 'n'), C('Фотосессия для журнала', 'n'), C('Ремонт экипировки', 'n'), C('Поход в магазин', 'n'), C('Прослушивание музыки перед боем', 'n'),
-  C('Медитация на рассвете', 'n'), C('Осмотр метеоритного камня', 'n'), C('Выставка технологий', 'n'), C('Спарринг с напарником', 'n'), C('Посещение спортзала', 'n'), C('Игра в настолки с командой', 'n')
+  C('Медитация на рассвете', 'n'), C('Осмотр метеоритного камня', 'n'), C('Выставка технологий', 'n'), C('Спарринг с напарником', 'spar'), C('Посещение спортзала', 'n'), C('Игра в настолки с командой', 'n')
 ];
 // карта 1254×1254: выноски (x0,y0,x1,y1), точки, короткое имя лиги
 const MAPW = 1254, MAPH = 875;   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
@@ -937,7 +937,7 @@ const NB = {   // нейтральные действия: небольшой б
   'Пляж в Санье': 'turn', 'Экскурсия на Великую китайскую стену': 'two', 'Поход в Запретный город': 'next', 'Прогулка по Бунду': 'turn', 'Чайная церемония': 'game', 'Поход на китайский рынок': 'turn', 'Фестиваль фонариков': 'next', 'Поход на оперу в Пекине': 'game', 'Шоппинг на Нанкинской улице': 'game',
   'Пляж на Чеджу': 'turn', 'Попробовать местную кухню': 'next', 'Поход на башню Намсан': 'game', 'Прогулка по Ханоку': 'turn', 'Поход на K-pop шоу': 'game', 'Посетить игровое кафе': 'game', 'Фестиваль весенних цветов': 'next', 'Поход в горы Букхан': 'two', 'Шопинг в Мёндоне': 'turn',
   'Прогулка по городу': 'turn', 'Визит к массажисту': 'two', 'Поход в кафе': 'turn', 'Чтение новостей о турнирах': 'game', 'Просмотр стримов соперников': 'game', 'Встреча с фанатами': 'next', 'Фотосессия для журнала': 'next', 'Ремонт экипировки': 'game',
-  'Поход в магазин': 'turn', 'Прослушивание музыки перед боем': 'game', 'Медитация на рассвете': 'next', 'Осмотр метеоритного камня': 'two', 'Выставка технологий': 'next', 'Спарринг с напарником': 'game', 'Посещение спортзала': 'two', 'Игра в настолки с командой': 'turn'
+  'Поход в магазин': 'turn', 'Прослушивание музыки перед боем': 'game', 'Медитация на рассвете': 'next', 'Осмотр метеоритного камня': 'two', 'Выставка технологий': 'next', 'Посещение спортзала': 'two', 'Игра в настолки с командой': 'turn'
 };
 const MB = {   // действия со штрафом: штраф + небольшой бонус потом (или сейчас, если штраф на следующую неделю)
   'Бессонная ночь в Вегасе': [2, 'next'], 'Простуда после кондиционера': [1, 'next'],
@@ -978,6 +978,7 @@ function cardExpect(c) {   // ожидаемый эффект до нажати�
   if (c.k === 'fanp') return { kind: 'Бонус', cls: 'plus', txt: 'Бонус до конца недели' };
   if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: `Прокачка завершена — +20 рейтинга; иначе ${effTxt(...COND_B)}` };
   if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе' };
+  if (c.k === 'spar') return { kind: 'Бой', cls: 'rand', txt: G && G.players.length > 1 ? `Спарринг Bo3 с любым игроком · победителю +${SPAR_WIN} рейтинга, поражение без потерь` : `Лестничный бой · победа — +${SPAR_WIN} рейтинга, поражение без потерь` };
   if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.win} рейтинга` };
   if (c.k === 'duel') return { kind: 'Бой', cls: 'rand', txt: `Дуэль · победа — +${DUEL_WIN} рейтинга` };
   if (c.k === 'contract') return { kind: 'Турнир', cls: 'rand', txt: `Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга` };
@@ -994,6 +995,7 @@ function useCard(i, ivDone) {
   const jet = ivDone ? S.iv.jet : !!S.jetlag; clearJet();   // любое действие недели снимает джетлаг
   if (c.k === 'dh') { c.used = true; dhStart(); save(); return; }
   if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
+  if (c.k === 'spar') { c.used = true; if (G.players.length > 1) S.view = 'spar'; else sparStart(null); save(); return; }
   if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
   let R;
   if (c.k === 'm') {   // штраф и небольшой бонус
@@ -1253,6 +1255,38 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
     logMsg(title + ' против ' + opp.name + ': ' + (won ? 'победа (+' + win + ' рейтинга).' : 'поражение.'));
     S.view = 'main';
   });
+}
+// ---------- спарринг: вызвать любого игрока (Bo3, отказаться нельзя) или, если играешь один, лестничный бой ----------
+const SPAR_WIN = 20;
+function sparStart(h) {
+  if (h == null) {   // один игрок: обычный лестничный бой, поражение рейтинг не снимает
+    const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 30)));
+    const g = genSpectre(S.region, takenSet([S.nick]), p), opp = withMeta(fighter(g.name, p, npcRating(p), false, g.abil, g.face), g.country);
+    startFight('Спарринг · лестничный бой', opp, won => {
+      if (won) S.rating += SPAR_WIN;
+      histAdd('Спарринг · ' + (won ? 'победа · +' + SPAR_WIN : 'поражение'));
+      logMsg('Спарринг против ' + opp.name + ': ' + (won ? `победа (+${SPAR_WIN} рейтинга).` : 'поражение, рейтинг не потерян.'));
+      S.view = 'main';
+    });
+    return;
+  }
+  const me = G.cur, sp = { a: me, b: h, wa: 0, wb: 0 };
+  const hf = i => { const H = G.players[i]; return heroF(H, withMeta(fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face), H.country, heroTeam(H, i))); };
+  const game = () => startFightAB(`Спарринг Bo3 · бой ${sp.wa + sp.wb + 1} · ${sp.wa}:${sp.wb}`, hf(sp.a), hf(sp.b), won => {
+    if (won) sp.wa++; else sp.wb++;
+    if (sp.wa < 2 && sp.wb < 2) { game(); return; }
+    const A = G.players[sp.a], B = G.players[sp.b], W = sp.wa > sp.wb ? A : B, Lz = W === A ? B : A, sc = `${Math.max(sp.wa, sp.wb)}:${Math.min(sp.wa, sp.wb)}`;
+    W.rating += SPAR_WIN;
+    [A, B].forEach(H => { histTo(H, H.region, `Спарринг · ${H === A ? B.nick : A.nick} · ${H === W ? 'победа ' + sc + ' · +' + SPAR_WIN : 'поражение ' + sc}`);
+      logTo(H, `Спарринг ${A.nick} — ${B.nick}: ${H === W ? `победа ${sc} (+${SPAR_WIN} рейтинга).` : `поражение ${sc}, рейтинг не потерян.`}`); });
+    S.view = 'main'; save();
+  });
+  game();
+}
+function viewSpar() {   // выбор напарника: любой другой игрок, отказаться он не может
+  const list = G.players.map((H, i) => i).filter(i => i !== G.cur);
+  return wrap(`<div class="card"><h2>Спарринг с напарником</h2><div class="dim">Выбери любого игрока. Отказаться он не может. Матч Bo3, победителю +${SPAR_WIN} рейтинга, поражение рейтинг не снимает.</div>
+    ${list.map(i => { const H = G.players[i]; return `<button class="erow" data-a="sparpick" data-v="${i}"><span class="ava">${faceImg(H.face)}</span><span style="flex:1;text-align:left"><b>${esc(H.nick)} ${flagOf(H.country)}</b><div class="dim">${REGIONS[H.region].name}</div></span>${rateHtml(H.rating)}</button>`; }).join('')}</div>`);
 }
 function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
   const teams = shuffle(SEMI.map((_, i) => i)).slice(0, 4), my = teams[0];
@@ -2254,6 +2288,7 @@ const labelOf = c => {
   if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе.</div>';
   if (c.k === 'beast') return `<div class="bonus rand">Бой со зверем · победа — +${BEAST.win} рейтинга</div>`;
   if (c.k === 'duel') return `<div class="bonus rand">Дуэль · победа — +${DUEL_WIN} рейтинга</div>`;
+  if (c.k === 'spar') return `<div class="bonus rand">Спарринг · победа — +${SPAR_WIN} рейтинга</div>`;
   if (c.k === 'fanp') return '<div class="bonus plus">Бонус до конца недели</div>';
   if (c.k === 'contract') return `<div class="bonus rand">Турнир на 16 игроков · победа — +${CONTRACT_WIN} рейтинга</div>`;
   if (c.k === 'cond') return '<div class="bonus nt">Условие: сила выше 65</div>';
@@ -2354,7 +2389,7 @@ function viewCard() {   // до выполнения: картинка, опис
       <div class="evtinfo"><h2>${esc(c.t)}</h2><p>${descOf(c) ? esc(descOf(c)) : TEXT}</p>
         <div class="effbox ${E.cls}"><span>${E.kind}</span><b>${E.txt}</b></div>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
-        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
+        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
 }
@@ -3053,7 +3088,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -3119,6 +3154,7 @@ function act(a, v) {
     case 'league': S.view = 'league'; S.sel = +v; break;
     case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
+    case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
     case 'ivans': if (S.iv) { if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
     case 'coll': S.view = 'coll'; break;
