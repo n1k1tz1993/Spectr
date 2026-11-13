@@ -854,7 +854,8 @@ const FIGHT = {
   diceDiv: 1000,                            // поправка к броску: разница сил / diceDiv (сейчас по сути выключена)
   abilHits: 5,                              // способность = 5 ударов, урон проходит одним ударом
   abilCrit: 0.2,                            // шанс крита способности
-  abilCd: 3,                                // перезарядка способности, секунд
+  abilCd: 28,                               // перезарядка способности, секунд: за бой ~60 с — 2–3 применения
+  abilStart: 10,                            // способность готова только через 10 с после начала боя
   qiProc: 0.02, qiProcMin: 0.05, qiProcMax: 0.10,   // 2% за удар: прилив Цы 5–10%
   thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
 };
@@ -881,7 +882,7 @@ const withMeta = (f, country, team) => Object.assign(f, { country: country || f.
 function startFight(title, opp, onEnd) { startFightAB(title, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
   F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
-  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
+  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;   // кто бьёт первым — случайно
   S.view = 'fight';
 }
 function rollHit(x, y) {
@@ -1793,7 +1794,7 @@ function tFighter(R, id) {   // боец турнира: флаг и логот�
 function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
   const keep = F;
   F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
-  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;
+  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;
   finishFight();
   const w = F.won; F = keep; return w;
 }
@@ -2533,7 +2534,7 @@ function fightPaint() {
     const ready = !F.done && x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct;
     const st = document.getElementById(id + '-acd');
     const active = x.abT != null && F.t - x.abT < 0.8;
-    st.textContent = active ? 'Активна' : x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово' : 'Недостаточно Цы';
+    st.textContent = active ? 'Активна' : x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + Math.ceil(x.acd) + ' с' : ready ? 'Готово' : 'Недостаточно Цы';
     st.className = active ? 'act' : ready ? 'ok' : '';
     const sq = document.getElementById(id + '-sq');
     if (sq) { sq.classList.toggle('cd', !ready && !active); sq.classList.toggle('ready', ready); sq.classList.toggle('act', active); const t = document.getElementById(id + '-sqst'); t.textContent = st.textContent; }
