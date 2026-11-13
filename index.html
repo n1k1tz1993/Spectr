@@ -330,7 +330,7 @@ html.land .rt.fzrt{font-size:16px}
 .fzk button.on{background:linear-gradient(180deg,#E8A33A,#B8741B);border-color:#F5C542}
 html.land .fz{max-width:1240px;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);grid-template-rows:auto 1fr auto;grid-template-areas:"h h" "f l" "f k";gap:12px}
 html.land .fzst{flex-basis:auto;margin-left:auto;padding-left:14px;border-left:1px solid rgba(58,143,216,.5)}
-html.land .fzp{aspect-ratio:auto;height:min(30vw,calc(100vh - 340px));min-height:150px}
+html.land .fzp{aspect-ratio:auto;height:min(30vw,calc(100vh - 420px));min-height:130px}
 html.land .fzl .flog{max-height:none}
 html.land .fzn b{font-size:18px}
 html.land .fza b{font-size:14px}
@@ -379,6 +379,41 @@ html.land #app>.card.evt{display:flex;flex-direction:row;align-items:flex-start}
 html.land .evtpic{flex:0 0 55%}
 html.land .evtpic img{max-width:none;max-height:calc(100vh - 170px);width:auto}
 html.land .evtinfo{flex:1;min-width:0}
+
+/* ---------- бой: этап 3 ---------- */
+.fzn{gap:4px;padding:8px 8px 6px}
+.fzid{display:flex;align-items:center;gap:6px;min-width:0}
+.fzt{width:28px;height:28px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.fznn{display:flex;flex-direction:row;align-items:center;gap:5px;min-width:0}
+.fznn b{font-size:16px;font-weight:800;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fzfl{font-size:16px;line-height:1;flex:0 0 auto}
+.fztn{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-2px}
+.fzrr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:2px;flex-wrap:wrap}
+.rt.fzrt{font-size:23px}
+.rt.fzrt img{height:1.35em}
+.rt.fzrt b{letter-spacing:.03em}
+.fzlg{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--lc);padding:2px 7px;border-radius:6px;border:1px solid var(--lc);background:color-mix(in srgb,var(--lc) 14%,transparent);white-space:nowrap}
+.fzk button.on{background:rgba(50,213,231,.16);border-color:var(--cyan);color:var(--cyan)}
+.fza em{min-width:0;align-self:stretch;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fza em.act{border-color:var(--gold);color:var(--gold)}
+.fza.opp{cursor:default}
+.fzp.hit{animation:fzhit .35s ease-out}
+@keyframes fzhit{0%{box-shadow:inset 0 0 0 3px #FF8B7B;filter:brightness(1.35)}100%{box-shadow:inset 0 0 0 0 transparent;filter:none}}
+.fzl{display:flex;flex-direction:column;position:relative}
+.fzl .flog{max-height:170px;overflow-y:auto;scrollbar-width:thin}
+.fzl .flog div{font-size:13px}
+.fzl .flog div.crit{border-left-color:var(--gold);color:#FFE7A3}
+.fzl .flog div.ab{border-left-color:#B98CFF;font-weight:600}
+.fzl .flog div.nt{border-left-color:#5B6B8F;color:var(--dim)}
+.fzl .flog div.qi{border-left-color:var(--cyan);color:#9FEFFF}
+.fzlast{align-self:center;margin-top:6px;min-height:36px;padding:4px 14px;border-radius:10px;border:1px solid var(--cyan);background:var(--nest);color:var(--cyan);font-family:inherit;font-size:13px;cursor:pointer}
+html.land .fzl .flog{max-height:none;flex:1;min-height:0}
+html.land .fzl{height:100%;min-height:0;max-height:calc(100vh - 210px)}
+html.land .rt.fzrt{font-size:26px}
+html.land .fznn b{font-size:20px}
+html.land .fzt{width:36px;height:36px}
+html.land .fzlg{font-size:12px}
+html.land .fztn{font-size:13px}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -746,7 +781,7 @@ function rollHit(x, y) {
   if (r <= 6) return { kind: 'block', dmg: 0 };
   return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)) };
 }
-const fev = (m) => { F.ev.unshift(m); F.ev = F.ev.slice(0, 5); };
+const fev = (m, c = '') => { F.ev.push({ t: m, c }); if (F.ev.length > 120) { F.ev.shift(); F.evCut = (F.evCut || 0) + 1; } };   // журнал: новые строки внизу
 const fxPush = (who, text, cls, layer) => { F.fx.push({ who: who === F.a ? 'fa' : 'fb', text, cls, layer }); };
 function useAbility(x, y) {
   // 5 ударов: каждый может критануть или не попасть; урон проходит одним ударом, вне очереди
@@ -758,7 +793,8 @@ function useAbility(x, y) {
   y.hp = Math.max(0, y.hp - dmg);
   // в журнал — что делает удар (фраза, которую придумал игрок), и урон от него
   const what = (x.abil.desc || 'наносит серию из пяти ударов').replace(/[.!\s]+$/, '');
-  fev(`${x.name} · «${x.abil.name}»: ${what}!${mult > 1 ? ' Сокрушительная мощь!' : ''}`);
+  fev(`${x.name} → ${y.name}: «${x.abil.name}» — ${dmg} урона${mult > 1 ? ' · сокрушительная мощь ×' + mult.toFixed(1) : ''}`, 'ab');
+  x.abT = F.t;
   fxPush(y, `${x.abil.name}${mult > 1 ? ' ×' + mult.toFixed(1) : ''}! −${dmg}`, 'rand', 1);
   if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
 }
@@ -770,20 +806,21 @@ function fightStep(dt) {
     x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
     x.cd -= dt;
     if (x.cd > 0) continue;
-    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ' выдыхается — Цы иссякла!'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
+    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; fev(x.name + ' выдыхается — Цы иссякла', 'qi'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
     x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
     const r = rollHit(x, y);
     y.hp = Math.max(0, y.hp - r.dmg);
     // в журнал — только яркие моменты; обычные удары видны цифрами на портрете
-    if (r.kind === 'crit') fev(x.lastCrit ? `${x.name} проводит серию разрушительных атак!` : `${x.name} производит разрушительную атаку!`);
-    else if (r.kind === 'dodge') fev(`${y.name} легко уклоняется от атаки!`);
-    else if (r.kind === 'block') fev(`${y.name} блокирует удар!`);
+    if (r.kind === 'crit') fev(`${x.name} → ${y.name}: ${r.dmg} урона · крит!`, 'crit');
+    else if (r.kind === 'dodge') fev(`${y.name} уклоняется от удара ${x.name}`, 'nt');
+    else if (r.kind === 'block') fev(`${y.name} блокирует удар ${x.name}`, 'nt');
+    else fev(`${x.name} → ${y.name}: ${r.dmg} урона`);
     x.lastCrit = r.kind === 'crit';
     fxPush(y, { crit: 'Крит! −' + r.dmg, dodge: 'Уклон!', block: 'Блок!', hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
     if (Math.random() < FIGHT.qiProc) {          // шанс как у крита: прилив Цы 5–10%
       const g = FIGHT.qiProcMin + Math.random() * (FIGHT.qiProcMax - FIGHT.qiProcMin);
       x.qi = Math.min(x.qiMax, x.qi + x.qiMax * g);
-      fev(`${x.name} чувствует прилив Цы!`); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
+      fev(`${x.name} восстанавливает ${Math.round(g * 100)} Цы`, 'qi'); fxPush(x, `+${Math.round(g * 100)}% Цы`, 'qi', 2);
     }
     if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
     // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
@@ -2266,15 +2303,21 @@ function fside(x, id) {
 const fabRow = (x, id) => `<button class="ff-ab" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">
   ${abilIcon(x.abil.icon)}<span class="ff-abt"><em>${esc(x.name)}</em><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><span id="${id}-acd"></span></span></button>`;
 // экран боя по макету: шапка SPECTRE / ПОЕДИНОК, две карточки бойцов, журнал и скорость; в альбомном — журнал справа
-function fzCard(x, id) {
+function fzCard(x, id) {   // карточка бойца: портрет → лого команды, ник, флаг → рейтинг и плашка лиги → HP → Цы → способность
+  const lg = leagueOf(x.rating), cc = x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '';
+  const own = x.me;   // нажимать можно только способность живого игрока; у соперника — только состояние
+  const ab = `${abilIcon(x.abil.icon)}<span><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><em id="${id}-acd"></em></span>`;
   return `<div class="fzc ${id}">
-    <div class="fzp">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
-    <div class="fzn"><b class="fznb">${esc(x.name)} ${flagOf(x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '')}</b>
-      <div class="fzn2"><span class="fznm">${x.team && x.team.logo ? `<img class="fzt" src="img/team/${x.team.logo}.webp" alt="">` : ''}${x.team ? `<small>${esc(x.team.name)}</small>` : ''}</span>${x.beast ? `<span class="beastmark">${abilIcon(30)}</span>` : `<span class="fzr"><small>Рейтинг</small>${rateHtml(x.rating, 'fzrt')}</span>`}</div></div>
+    <div class="fzp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
+    <div class="fzn">
+      <div class="fzid">${x.team && x.team.logo ? `<img class="fzt" src="img/team/${x.team.logo}.webp" alt="" title="${esc(x.team.name)}">` : ''}<span class="fznn"><b>${esc(x.name)}</b>${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}</span></div>
+      ${x.team ? `<div class="fztn">${esc(x.team.name)}</div>` : ''}
+      ${x.beast ? `<div class="fzrr"><span class="beastmark">${abilIcon(30)}</span><span class="fzlg" style="--lc:#FF8B7B">Дикий зверь</span></div>`
+        : `<div class="fzrr">${rateHtml(x.rating, 'fzrt')}<span class="fzlg" style="--lc:${lg.c}">${lg.n}</span></div>`}
+    </div>
     <div class="fzb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
     <div class="fzb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
-    <button class="fza" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}
-      <span><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><em id="${id}-acd"></em></span></button>
+    ${own ? `<button class="fza" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${ab}</button>` : `<div class="fza opp" id="${id}-ab">${ab}</div>`}
   </div>`;
 }
 function viewFight() {
@@ -2282,7 +2325,7 @@ function viewFight() {
   return `<div class="fz">
     <div class="fzh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b><span class="fzst">${esc(F.title)}</span></div>
     <div class="fzf">${fzCard(F.a, 'fa')}<div class="fzvs">VS</div>${fzCard(F.b, 'fb')}</div>
-    <div class="fzl"><h3>Журнал боя</h3><div class="flog" id="flog"></div><div id="fend"></div></div>
+    <div class="fzl"><h3>Журнал боя</h3><div class="flog" id="flog" onscroll="const f=document.getElementById('flast');if(f)f.hidden=this.scrollHeight-this.scrollTop-this.clientHeight<24"></div><button class="fzlast" id="flast" data-a="flast" hidden>К последнему ↓</button><div id="fend"></div></div>
     <div class="fzk" id="fctl"><button data-a="fspeed" data-v="1">×1</button><button data-a="fspeed" data-v="3">×3</button><button data-a="fskip">Skip</button></div>
   </div>`;
 }
@@ -2297,20 +2340,28 @@ function fightPaint() {
     document.getElementById(id + '-qit').textContent = Math.round(x.qi / x.qiMax * 100) + '/100';
     const ready = !F.done && x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct;
     const st = document.getElementById(id + '-acd');
-    st.textContent = x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово' : 'Мало Цы';
-    st.className = ready ? 'ok' : '';
+    const active = x.abT != null && F.t - x.abT < 0.8;
+    st.textContent = active ? 'Активна' : x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово' : 'Недостаточно Цы';
+    st.className = active ? 'act' : ready ? 'ok' : '';
     document.getElementById(id + '-ab').classList.toggle('cd', !ready);
   }
   for (const e of F.fx) {
     const el = document.getElementById(e.who + (e.layer === 2 ? '-fx2' : '-fx'));
     el.textContent = e.text; el.className = 'ff-fx' + (e.layer === 2 ? ' ff-fx2 ' : ' ') + e.cls; void el.offsetWidth; el.classList.add('go');
+    if (e.layer === 1 && e.cls === 'minus' || e.cls === 'rand' && e.layer === 1) { const pic = document.getElementById(e.who + '-pic'); if (pic) { pic.classList.remove('hit'); void pic.offsetWidth; pic.classList.add('hit'); } }
   }
   F.fx = [];
   document.querySelectorAll('#fctl [data-a=fspeed]').forEach(b => b.classList.toggle('on', +b.dataset.v === F.speed));
-  document.getElementById('flog').innerHTML = F.ev.map(e => `<div>${esc(e)}</div>`).join('');
+  const lg = document.getElementById('flog'), total = (F.evCut || 0) + F.ev.length;
+  if (lg && lg.dataset.n != total) {   // дописываем новые строки; автопрокрутка, только если игрок внизу
+    const atEnd = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 24;
+    lg.innerHTML = F.ev.map(e => `<div class="${e.c || ''}">${esc(e.t || e)}</div>`).join(''); lg.dataset.n = total;
+    if (atEnd || !F.evSeen) { lg.scrollTop = lg.scrollHeight; F.evSeen = true; }
+    const fl = document.getElementById('flast'); if (fl) fl.hidden = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 24;
+  }
   if (F.done && !document.getElementById('fend').innerHTML) {
     document.getElementById('fend').innerHTML = `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
-    document.getElementById('fctl').style.display = 'none'; document.getElementById('flog').style.display = 'none';
+    document.getElementById('fctl').style.display = 'none'; document.getElementById('flog').style.display = 'none'; document.getElementById('flast').hidden = true;
   }
 }
 function fightLoop() {
@@ -2552,7 +2603,8 @@ function act(a, v) {
     case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (S.actions >= 1 && G.players[h].region === S.region) a2.push(h); break; }
     case 'tauto': if (S.trun) tRun(S.trun, true); break;
     case 'tfinish': finishTour(); break;
-    case 'fspeed': if (F) F.speed = +v; return;
+    case 'fspeed': if (F) { F.speed = +v; fightPaint(); } return;
+    case 'flast': { const lg = document.getElementById('flog'); if (lg) { lg.scrollTop = lg.scrollHeight; document.getElementById('flast').hidden = true; } return; }
     case 'fskip': if (F) { finishFight(); fightPaint(); } return;
     case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); fightPaint(); } return;
     case 'fabil': {   // нажатие на квадрат с иконкой: способность этого бойца, если готова
