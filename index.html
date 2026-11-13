@@ -440,6 +440,16 @@ html.land .fzteam.fa{min-height:96px}
 html.land .fzteam.fa b{font-size:20px}
 html.land .fzbars .fzb{padding:6px 4px;font-size:13px}
 html.land .fzbars .fzbar{height:12px}
+
+/* логотипы команд: единый стиль — квадрат на чёрном фоне */
+.tlogo,.ttag,.tmlogo,.ctteams img,.fzteam img,.fzt{background:#000;border-radius:8px;object-fit:cover}
+.tmlogo{border-radius:16px;border:1px solid var(--line)}
+.fzteam img{border-radius:10px;border:1px solid rgba(255,255,255,.12);filter:none}
+.fzteam small{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;word-break:break-word}
+html:not(.land) .fzteam{align-items:center}
+html:not(.land) .fzteam img{width:38px;height:38px;flex:0 0 auto}
+html:not(.land) .fzteam small{font-size:12px;line-height:1.2;flex:1;min-width:0}
+html.land .fzteam small{font-size:12px;text-align:center}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
