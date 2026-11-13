@@ -602,6 +602,115 @@ html.land .lttl{display:flex}
 .famel img{width:22px;height:22px;border-radius:5px}
 html.land #app[data-view=fame]{column-count:1;padding-left:112px;padding-bottom:40px}
 html.land .fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+
+/* ===== бой по макету (книжный и альбомный) ===== */
+.fy{--cA:#32C8F0;--cB:#F0605A;max-width:520px;margin:4px auto 0;display:flex;flex-direction:column;gap:12px}
+.fyh{display:flex;align-items:center;gap:12px;padding:4px 2px 10px;border-bottom:1px solid rgba(58,143,216,.35)}
+.fyht{display:flex;flex-direction:column;min-width:0}
+.fyht>div{display:flex;align-items:baseline;gap:8px}
+.fyht b{font-size:17px;letter-spacing:.1em}
+.fyh .fzst{flex-basis:auto;text-align:left;font-size:15px;color:#DCE6FF}
+.fyf{display:grid;grid-template-columns:1fr 34px 1fr;gap:4px;align-items:start}
+.fyvs{align-self:start;margin-top:22%;text-align:center;font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:26px;color:#fff;text-shadow:0 0 12px rgba(50,200,240,.8)}
+.fyc{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fyp{position:relative;aspect-ratio:1/1;border-radius:14px;border:2px solid var(--cA);box-shadow:0 0 16px rgba(50,200,240,.35);background:radial-gradient(circle at 50% 38%,#5A6E99 0%,#34446A 45%,#1A2340 100%);overflow:hidden;container-type:inline-size}
+.fyc.fb .fyp{border-color:var(--cB);box-shadow:0 0 16px rgba(240,96,90,.35)}
+.fyp img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.fyp .ff-fx{position:absolute;top:6%;left:5%;right:auto;bottom:auto;inset:auto;top:6%;left:5%;padding:3px 12px;border-radius:10px;background:rgba(8,20,40,.85);border:1px solid var(--cA);font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:8.5cqw !important;color:#7BE8FF;transform:skewX(-8deg);-webkit-text-stroke:0;white-space:nowrap}
+.fyc.fb .fyp .ff-fx{left:auto;right:5%;border-color:var(--cB);color:#FF8B7B}
+.fyp .ff-fx.ff-fx2{top:auto;bottom:6%;font-size:7cqw !important}
+.fyp .ff-fx.plus{color:#7BF07F;border-color:#3FCF5A}.fyp .ff-fx.qi{color:#5FE7FF}.fyp .ff-fx.rand{color:var(--gold);border-color:var(--gold)}
+.fyp.hit{animation:fzhit .35s ease-out}
+.fyi{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fyn{display:flex;align-items:center;gap:6px;min-width:0}
+.fyn b{font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fyn .fzfl{font-size:20px}
+.fyr{display:flex;align-items:center;gap:6px;min-height:34px}
+.fyr img{width:34px;height:34px;object-fit:contain;flex:0 0 auto}
+.fysep{width:1px;height:22px;background:#3A4A70}
+.fyrt{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:20px;color:var(--gold)}
+.fylg{margin-left:auto;font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--lc);padding:3px 8px;border-radius:8px;border:1.5px solid var(--lc);background:rgba(0,0,0,.25);white-space:nowrap}
+.fyteam{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 10px;border-radius:10px;border:1.5px solid var(--gold);background:linear-gradient(180deg,rgba(245,200,76,.08),rgba(0,0,0,.3));min-height:36px;min-width:0}
+.fyteam b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:14px;letter-spacing:.08em;color:#FFE7A3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.fyteam img{width:28px;height:28px;border-radius:6px;object-fit:contain;flex:0 0 auto}
+.fyteam.fa b{font-size:16px}
+.fyteam.wild{border-color:var(--bad)}.fyteam.wild .aic{width:26px;height:26px}
+.fybars{display:flex;flex-direction:column;gap:8px}
+.fyb{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;font-size:14px;font-weight:800}
+.fyb em{font-style:normal;font-weight:500;color:#DCE6FF;font-size:13px;min-width:62px;text-align:right}
+.fyb .fzbar{height:12px;border-radius:7px}
+.fya{display:flex;align-items:center;gap:12px;text-align:left;width:100%;border:1px solid #2A3A60;border-left:4px solid var(--cA);border-radius:14px;background:linear-gradient(180deg,#121C36,#0C1428);color:var(--txt);padding:10px 12px;font-family:inherit;cursor:pointer;min-width:0}
+.fya.fb{border-left-color:var(--cB)}
+.fya.opp{cursor:default}
+.fya .aic{width:56px;height:56px;border-radius:10px;flex:0 0 auto}
+.fyat{flex:1;display:flex;flex-direction:column;min-width:0;padding-left:12px;border-left:1px solid #2A3A60}
+.fyat small{font-size:12px;color:var(--dim)}
+.fyat b{font-size:18px;line-height:1.2}
+.fyat i{font-style:normal;font-size:13px;color:#AEB9D6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fya em{flex:0 0 auto;font-style:normal;font-size:13px;padding:5px 12px;border-radius:10px;border:1px solid #3A4A70;color:#DCE6FF;white-space:nowrap}
+.fya em.ok{border-color:#3FCF5A;color:#7BF07F;box-shadow:0 0 10px rgba(63,207,90,.3)}
+.fya em.act{border-color:var(--gold);color:var(--gold)}
+.fya.cd .aic{filter:grayscale(1) brightness(.6)}
+.fyabs{display:flex;flex-direction:column;gap:10px}
+.fyc .fya{display:none}
+.fyl{border:1px solid rgba(58,143,216,.5);border-radius:14px;background:#0C1428;padding:12px 14px;position:relative}
+.fylh{display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid rgba(58,143,216,.25)}
+.fylh h3{margin:0;font-size:17px;letter-spacing:.08em;text-transform:uppercase}
+.fyall{border:0;background:none;color:var(--gold);font-family:inherit;font-size:14px;cursor:pointer}
+.fyl .flog{margin:6px 0 0;background:transparent;padding:0;font-size:14px;line-height:1.35;height:116px;overflow-y:auto;scrollbar-width:thin}
+.fy.logfull .fyl .flog{height:min(55vh,420px)}
+.fyl .flog div{border-left:3px solid #5B6B8F;padding:6px 0 6px 10px;margin:0;border-bottom:1px solid rgba(58,143,216,.15)}
+.fyl .flog div.crit{border-left-color:var(--gold);color:#FFE7A3}.fyl .flog div.ab{border-left-color:#B98CFF;font-weight:600}
+.fyl .flog div.nt{color:var(--dim)}.fyl .flog div.qi{border-left-color:var(--cyan);color:#9FEFFF}
+.fyl .flog div.rupture{border-left-color:#FF5AD8;color:#FFB8F0;font-weight:800}
+.fyl .flog div.hp50{border-left-color:#F5C84C;font-style:italic}.fyl .flog div.hp30{border-left-color:#FF9F5A;color:#FFD0A8;font-style:italic}.fyl .flog div.hp10{border-left-color:var(--bad);color:#FFB3A8;font-weight:700}
+.fyl #fend .btn{margin-top:8px;text-align:center}
+.fyk{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px}
+.fyk::before,.fyk::after{content:'';flex:1;height:1px;background:rgba(58,143,216,.4)}
+.fysp{display:flex;align-items:center;gap:10px;padding:8px 26px;border-radius:14px;border:2px solid var(--cyan);background:rgba(50,213,231,.08);color:var(--cyan);font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:22px;cursor:pointer;box-shadow:0 0 14px rgba(50,213,231,.25)}
+.fysp span{font-style:normal;font-size:18px}
+.fyskip{border:0;background:none;color:var(--dim);font-family:inherit;font-size:13px;cursor:pointer}
+html.land #app[data-view=fight]{max-width:none;padding-left:16px}
+html.land .fy{max-width:1240px}
+html.land .fyh .fyht{flex-direction:row;align-items:center;flex:1;justify-content:space-between}
+html.land .fyh .fzst{padding-left:14px;border-left:1px solid rgba(58,143,216,.5)}
+html.land .fyf{grid-template-columns:1fr 70px 1fr;align-items:stretch}
+html.land .fyvs{align-self:center;margin:0;font-size:52px}
+html.land .fyc{display:grid;grid-template-columns:minmax(150px,40%) 1fr;grid-template-areas:"p i" "b b" "a a";gap:10px 14px;padding:14px;border-radius:16px;border:2px solid var(--cA);background:linear-gradient(135deg,rgba(50,200,240,.08),#0C1428 55%);box-shadow:0 0 18px rgba(50,200,240,.25)}
+html.land .fyc.fb{grid-template-columns:1fr minmax(150px,40%);grid-template-areas:"i p" "b b" "a a";border-color:var(--cB);background:linear-gradient(225deg,rgba(240,96,90,.1),#0C1428 55%);box-shadow:0 0 18px rgba(240,96,90,.25)}
+html.land .fyp{grid-area:p;border:0;box-shadow:none;background:transparent;aspect-ratio:1/1}
+html.land .fyi{grid-area:i;justify-content:center}
+html.land .fybars{grid-area:b;padding-top:10px;border-top:1px solid rgba(58,143,216,.3)}
+html.land .fyc .fya{grid-area:a;display:flex}
+html.land .fyabs{display:none}
+html.land .fyl{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
+html.land .fylh{border:0;padding:0;flex-direction:column;align-items:flex-start}
+html.land .fylh h3{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-size:26px;line-height:1.05;border-left:4px solid var(--cyan);padding-left:12px;max-width:140px}
+html.land .fyall{display:none}
+html.land .fyl .flog{margin:0;height:auto;max-height:120px;border-left:1px solid rgba(58,143,216,.3);border-right:1px solid rgba(58,143,216,.3);padding:0 14px}
+html.land .fy.logfull .fyl .flog{max-height:50vh}
+html.land .fyk{margin:0;flex-direction:column;gap:10px}
+.fyall2{display:none}
+html.land .fyk::before,html.land .fyk::after{display:none}
+html.land .fyall2{display:block;border:1.5px solid var(--gold);border-radius:12px;padding:6px 14px}
+html.land .fyk .fyskip{order:3}
+html.land .fyl #fend{grid-column:1/-1}
+
+.fyp .ff-fx.go{animation:fybadge 1s ease-out forwards}
+@keyframes fybadge{0%{opacity:0;transform:skewX(-8deg) scale(.6)}15%{opacity:1;transform:skewX(-8deg) scale(1.08)}30%{transform:skewX(-8deg) scale(1)}75%{opacity:1}100%{opacity:0;transform:skewX(-8deg) scale(1)}}
+.fyat small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fyat b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fyabs .fya .aic{width:48px;height:48px}
+.fyabs .fya em{font-size:12px;padding:4px 8px}
+.fyabs .fya{gap:10px;padding:10px}
+html.land .fyc{grid-template-columns:min(36%,calc(100vh - 420px)) 1fr}
+html.land .fyc.fb{grid-template-columns:1fr min(36%,calc(100vh - 420px))}
+html.land .fyl .flog{grid-column:2;grid-row:1}
+html.land .fylh{grid-column:1;grid-row:1}
+html.land .fyk{grid-column:3;grid-row:1}
+html.land .fyl #fend{grid-row:2}
+html.land .fzlast{position:absolute;right:180px;bottom:8px}
+html.land .fyl .flog{max-height:110px}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -3058,36 +3167,35 @@ function fside(x, id) {
 const fabRow = (x, id) => `<button class="ff-ab" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">
   ${abilIcon(x.abil.icon)}<span class="ff-abt"><em>${esc(x.name)}</em><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><span id="${id}-acd"></span></span></button>`;
 // экран боя по макету: шапка SPECTRE / ПОЕДИНОК, две карточки бойцов, журнал и скорость; в альбомном — журнал справа
-function fzCard(x, id) {   // карточка бойца: портрет → лого команды, ник, флаг → рейтинг и плашка лиги → HP → Цы → способность
+function fzCard(x, id) {   // карточка бойца по макету: портрет с рамкой стороны, ник+флаг, ранг|рейтинг|лига, команда, HP, Цы; способность — отдельно
   const lg = leagueOf(x.rating), cc = x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '';
-  const own = x.me;   // нажимать можно только способность живого игрока; у соперника — только состояние
-  const ab = `${abilIcon(x.abil.icon)}<span><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><em id="${id}-acd"></em></span>`;
-  return `<div class="fzc ${id}">
-    <div class="fzp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
-    <div class="fzn">
-      <div class="fzid"><span class="fznn"><b>${esc(x.name)}</b>${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}</span></div>
-      ${x.beast ? `<div class="fzrr"><span class="beastmark">${abilIcon(30)}</span><span class="fzlg" style="--lc:#FF8B7B">Дикий зверь</span></div>`
-        : `<div class="fzrr">${rateHtml(x.rating, 'fzrt')}<span class="fzlg" style="--lc:${lg.c}">${lg.n}</span></div>`}
+  const team = x.beast ? `<span class="fyteam wild">${abilIcon(30)}<b>Дикий зверь</b></span>`
+    : x.team && x.team.logo ? `<span class="fyteam"><img src="img/team/${x.team.logo}.webp" alt=""><b>${esc(x.team.name)}</b></span>` : '<span class="fyteam fa"><b>FREE AGENT</b></span>';
+  return `<div class="fyc ${id}">
+    <div class="fyp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
+    <div class="fyi">
+      <div class="fyn"><b>${esc(x.name)}</b>${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}</div>
+      <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt">${x.rating}</b><span class="fylg" style="--lc:${lg.c}">${lg.n}</span>`}</div>
+      ${team}
     </div>
-    <div class="fzmid">
-      <div class="fzteam ${x.team && x.team.logo ? '' : 'fa'}" title="${x.team ? esc(x.team.name) : 'Без команды'}">${x.beast ? `<span class="fzwild">${abilIcon(30)}</span>`
-        : x.team && x.team.logo ? `<img src="img/team/${x.team.logo}.webp" alt=""><small>${esc(x.team.name)}</small>` : '<b>FREE <br>AGENT</b>'}</div>
-      <div class="fzbars">
-        <div class="fzb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
-        <div class="fzb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
-      </div>
+    <div class="fybars">
+      <div class="fyb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
+      <div class="fyb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
     </div>
-    ${own ? `<button class="fza" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${ab}</button>` : `<div class="fza opp" id="${id}-ab">${ab}</div>`}
+    ${fyAb(x, id).replace(/id="(f[ab])-(ab|acd)"/g, 'data-id="$1-$2"')}
   </div>`;
 }
+const fyAb = (x, id) => { const ab = `${abilIcon(x.abil.icon)}<span class="fyat"><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i></span><em id="${id}-acd"></em>`;
+  return x.me ? `<button class="fya ${id}" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${ab}</button>` : `<div class="fya ${id} opp" id="${id}-ab">${ab}</div>`; };
 function viewFight() {
   if (!F) { S.view = S.trun ? 'trun' : 'main'; return S.trun ? viewTRun() : viewMain(); }
-  return `<div class="fz">
-    <div class="fzh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b><span class="fzst">${esc(F.title)}</span></div>
-    <div class="fzf">${fzCard(F.a, 'fa')}<div class="fzvs">VS</div>${fzCard(F.b, 'fb')}</div>
-    <div class="fzl"><h3>Журнал боя</h3><div class="flog" id="flog" onscroll="const f=document.getElementById('flast');if(f)f.hidden=this.scrollHeight-this.scrollTop-this.clientHeight<24"></div><button class="fzlast" id="flast" data-a="flast" hidden>К последнему ↓</button><div id="fend"></div></div>
-    <div class="fzk" id="fctl"><div class="fzsp"><button data-a="fspeed" data-v="1">×1</button><button data-a="fspeed" data-v="3">×3</button><button data-a="fskip">Skip</button></div>
-      ${[[F.a, 'fa'], [F.b, 'fb']].filter(([x]) => x.me).map(([x, id]) => `<button class="fzsq ${id}" id="${id}-sq" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}<b>${esc(x.abil.name)}</b><em id="${id}-sqst"></em></button>`).join('')}</div>
+  return `<div class="fy ${F.logFull ? 'logfull' : ''}">
+    <div class="fyh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><div class="fyht"><div><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b></div><span class="fzst">${esc(F.title)}</span></div></div>
+    <div class="fyf">${fzCard(F.a, 'fa')}<div class="fyvs">VS</div>${fzCard(F.b, 'fb')}</div>
+    <div class="fyabs">${fyAb(F.a, 'fa')}${fyAb(F.b, 'fb')}</div>
+    <div class="fyl"><div class="fylh"><h3>Журнал боя</h3><button class="fyall" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button></div>
+      <div class="flog" id="flog" onscroll="const f=document.getElementById('flast');if(f)f.hidden=this.scrollHeight-this.scrollTop-this.clientHeight<24"></div><button class="fzlast" id="flast" data-a="flast" hidden>К последнему ↓</button><div id="fend"></div>
+      <div class="fyk" id="fctl"><button class="fyall fyall2" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button><button class="fysp" data-a="fspc"><span>▶</span><b id="fspl">×${F.speed || 1}</b></button><button class="fyskip" data-a="fskip">Пропустить »</button></div></div>
   </div>`;
 }
 function fightPaint() {
@@ -3114,7 +3222,10 @@ function fightPaint() {
     if (e.layer === 1 && e.cls === 'minus' || e.cls === 'rand' && e.layer === 1) { const pic = document.getElementById(e.who + '-pic'); if (pic) { pic.classList.remove('hit'); void pic.offsetWidth; pic.classList.add('hit'); } }
   }
   F.fx = [];
-  document.querySelectorAll('#fctl [data-a=fspeed]').forEach(b => b.classList.toggle('on', +b.dataset.v === F.speed));
+  const spl = document.getElementById('fspl'); if (spl) spl.textContent = '×' + (F.speed || 1);
+  for (const id of ['fa', 'fb']) { const o = document.getElementById(id + '-ab'), st = document.getElementById(id + '-acd');   // копия способности внутри карточки (альбомный вид)
+    document.querySelectorAll(`[data-id="${id}-ab"]`).forEach(c => c.className = o.className);
+    document.querySelectorAll(`[data-id="${id}-acd"]`).forEach(c => { c.textContent = st.textContent; c.className = st.className; }); }
   const lg = document.getElementById('flog'), total = (F.evCut || 0) + F.ev.length;
   if (lg && lg.dataset.n != total) {   // дописываем новые строки; автопрокрутка, только если игрок внизу
     const atEnd = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 24;
@@ -3402,6 +3513,8 @@ function act(a, v) {
     case 'tfinish': finishTour(); S.ttab = null; break;
     case 'ttab': S.ttab = v; return render();
     case 'fspeed': if (F) { F.speed = +v; fightPaint(); } return;
+    case 'fspc': if (F) { F.speed = (F.speed || 1) === 1 ? 3 : 1; fightPaint(); } return;
+    case 'flogall': if (F) { F.logFull = !F.logFull; render(); } return;
     case 'flast': { const lg = document.getElementById('flog'); if (lg) { lg.scrollTop = lg.scrollHeight; document.getElementById('flast').hidden = true; } return; }
     case 'fskip': if (F) { finishFight(); fightPaint(); } return;
     case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); fightPaint(); } return;
