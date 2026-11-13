@@ -387,6 +387,8 @@ html.land .fza b{font-size:14px}
 .effbox.plus{border-color:rgba(101,217,121,.6)}.effbox.plus span{color:var(--good)}
 .effbox.minus{border-color:rgba(255,139,123,.6)}.effbox.minus span{color:var(--bad)}
 .effbox.rand span{color:var(--gold)}.effbox.nt span{color:var(--dim)}
+.victt{color:var(--gold);font-size:26px;text-align:center}
+.vic .evtpic img.big{aspect-ratio:4/3;object-fit:cover}
 .ivq{padding:12px 14px;border-radius:12px;background:var(--nest);border-left:3px solid var(--cyan);font-size:16px;line-height:1.45;margin:8px 0 10px}
 .quote{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--nest);margin-bottom:10px}
 .quote .ava{width:48px;height:48px}
@@ -1862,7 +1864,7 @@ function wcFinish(L) {
     if (i === champ) {
       const first = !H.wcWon; H.wcWon = (H.wcWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WC_GAIN);
-      logTo(H, `Ты выиграл Wild Card!${first ? ' Постоянный бонус к силе.' : ''}`);
+      logTo(H, `Ты выиграл Wild Card!${first ? ' Постоянный бонус к силе.' : ''}`); H.vic = 'wc';
       histTo(H, H.region, 'Wild Card: победа');
     } else histTo(H, H.region, 'Wild Card: турнир окончен');
   });
@@ -1920,7 +1922,7 @@ function wfFinish(L) {
     if (i === champ) {
       const first = !H.wfWon; H.wfWon = (H.wfWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WF_GAIN);
-      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''}`);
+      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''}`); H.vic = 'wf';
       histTo(H, H.region, 'Чемпионат мира: победа');
     } else histTo(H, H.region, 'Чемпионат мира: турнир окончен');
   });
@@ -2414,6 +2416,18 @@ function viewCard() {   // до выполнения: картинка, опис
         <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
+}
+// ---------- экран большой победы: чемпионат мира и Wild Card ----------
+const VIC = {
+  wf: { t: 'Чемпион мира!', img: 'img/win/wf', d: n => `${n}, весь мир смотрит на тебя! Лучшие Спектры пяти лиг остались позади, и в твоих руках Хрустальный глобус. Трибуны скандируют твоё имя, а в Зале славы уже появилась новая строчка. Отныне каждый соперник будет знать: перед ним чемпион мира. Поздравляем — это вершина, о которой мечтает каждый Спектр!` },
+  wc: { t: 'Победитель Wild Card!', img: 'img/win/wc', d: n => `${n}, это было невозможно — и всё же это случилось! Сто бойцов вышли на отбор, и лишь в твоих руках Золотая пума. Все, кто мечтал о втором шансе, остались позади, а впереди — чемпионат мира. Поздравляем! Теперь мир узнает, на что способен тот, кого рано списали со счетов.` }
+};
+function viewVic() {
+  const V = VIC[S.vic];
+  if (!V) { S.vic = null; S.view = 'main'; return viewMain(); }
+  return wrap(`<div class="card evt vic"><div class="evtpic"><img class="big" src="${V.img}.webp" alt="${V.t}"></div>
+      <div class="evtinfo"><h2 class="victt">${V.t}</h2><p>${esc(V.d(S.nick))}</p>
+        <button class="btn gold evtgo" data-a="vicok">Принять поздравления</button></div></div>`);
 }
 function viewIv() {   // интервью: вопрос, три ответа, кнопка «Ответ»
   const I = S.iv, c = I && S.hand[I.sel];
@@ -3130,7 +3144,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -3138,6 +3152,7 @@ function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
   if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); stageTop(); } lastView = null; return; }
   if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); stageTop(); lastView = null; return; }
+  if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
   if (S.view !== lastView) { window.scrollTo(0, 0); stageTop(); lastView = S.view; }   // новый экран всегда с верха
@@ -3197,6 +3212,7 @@ function act(a, v) {
     case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
+    case 'vicok': S.vic = null; S.view = 'main'; break;
     case 'ivans': if (S.iv) { if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
     case 'coll': S.view = 'coll'; break;
