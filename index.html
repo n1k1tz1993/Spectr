@@ -1205,7 +1205,7 @@ const ABIL_LIST = [   // способности соперников: назва
   ['Багровая волна', 'накрывает врага багровой волной'], ['Призрачный каскад', 'наносит каскад призрачных ударов']
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
-const FACE_COUNT = 48;   // портреты: img/face/0..47.webp (выбор героя и сгенерированные бойцы)
+const FACE_COUNT = 54;   // портреты: img/face/0..53.webp (выбор героя и сгенерированные бойцы)
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
