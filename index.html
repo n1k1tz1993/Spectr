@@ -1250,7 +1250,7 @@ const TEAM_INFO = {   // us_* — полупрофессиональные ко�
     sponsors: ['Motor City Works', 'Overdrive Engines', 'Great Lakes Tires'] }
 };
 // команды лиги Европы (25): описание по имени команды
-const TEAM_INFO_EU = {
+const TEAM_INFO_EU = {   // флаги у команд не показываются — только у игроков
   "Fanatiq": { country: "GB", desc: "Медийная империя превращает Спектров в культовых звёзд, а их победы — в рост стоимости своих активов." },
   "G2 Sovereign": { country: "DE", desc: "Один из лидеров лиги. Содержит элитную армию и переманивает лучших Спектров щедрыми контрактами." },
   "Vitalis": { country: "FR", desc: "Биотехнологический гигант совершенствует тело и контроль Цы, вкладывая миллиарды в карьеру Спектров." },
@@ -1289,7 +1289,7 @@ function viewTeams() {   // библиотека: команды лиг по р�
   let h = `<div class="card"><h2>Команды лиг</h2><div class="dim">Профессиональные команды регионов: откуда они и кто за ними стоит.</div><div class="row">${tabs}</div></div>
     <div class="card"><h3>${semi ? 'Полупрофессиональные команды' : `<img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}`}</h3>${list.map(t => {
       const I = teamInfo(t);
-      return `<button class="erow" data-a="tsel" data-v="${esc(t[1])}">${teamLogo(t, 40)}<span style="flex:1;text-align:left"><b>${esc(t[1])}</b>${I ? ' ' + flagOf(I.country) : ''}<br>${I && I.city ? `<span class="dim" style="font-size:12px">${esc(I.city)}</span>` : ''}</span>${semi ? '' : `<b class="gold">+${teamBonusOf(r, t[1])}</b>`}</button>`;
+      return `<button class="erow" data-a="tsel" data-v="${esc(t[1])}">${teamLogo(t, 40)}<span style="flex:1;text-align:left"><b>${esc(t[1])}</b><br>${I && I.city ? `<span class="dim" style="font-size:12px">${esc(I.city)}</span>` : ''}</span>${semi ? '' : `<b class="gold">+${teamBonusOf(r, t[1])}</b>`}</button>`;
     }).join('')}</div>`;
   const T = S.tsel ? ((semi ? null : LDB.teams.find(t => t[0] === r && t[1] === S.tsel)) || SEMI.filter(t => t[0] === S.tsel).map(t => [-1, t[0], t[1]])[0]) : null;
   if (T) {
@@ -1297,7 +1297,7 @@ function viewTeams() {   // библиотека: команды лиг по р�
     h += `<div class="ovl" data-a="tsel" data-v=""><div class="tmodal" data-a="noop">
       <button class="tmx" data-a="tsel" data-v="" aria-label="Закрыть">✕</button>
       ${T[2] ? `<img class="tmlogo" src="img/team/${T[2]}.webp" alt="${esc(T[1])}">` : `<div class="tmlogo tmletter">${esc(T[1][0])}</div>`}
-      <h2>${esc(T[1])} ${I && I.country ? flagOf(I.country) : ''}</h2>
+      <h2>${esc(T[1])}</h2>
       ${T[0] < 0 ? '<div class="dim">Полупрофессиональная команда · контракты на турниры</div>' : `<div class="tmbonus">Бонус к силе при подписании: <b>+${teamBonusOf(T[0], T[1])}</b></div>`}
       ${I ? `${I.city ? `<div class="gold">${esc(I.city)}</div>` : ''}
       <p>${esc(I.desc)}</p>
