@@ -253,8 +253,21 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const C = (t, k, v, d) => ({ t, k, v, d });            // карточка действия: t название, k тип, v эффект силы, d длительность
 const TEXT = 'Текст будет задан.';
-const COUNTRIES = { RU: 'Россия', US: 'США', CN: 'Китай', KR: 'Корея', GB: 'Великобритания', DE: 'Германия', FR: 'Франция', JP: 'Япония', BR: 'Бразилия', CA: 'Канада' };
-const flagOf = code => code ? String.fromCodePoint(...[...code].map(ch => 127397 + ch.charCodeAt(0))) : '';
+const COUNTRIES = { RU: 'Россия', US: 'США', CN: 'Китай', KR: 'Южная Корея', KP: 'Северная Корея', JP: 'Япония', TW: 'Тайвань', SG: 'Сингапур',
+  GB: 'Великобритания', EN: 'Англия', DE: 'Германия', FR: 'Франция', SE: 'Швеция', NL: 'Нидерланды', PL: 'Польша', DK: 'Дания', IT: 'Италия', ES: 'Испания',
+  PT: 'Португалия', CZ: 'Чехия', GR: 'Греция', IE: 'Ирландия', NO: 'Норвегия', UA: 'Украина', BY: 'Беларусь', KZ: 'Казахстан', KG: 'Кыргызстан',
+  RS: 'Сербия', AM: 'Армения', GE: 'Грузия', CA: 'Канада', MX: 'Мексика', AR: 'Аргентина', BR: 'Бразилия' };
+// флаги сгенерированных бойцов на турнирах по регионам (игроку при создании доступны все)
+const REGION_FLAGS = [
+  ['US', 'CA', 'DE', 'CN', 'MX', 'AR'],
+  ['FR', 'GB', 'EN', 'DE', 'CN', 'SE', 'KR', 'RU', 'UA', 'NL', 'PL', 'DK', 'IT', 'ES'],
+  ['RU', 'BY', 'UA', 'KZ', 'KG', 'RS', 'PL', 'AM', 'GE'],
+  ['CN', 'TW', 'JP', 'SG', 'KP'],
+  ['KR', 'CN', 'TW', 'SG']
+];
+const ALL_FLAGS = [...new Set(REGION_FLAGS.flat())];
+// азиатские ники привязаны к флагам: китайские — Китай, Тайвань, Сингапур; корейские — обе Кореи, Сингапур, Тайвань
+const flagOf = code => code === 'EN' ? '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}' : code ? String.fromCodePoint(...[...code].map(ch => 127397 + ch.charCodeAt(0))) : '';
 
 // ---------- регионы (15 действий каждый) ----------
 const REGIONS = [
@@ -589,7 +602,7 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
     opp.beast = true;
   } else {
     const p = Math.max(10, effPower() - 20); title = 'Дуэль'; win = DUEL_WIN;
-    opp = fighter(regionNames(S.region)[0], p, npcRating(p), false);
+    { const g = genSpectre(S.region, takenSet([S.nick]), p); opp = fighter(g.name, p, npcRating(p), false, g.abil, g.face); opp.country = g.country; }
   }
   startFight(title, opp, won => {
     if (won) S.rating += win;
@@ -601,11 +614,8 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
 function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
   const teams = shuffle(SEMI.map((_, i) => i)).slice(0, 4), my = teams[0];
   const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
-  const taken = G.players.map(H => H.nick), names = regionNames(S.region).filter(x => !taken.includes(x)).slice(0, 15);
-  names.forEach((name, i) => {
-    const p = rnd(TIERS[2].lo, TIERS[2].hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-    ps.push({ id: i + 1, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } });
-  });
+  const tk = takenSet(G.players.map(H => H.nick));
+  for (let i = 0; i < 15; i++) ps.push(Object.assign(genSpectre(S.region, tk, rnd(TIERS[2].lo, TIERS[2].hi)), { id: i + 1, seed: Math.random() }));
   logMsg('Контракт: ты выступаешь за ' + SEMI_TEAMS[my] + '.');
   tStart({ kind: 'contract', tier: null, region: S.region, team: my, teams }, 'g16', ps);
 }
@@ -615,8 +625,8 @@ function bureauFight(kind) {
   let opp, name;
   if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55
     const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 30)));
-    name = regionNames(S.region)[0];
-    opp = fighter(name, p, npcRating(p), false);
+    const g = genSpectre(S.region, takenSet([S.nick]), p); name = g.name;
+    opp = fighter(name, p, npcRating(p), false, g.abil, g.face); opp.country = g.country;
   } else {                   // один из 12 про-игроков региона
     const f = lgPool(S.region)[rnd(0, proCount(S.region) - 1)];
     name = f.name; opp = fighter(f.name, f.p, f.rating, false, f.abil, f.face);
@@ -640,10 +650,10 @@ function eslNew() { S.esl = { size: 8, pick: [], inv: [], gen: [] }; }
 function eslCount() { const E = S.esl; return 1 + E.inv.length + E.pick.length + E.gen.length; }
 function eslFill() {   // добрать сгенерированными — как соперники в лестнице, но сила не выше 50
   const E = S.esl, taken = new Set([...G.players.map(H => H.nick), ...E.pick.map(k => eslElite(k).name), ...E.gen.map(g => g.name)]);
-  const pool = shuffle(NAMES.filter(n => !taken.has(n)));
+  const tk = takenSet([...taken]);
   while (eslCount() < E.size) {
-    const p = Math.max(LADDER_MIN, Math.min(ESL_MIN_POWER, Math.round((S.rating + rnd(-200, 200)) / 30))), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-    E.gen.push({ name: pool.pop() || ('Боец ' + (E.gen.length + 1)), p, rating: npcRating(p), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } });
+    const p = Math.max(LADDER_MIN, Math.min(ESL_MIN_POWER, Math.round((S.rating + rnd(-200, 200)) / 30)));
+    E.gen.push(genSpectre(S.region, tk, p));
   }
 }
 function eslStart() {
@@ -892,11 +902,8 @@ const teamBonus = (i, n, r) => TEAM_BONUS_MIN[r] != null ? Math.round(20 - i * (
 const allRegionTeams = r => LDB.teams.filter(t => t[0] === r).map(t => [t[1], t[2], t[3], t[4]]).concat(r === 4 ? LG_EXTRA : []).sort((a, b) => b[2] - a[2]);
 const regionTeams = r => EU40(r) ? allRegionTeams(r) : allRegionTeams(r).slice(0, LG_SIZE(r));   // в лиге играют сильнейшие LG_SIZE команд
 const teamBonusOf = (r, name) => { const T = allRegionTeams(r), i = T.findIndex(t => t[0] === name); return i < 0 ? 0 : teamBonus(i, T.length, r); };
-function euFiller(taken, C, r) {   // случайный боец 40–55 — дозаполняет драфт Европы
-  const pool = (r != null ? regionNames(r) : shuffle(NAMES)).filter(x => !taken.has(x.toLowerCase())), name = pool.length ? pool[0] : 'Spectre' + rnd(100, 999);
-  taken.add(name.toLowerCase());
-  const p = rnd(40, 55), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-  return { name, p, rating: npcRating(p), country: (C || EU_FILL_C)[rnd(0, (C || EU_FILL_C).length - 1)], face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) }, filler: true };
+function euFiller(taken, C, r) {   // случайный боец 40–55 — дозаполняет драфт лиг и Wild Card
+  const f = genSpectre(r != null ? r : null, taken, rnd(40, 55)); f.filler = true; return f;
 }
 function rrRounds(ids) {   // круговая система: список туров, в туре — пары
   ids = ids.slice(); const n = ids.length, R = [];
@@ -1288,6 +1295,19 @@ const REGION_NAMES = {
   4: ['SeoK', 'TaeRin', 'Haneul', 'JinZero', 'Baek', 'Hyeon', 'KwonX', 'DaeHan', 'MoonEdge', 'SiOn', 'KimchiCrit', 'OppaOops', 'SeoulLag', 'RamenRaid', 'KpopFlop', 'GGimbap', 'TteokTok', 'OppaAFK', 'AigoAim', 'ManduMood']
 };
 const NAMES = [...GEN_NAMES, ...Object.values(REGION_NAMES).flat()];
+const NAME_FLAGS = { 3: ['CN', 'TW', 'SG'], 4: ['KR', 'KP', 'SG', 'TW'] };   // REGION_NAMES[3] — китайские, [4] — корейские
+// сгенерированный боец: флаг из флагов региона (r = null — любой), ник подходит к флагу
+function genSpectre(r, taken, p) {
+  const flags = r != null && REGION_FLAGS[r] ? REGION_FLAGS[r] : ALL_FLAGS, c = flags[rnd(0, flags.length - 1)];
+  const asian = shuffle(Object.keys(NAME_FLAGS).filter(k => NAME_FLAGS[k].includes(c)).flatMap(k => REGION_NAMES[k]));
+  const local = r === 2 ? shuffle(REGION_NAMES[2]) : [], gen = shuffle(GEN_NAMES), loc = asian.concat(local);
+  const order = []; while (loc.length || gen.length) { if (loc.length) order.push(loc.shift()); if (gen.length) order.push(gen.shift()); }
+  const name = order.find(x => !taken.has(x.toLowerCase())) || 'Spectre' + rnd(100, 999);
+  taken.add(name.toLowerCase());
+  const [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
+  return { name, country: c, p, rating: npcRating(p), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
+}
+const takenSet = (...lists) => new Set(lists.flat().map(x => String(x).toLowerCase()));
 const regionNames = r => {   // уже перемешаны: в регионе со своими никами — через одного свой и общий
   const a = shuffle(REGION_NAMES[r] || []), b = shuffle(GEN_NAMES), out = [];
   while (a.length || b.length) { if (a.length) out.push(a.shift()); if (b.length) out.push(b.shift()); }
@@ -1312,17 +1332,15 @@ function playTour(t) {
   if (inv.length) S.actions -= 1;          // позвать любое число игроков — одно действие
   S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
   const semiT = t === 2;   // полупрофессиональный турнир: все полупро-команды выставляют по бойцу, формат на 32
-  const fmt = semiT ? 'dh32' : Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
+  const fmt = semiT ? 'dh32' : ['se8', 'g12', 'g16', 'sw20'][rnd(0, 3)], n = FMT[fmt].n;
   const invd = (S.tourInvade || []).filter(h => h !== G.cur && G.players[h] && !inv.includes(h));
   invd.forEach(h => { G.players[h].skipNext = true; logTo(G.players[h], 'Ты вторгся на турнир игрока ' + S.nick + ' и пропустишь свою неделю.'); });
   S.tourInvade = [];
   const hums = [G.cur, ...inv, ...invd];   // живые игроки: тот, чья неделя, приглашённые и вторгшиеся
   const taken = G.players.map(H => H.nick);
-  const names = regionNames(r).filter(x => !taken.includes(x)).slice(0, n - hums.length);
-  const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() })).concat(names.map((name, i) => {
-    const p = rnd(T.lo, T.hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-    return { id: hums.length + i, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
-  }));
+  const tk = takenSet(taken);
+  const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() })).concat([...Array(n - hums.length)].map((_, i) =>
+    Object.assign(genSpectre(r, tk, rnd(T.lo, T.hi)), { id: hums.length + i, seed: Math.random() })));
   if (semiT) {   // бойцы под флагами команд
     const teams = shuffle(SEMI.map((_, i) => i)), humT = {};
     ps.filter(x => x.h != null).forEach(x => {   // 10%: игрока с рейтингом выше 1500 берёт команда (+1 к силе на турнир)
@@ -1374,7 +1392,7 @@ function tGame(m, w) {   // записать бой серии; Bo2 — всег
   if (m.bo === 2) { if (m.g.length === 2) { m.done = true; m.w = wa === wb ? null : wa > wb ? m.a : m.b; } }
   else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
 }
-function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil, x.face); const H = G.players[h]; return fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face); }
+function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return Object.assign(fighter(x.name, x.p, x.rating, false, x.abil, x.face), { country: x.country }); const H = G.players[h]; return fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face); }
 function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
   const keep = F;
   F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -2057,7 +2075,7 @@ function viewTRun() {
   const R = S.trun;
   if (!R) { S.view = 'tour'; return viewTour(); }
   const f = FMT[R.fmt], me = tMine(R), hums = R.ps.filter(x => isHum(R, x.id));
-  const nm = id => teamTag(R.ps[id]) + (isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b>` : esc(R.ps[id].name));
+  const nm = id => teamTag(R.ps[id]) + (isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b> ${flagOf(G.players[humOf(R, id)].country)}` : esc(R.ps[id].name) + (R.ps[id].country ? ' ' + flagOf(R.ps[id].country) : ''));
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   let h = `<div class="card">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}<div class="dim">${R.tier === 2 ? '32 бойца: полупрофессиональные команды и свободные бойцы. 8 групп по 4, в группе двойное выбывание (Bo1), выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div>
