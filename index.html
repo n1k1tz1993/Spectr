@@ -1,7 +1,12 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1220">
+<meta name="theme-color" content="#0B1020">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Спектр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&family=Noto+Sans:wght@400;500;600;700;800&display=swap">
@@ -89,7 +94,9 @@ h3{font-size:16px;margin:12px 0 6px}
 input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#0B0F1C;color:var(--txt);font-size:16px;font-family:inherit}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl td{padding:6px 4px;border-bottom:1px solid var(--line)}
-.week{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.week{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px}
+.week>div:first-child{flex:1;min-width:0}
+.week .nextwk{flex:0 0 100%;margin-top:0}
 .week .inds{margin-top:8px}
 .nextm{text-align:right;font-size:14px}
 .loc{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px}
@@ -367,9 +374,9 @@ html.land .fzn b{font-size:18px}
 html.land .fza b{font-size:14px}
 /* ---------- главный экран, нижнее меню, экран действия ---------- */
 #app[data-view=main],#app[data-view=more],#app[data-view=coll]{padding-bottom:96px}
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:rgba(11,16,32,.96);border-top:1px solid var(--line);max-width:520px;margin:0 auto}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(11,16,32,.96);border-top:1px solid var(--line);max-width:520px;margin:0 auto}
 .nav button{min-height:52px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--dim);font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.nav button b{font-size:15px;font-weight:600}
+.nav button b{font-size:14px;font-weight:600}
 .nav button small{font-size:11px}
 .nav button.on{color:var(--txt);border-color:var(--cyan);background:rgba(50,213,231,.08)}
 .nav button.on b{color:var(--cyan)}
@@ -402,6 +409,35 @@ html.land .fza b{font-size:14px}
 .tendimg{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;margin-bottom:10px}
 .victt{color:var(--gold);font-size:26px;text-align:center}
 .vic .evtpic img.big{aspect-ratio:4/3;object-fit:cover}
+.bkt{display:flex;gap:18px;overflow-x:auto;padding:10px 2px 6px;-webkit-overflow-scrolling:touch}
+.bkc{flex:0 0 146px;display:flex;flex-direction:column}
+.bkh{font-size:13px;font-weight:800;color:var(--cyan);text-align:center;margin-bottom:6px;display:flex;flex-direction:column}
+.bkh small{font-size:11px;color:var(--dim);font-weight:500}
+.bkm{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:10px}
+.bkp{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--nest);overflow:visible}
+.bkp.now{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.bkpair{position:relative;flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:10px}
+.bkpair .bkp::after{content:'';position:absolute;right:-10px;top:50%;width:9px;border-top:2px solid #3D4F78}
+.bkpair::before{content:'';position:absolute;right:-10px;top:25%;bottom:25%;border-right:2px solid #3D4F78}
+.bkpair::after{content:'';position:absolute;right:-19px;top:50%;width:9px;border-top:2px solid #3D4F78}
+.bksolo{flex:1;display:flex;flex-direction:column;justify-content:center}
+.bksolo.go .bkp::after{content:'';position:absolute;right:-19px;top:50%;width:18px;border-top:2px solid #3D4F78}
+.bks{display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:13px;min-height:32px}
+.bks+.bks{border-top:1px solid var(--line)}
+.bks span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bks b{min-width:14px;text-align:right}
+.bks.win{background:rgba(101,217,121,.14)}.bks.win b{color:var(--good)}
+.bks.lose{opacity:.5}
+.bks.me span{color:var(--gold);font-weight:800}
+.bks.tbd span{color:var(--dim)}
+.bkc.champ .bkp{border-color:var(--gold)}
+.invbox{margin:10px 0}
+.invrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.invp{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font:inherit;font-size:14px;cursor:pointer}
+.invp .ava{width:30px;height:30px;border-radius:50%}
+.invp.on{border-color:var(--good);background:rgba(101,217,121,.15);box-shadow:0 0 0 1px var(--good)}
+.nextwk{margin-top:10px;text-align:center;font-weight:800;font-size:17px;padding:12px}
+.nextwk.soft{font-size:14px;font-weight:600;padding:9px;color:var(--dim)}
 .sstat{margin-top:4px;font-size:13px;font-weight:700;color:var(--cyan)}
 .ivq{padding:12px 14px;border-radius:12px;background:var(--nest);border-left:3px solid var(--cyan);font-size:16px;line-height:1.45;margin:8px 0 10px}
 .quote{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--nest);margin-bottom:10px}
@@ -942,11 +978,15 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
 const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
-const heroPower = H => { let p = H.power + itemBonus(H); for (const e of H.effects) if (e.game || (e.from <= H.turn && H.turn <= e.to)) p += e.v; if (H.jetlag) p -= 5; return p; };
-const gameBonus = H => H.effects.reduce((a, e) => a + (e.game ? e.v : 0), 0);   // бонусы «на следующий бой»
+// бонусы складываются, но суммарно не больше EFF_CAP; штрафы складываются без ограничения
+const EFF_CAP = 5;
+const effSum = (H, withGame) => { let pos = 0, neg = 0; for (const e of H.effects) if ((e.game ? withGame : e.from <= H.turn && H.turn <= e.to)) { if (e.v > 0) pos += e.v; else neg += e.v; } return Math.min(EFF_CAP, pos) + neg; };
+const heroPower = H => H.power + itemBonus(H) + effSum(H, true) - (H.jetlag ? 5 : 0);
+const gameBonus = H => effSum(H, true) - effSum(H, false);   // прибавка от бонусов «на следующий бой» (с учётом потолка)
 const useGame = f => { if (f && f.H) f.H.effects = f.H.effects.filter(e => !e.game); };   // бой сыгран — бонус на бой израсходован
 const heroF = (H, f) => Object.defineProperty(f, 'H', { value: H, enumerable: false });   // ссылка на героя (не сохраняется)
 const effPower = () => heroPower(S);
+const addEffTo = (H, v, d) => { if (d === 'game') { H.effects.push({ v, game: true }); return; } const from = d === 'next' ? H.turn + 1 : H.turn; H.effects.push({ v, from, to: d === 'two' ? from + 1 : from }); };
 const addEff = (v, d) => { if (d === 'game') { S.effects.push({ v, game: true }); return; } const from = d === 'next' ? S.turn + 1 : S.turn; S.effects.push({ v, from, to: d === 'two' ? from + 1 : from }); };
 const clearJet = () => { S.jetlag = 0; };
 const spend = () => { if (S.actions <= 0) return false; S.actions--; return true; };
@@ -1037,7 +1077,7 @@ function useCard(i, ivDone) {
   if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
   if (c.k === 'spar') { c.used = true; if (G.players.length > 1) S.view = 'spar'; else sparStart(null); save(); return; }
   if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
-  let R;
+  let R; const e0 = S.effects.length;
   if (c.k === 'm') {   // штраф и небольшой бонус
     const [b, bd] = mbOf(c); addEff(c.v, c.d); addEff(b, bd);
     R = { kind: 'Штраф и бонус', cls: 'minus', txt: `${capF(effTxt(c.v, c.d))}, но ${effTxt(b, bd)}`, phrase: c.d === 'next' ? CARD_PHRASE.mixNext : CARD_PHRASE.mixNow };
@@ -1057,6 +1097,16 @@ function useCard(i, ivDone) {
     const [v, d] = nbOf(c); addEff(v, d);
     R = { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(v, d)), phrase: CARD_PHRASE[d === 'next' ? 'nnext' : d] };
   }
+  // позвать игроков с собой: они получают те же бонусы (без штрафов), действие тратит только пригласивший
+  const inv = (S.invite || []).filter(h => G.players[h] && h !== G.cur && SHARE_K.includes(c.k));
+  if (inv.length) {
+    const gain = S.effects.slice(e0).filter(e => e.v > 0);
+    for (const h of inv) { const H = G.players[h];
+      for (const e of gain) if (e.game) H.effects.push({ v: e.v, game: true }); else H.effects.push({ v: e.v, from: H.turn + (e.from - S.turn), to: H.turn + (e.to - S.turn) });
+      logTo(H, `${S.nick} позвал тебя с собой: «${c.t}». ${gain.length ? 'Ты получил бонус.' : ''}`); }
+    R.txt += `. С тобой: ${inv.map(h => G.players[h].nick).join(', ')} — они тоже получили бонус`;
+  }
+  S.invite = [];
   if (jet) R.txt += '. Джетлаг снят';
   if (ivDone) { R.phrase = IV_END[isPod(c) ? 'pod' : 'iv']; S.iv = null; }
   c.used = true;   // событие недели выполняется один раз и становится серым
@@ -2097,6 +2147,7 @@ const regionNames = r => {   // уже перемешаны: в регионе �
   while (a.length || b.length) { if (a.length) out.push(a.shift()); if (b.length) out.push(b.shift()); }
   return out;
 };
+const KO_PLAN = { se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
 const FMT = {
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
@@ -2362,7 +2413,7 @@ const topBar = () => {   // компактная шапка: портрет 40×
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
 const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
-  ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'more'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
+  ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
@@ -2429,10 +2480,10 @@ function viewLeague() {
 }
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
-  const cur = ['more', 'shop', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
+  const cur = S.view === 'shop' ? 'shop' : ['more', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
   const nb = (id, a, v, label, extra, dis) => `<button class="${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''}><b>${label}</b>${extra ? `<small>${extra}</small>` : ''}</button>`;
   const freeB = freeBureau(S);
-  return `<nav class="nav">${nb('map', 'nav', 'map', 'Карта')}${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '1 действие', S.actions <= 0 && !freeB)}${nb('room', 'nav', 'room', 'Комната')}${nb('more', 'nav', 'more', 'Ещё')}</nav>`;
+  return `<nav class="nav">${nb('map', 'nav', 'map', 'Карта')}${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '1 дейст.', S.actions <= 0 && !freeB)}${nb('room', 'nav', 'room', 'Комната')}${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</nav>`;
 }
 function viewMain() {
   const done = S.actions <= 0;
@@ -2442,8 +2493,10 @@ function viewMain() {
     : '<div class="dim">Все действия этой недели выполнены.</div>';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2>${(([st, eta]) => `<div class="dim">Сезон ${seasonNo()} · ${esc(st)}</div><div class="sstat">${esc(eta)}</div>`)(seasonStatus())}
-        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}</div>
+        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
+</div>
       <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
+    ${done ? '<button class="btn gold nextwk" data-a="next">Следующая неделя ▶</button>' : `<button class="btn nextwk soft" data-a="pass">Завершить неделю · осталось ${S.actions} ${actWord(S.actions)}</button>`}
     </div>`;
   const map = `<div class="card mapcard">
       <h2>${S.inRoom ? 'Моя комната' : 'Карта мира'}</h2>
@@ -2453,9 +2506,8 @@ function viewMain() {
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
   const daily = `<div class="card"><h2>Повседневные действия</h2>
       <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Библиотека <span class="dim">· 1 действие</span></button>
-      <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых <span class="dim">· 1 действие</span></button>
+      <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых <span class="dim">· снимает все бонусы и штрафы · 1 действие</span></button>
       <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион <span class="dim">· 1 действие</span></button>
-      ${done ? '<button class="btn gold" data-a="next" style="text-align:center">Следующая неделя</button>' : '<button class="btn" data-a="pass">Пропустить неделю</button>'}
     </div>`;
   const news = S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div></div>` : '';
   return wrap(`<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
@@ -2464,7 +2516,6 @@ function viewMore() {   // «Ещё»: библиотека, магазин, и�
   const it = (a, t, d, dis) => `<button class="btn morei" data-a="${a}" ${dis ? 'disabled' : ''}><b>${t}</b><span class="dim">${d}</span></button>`;
   return wrap(`<div class="card">
       ${it('lib', 'Библиотека', 'Заметки о регионе, досье Элиты, команды лиг · 1 действие', S.actions <= 0)}
-      ${it('shop', 'Магазин', 'Жильё и артефакты за рейтинг')}
       ${it('inv', 'Инвентарь', 'Надетый артефакт и коллекция предметов')}
       ${it('fame', 'Зал славы', 'Чемпионы лиг, чемпионы мира, ESL ONE и турниры сессии')}
       ${it('coll', 'Коллекция', 'Кубки и медали')}
@@ -2476,6 +2527,7 @@ function viewMore() {   // «Ещё»: библиотека, магазин, и�
     </div>`) + navBar();
 }
 function viewColl() { return wrap(`<div class="card">${trophiesHtml() || '<div class="dim">Пока нет ни одного трофея.</div>'}</div>`) + navBar(); }
+const SHARE_K = ['n', 'p', 'm'];   // на какие действия недели можно позвать других игроков
 function viewCard() {   // до выполнения: картинка, описание, ожидаемый эффект, одна жёлтая кнопка
   const c = S.hand[S.sel];
   if (!c || c.used) { S.view = 'main'; return viewMain(); }
@@ -2485,6 +2537,7 @@ function viewCard() {   // до выполнения: картинка, опис
       <div class="evtinfo"><h2>${esc(c.t)}</h2><p>${descOf(c) ? esc(descOf(c)) : TEXT}</p>
         <div class="effbox ${E.cls}"><span>${E.kind}</span><b>${E.txt}</b></div>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
+        ${G.players.length > 1 && SHARE_K.includes(c.k) ? `<div class="invbox"><div class="dim">Позвать с собой — они получат тот же бонус, а действие потратишь только ты:</div><div class="invrow">${G.players.map((H, h) => h === G.cur ? '' : `<button class="invp ${(S.invite || []).includes(h) ? 'on' : ''}" data-a="invt" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}</button>`).join('')}</div></div>` : ''}
         <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
@@ -2836,7 +2889,7 @@ function viewShop() {   // магазин: только названия и це
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
     <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind, carIcon(j))).join('')}</div>
-    <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>` + back);
+    <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>`) + navBar();
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
   const own = (S.items || []).slice().sort((a, b) => b - a);
@@ -2866,7 +2919,7 @@ function viewDossier() {
 }
 function viewRest() {
   return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Отдых</div>
-    <h2>Отдых</h2><div style="text-align:left">${TEXT}</div><div class="bonus plus">Бонус!</div></div>${back}`);
+    <h2>Отдых</h2><div style="text-align:left">Ты как следует отдохнул и привёл себя в порядок. Всё лишнее ушло — и хорошее, и плохое: теперь ты в обычной форме.</div><div class="bonus nt">Все бонусы и штрафы сняты</div></div>${back}`);
 }
 function invadeHtml() {   // вторжение: любой другой игрок может ворваться в турнир, но пропустит свою неделю
   const inv = S.tourInv || [], ivd = S.tourInvade || [], list = G.players.map((H, i) => i).filter(i => i !== G.cur && !inv.includes(i) && !G.players[i].skipNext);
@@ -3121,7 +3174,18 @@ function viewTRun() {
   const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW') || m.st.startsWith('DH')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
   if (myGroup.length) h += `<div class="card"><h3>${hums.length > 1 ? 'Бои игроков в группе' : 'Твои бои в группе'}</h3>${myGroup.map(series).join('')}</div>`;
   const groups = h; h = '';
-  for (const k of R.stages) if (k !== 'GS' && !k.startsWith('SW') && !k.startsWith('DH')) h += `<div class="card"><h3>${stageName(k)}</h3>${tStage(R, k).map(series).join('')}</div>`;
+  // сетка плей-офф: колонки по раундам, будущие матчи — пустые слоты, линии к следующему раунду
+  const plan = KO_PLAN[R.fmt] || [['QF', 4], ['SF', 2], ['F', 1]];
+  const ko = plan.map(([k, n]) => { const ms = tStage(R, k).filter(m => !m.tb); return { k, ms: ms.length ? ms : [], n: Math.max(n, ms.length) }; });
+  const slot = (m, side) => { if (!m) return `<div class="bks tbd"><span>—</span><b></b></div>`;
+    const id = side ? m.b : m.a, [wa, wb] = sc(m), sco = side ? wb : wa, won = m.done && m.w === id;
+    return `<div class="bks ${won ? 'win' : m.done ? 'lose' : ''} ${isHum(R, id) ? 'me' : ''}"><span>${nm(id)}</span><b>${m.g.length ? sco : ''}</b></div>`; };
+  h = `<div class="card"><h3>Сетка плей-офф</h3><div class="dim">Победитель пары проходит дальше по линии. Золотым — ${hums.length > 1 ? 'игроки' : 'ты'}.</div>
+    <div class="bkt">${ko.map((c, ci) => `<div class="bkc ${ci === ko.length - 1 ? 'last' : ''}"><div class="bkh">${stageName(c.k)}<small>Bo${(c.ms[0] && c.ms[0].bo) || (c.k === 'F' ? 5 : 3)}</small></div>
+      <div class="bkm">${(() => { const box = i => { const m = c.ms[i]; return `<div class="bkp ${m && !m.done && (isHum(R, m.a) || isHum(R, m.b)) ? 'now' : ''}">${slot(m, 0)}${slot(m, 1)}</div>`; };
+        const nx = ko[ci + 1], pair = nx && nx.n * 2 === c.n, idx = [...Array(c.n).keys()];
+        return pair ? idx.filter(i => i % 2 === 0).map(i => `<div class="bkpair">${box(i)}${box(i + 1)}</div>`).join('') : idx.map(i => `<div class="bksolo ${ci === ko.length - 1 ? '' : 'go'}">${box(i)}</div>`).join(''); })()}</div></div>`).join('')}
+      ${R.done ? `<div class="bkc champ"><div class="bkh">Чемпион</div><div class="bkm"><div class="bkp"><div class="bks win ${isHum(R, R.winner) ? 'me' : ''}"><span>🏆 ${nm(R.winner)}</span></div></div></div></div>` : ''}</div></div>`;
   const bracket = h;
   const results = R.M.filter(m => m.done).slice().reverse().slice(0, 40);
   const res = `<div class="card">${results.length ? results.map(m => `<div class="dim" style="font-size:12px;margin-top:6px">${stageName(m.st)}${m.label ? ' · ' + esc(m.label) : ''}</div>${series(m)}`).join('') : '<div class="dim">Матчей пока не было.</div>'}</div>`;
@@ -3255,6 +3319,8 @@ function render() {
   if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
+  const bkt = app.querySelector('.bkt');   // сетка: прокрутить к текущему раунду
+  if (bkt) { const cols = [...bkt.querySelectorAll('.bkc')], cur = cols.find(c => c.querySelector('.bkp.now')) || cols.slice().reverse().find(c => c.querySelector('.bks.win')) || cols[0]; if (cur) bkt.scrollLeft = Math.max(0, cur.offsetLeft - bkt.offsetLeft - 20); }
   if (S.view !== lastView) { window.scrollTo(0, 0); stageTop(); lastView = S.view; }   // новый экран всегда с верха
   fightLoop();
 }
@@ -3310,6 +3376,7 @@ function act(a, v) {
     case 'card': if (S.hand[+v] && !S.hand[+v].used) { S.view = 'card'; S.sel = +v; } break;
     case 'league': S.view = 'league'; S.sel = +v; break;
     case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
+    case 'invt': { const h = +v; S.invite = S.invite || []; S.invite = S.invite.includes(h) ? S.invite.filter(x => x !== h) : S.invite.concat(h); break; }
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
     case 'cupview': S.view = 'cup'; break;
@@ -3320,7 +3387,7 @@ function act(a, v) {
     case 'fame': S.view = 'fame'; break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); addEff(...LIB_B); S.view = 'lib'; } break;
-    case 'rest': if (spend()) { clearJet(); addEff(5, 'turn'); logMsg('Отдых: бонус до конца недели.'); S.view = 'rest'; } break;
+    case 'rest': if (spend()) { clearJet(); S.effects = []; logMsg('Отдых: все бонусы и штрафы сняты.'); S.view = 'rest'; } break;
     case 'tour': if (spend()) { clearJet(); S.tourPass = true; S.tourInv = []; S.view = 'tour'; } break;
     case 'play': playTour(+v); break;
     case 'tplay': {   // живой бой: игрок слева; если встретились два игрока — оба живые
@@ -3401,4 +3468,7 @@ document.addEventListener('click', e => {
 window.addEventListener('error', e => { app.insertAdjacentHTML('afterbegin', '<pre style="color:#FF5A5A;white-space:pre-wrap;font-size:12px">Ошибка: ' + esc(e.message) + ' (' + (e.lineno || '?') + ')</pre>'); });
 G = null; S = null;
 render();
+
+// установка как приложения (Chrome: «Установить приложение»)
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script></body></html>
