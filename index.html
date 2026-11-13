@@ -1615,7 +1615,7 @@ function sparStart(h) {
 function viewSpar() {   // выбор напарника: любой другой игрок, отказаться он не может
   const list = G.players.map((H, i) => i).filter(i => i !== G.cur);
   return wrap(`<div class="card"><h2>Спарринг с напарником</h2><div class="dim">Выбери любого игрока. Отказаться он не может. Матч Bo3, победителю +${SPAR_WIN} рейтинга, поражение рейтинг не снимает.</div>
-    ${list.map(i => { const H = G.players[i]; return `<button class="erow" data-a="sparpick" data-v="${i}"><span class="ava">${faceImg(H.face)}</span><span style="flex:1;text-align:left"><b>${esc(H.nick)} ${flagOf(H.country)}</b><div class="dim">${REGIONS[H.region].name}</div></span>${rateHtml(H.rating)}</button>`; }).join('')}</div>`);
+    ${list.map(i => { const H = G.players[i]; return `<button class="erow" data-a="sparpick" data-v="${i}"><span class="ava">${faceImg(H.face)}</span><span style="flex:1;text-align:left"><b>${flagOf(H.country)} ${esc(H.nick)}</b><div class="dim">${REGIONS[H.region].name}</div></span>${rateHtml(H.rating)}</button>`; }).join('')}</div>`);
 }
 function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
   const teams = shuffle(SEMI.map((_, i) => i)).slice(0, 4), my = teams[0];
@@ -1685,7 +1685,7 @@ function viewEsl() {
       <div style="margin-top:8px">Участников: <b class="${over ? 'minus' : full ? 'plus' : ''}">${n} из ${E.size}</b>${over ? ' — убери лишних' : ''}</div>
       <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="eslfill" style="text-align:center" ${n >= E.size ? 'disabled' : ''}>Дозаполнить</button><button class="btn gold" data-a="eslgo" style="text-align:center" ${full ? '' : 'disabled'}>Начать турнир</button></div>
       ${E.gen.length ? `<div class="dim" style="margin-top:6px">Добрано бойцов: ${E.gen.length}. <a href="#" data-a="eslclear" style="color:var(--gold)">Убрать</a></div>` : ''}</div>`;
-  if (G.mode === 'coop') h += `<div class="card"><h3>Игроки в регионе ${REGIONS[S.region].name}</h3>${here.length ? `<div class="row">${here.map(i => `<button class="btn ${E.inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="eslinv" data-v="${i}">${E.inv.includes(i) ? '✓ ' : ''}${esc(G.players[i].nick)} ${flagOf(G.players[i].country)}</button>`).join('')}</div>` : '<div class="dim">Других игроков здесь нет.</div>'}</div>`;
+  if (G.mode === 'coop') h += `<div class="card"><h3>Игроки в регионе ${REGIONS[S.region].name}</h3>${here.length ? `<div class="row">${here.map(i => `<button class="btn ${E.inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="eslinv" data-v="${i}">${E.inv.includes(i) ? '✓ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div>` : '<div class="dim">Других игроков здесь нет.</div>'}</div>`;
   for (let r = 0; r < REGIONS.length; r++) {
     const list = lgPool(r).slice(0, proCount(r));
     h += `<div class="card"><h3><img class="tlogo" src="img/logo_${r}.webp" alt=""> Элитные Спектры · ${LSHORT[r]}</h3>${list.map((f, k) => {
@@ -2714,7 +2714,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
     <div class="hdtop"><button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button></div>
     <div class="hdm">
       <div class="ava hdava">${faceImg(S.face)}</div>
-      <div class="hdid"><button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400;font-size:.6em">${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="sub">${REGIONS[S.region].name} · ${full}</span></button>${statusHtml(S)}</div>
+      <div class="hdid"><button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${flagOf(S.country)} ${esc(S.nick)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400;font-size:.6em">${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="sub">${REGIONS[S.region].name} · ${full}</span></button>${statusHtml(S)}</div>
       <div class="hdr"><div class="hdrt" title="${lg.n}"><img src="img/rank_${lg.id}.webp" alt="${lg.n}"><b>${S.rating.toLocaleString('ru-RU')}</b></div>
         <div class="hdbal"><span>Баланс</span>${coinHtml(S.coins)}</div>
         <div class="hdteam">${team}</div></div>
@@ -3223,7 +3223,7 @@ function viewDossier() {
   const one = S.dsel != null && list[S.dsel] ? list[S.dsel] : null;
   let h = `<div class="card"><h2>Досье Элитных Спектров</h2><div class="dim">Сильнейшие Спектры регионов: кто они и на что способны.</div><div class="row">${tabs}</div></div>`;
   if (one) {
-    h += `<div class="card dos"><div class="dosimg">${faceImg(one.face)}</div><h2>${esc(one.name)} ${flagOf(one.country)}</h2><div>${rateHtml(one.rating, 'mid')}</div>
+    h += `<div class="card dos"><div class="dosimg">${faceImg(one.face)}</div><h2>${flagOf(one.country)} ${esc(one.name)}</h2><div>${rateHtml(one.rating, 'mid')}</div>
       <div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(one.abil.icon)}<div><b>${esc(one.abil.name)}</b><div class="dim">${esc(one.abil.desc)}</div></div></div>
       <div style="margin-top:10px">${one.bio ? esc(one.bio) : '<span class="dim">Досье пока не заполнено.</span>'}</div>
       <button class="btn" data-a="dsel" data-v="-1">К списку</button></div>`;
@@ -3240,14 +3240,14 @@ function invadeHtml() {   // вторжение: любой другой игр�
   const inv = S.tourInv || [], ivd = S.tourInvade || [], list = G.players.map((H, i) => i).filter(i => i !== G.cur && !inv.includes(i) && !G.players[i].skipNext);
   if (!list.length) return '';
   return `<div class="card"><h3>Вторжение на турнир</h3><div class="dim">Тебя не позвали? Можно вторгнуться из любого региона, но цена — пропуск своей следующей недели.</div>
-    <div class="row" style="margin-top:6px">${list.map(i => `<button class="btn ${ivd.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinvade" data-v="${i}">${ivd.includes(i) ? '⚔ ' : ''}${esc(G.players[i].nick)} ${flagOf(G.players[i].country)}</button>`).join('')}</div></div>`;
+    <div class="row" style="margin-top:6px">${list.map(i => `<button class="btn ${ivd.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinvade" data-v="${i}">${ivd.includes(i) ? '⚔ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div></div>`;
 }
 function inviteHtml() {   // совместная игра: позвать игроков из этого же региона — одно действие на всех
   const inv = S.tourInv || [], here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
   const away = G.players.filter((H, i) => i !== G.cur && H.region !== S.region);
   return `<div class="card"><h3>Позвать игроков</h3>
     <div class="dim">Позвать можно только тех, кто сейчас в регионе ${REGIONS[S.region].name}. Сколько бы игроков ты ни позвал — это 1 действие.${inv.length ? '' : ' Осталось действий: ' + S.actions + '.'}</div>
-    ${here.length ? `<div class="row" style="margin-top:6px">${here.map(i => `<button class="btn ${inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinv" data-v="${i}" ${!inv.includes(i) && S.actions < 1 ? 'disabled' : ''}>${inv.includes(i) ? '✓ ' : ''}${esc(G.players[i].nick)} ${flagOf(G.players[i].country)}</button>`).join('')}</div>`
+    ${here.length ? `<div class="row" style="margin-top:6px">${here.map(i => `<button class="btn ${inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinv" data-v="${i}" ${!inv.includes(i) && S.actions < 1 ? 'disabled' : ''}>${inv.includes(i) ? '✓ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div>`
       : '<div class="dim" style="margin-top:6px">В этом регионе других игроков нет.</div>'}
     ${away.length ? `<div class="dim" style="margin-top:6px;font-size:12px">В других регионах: ${away.map(H => esc(H.nick) + ' (' + REGIONS[H.region].city + ')').join(', ')}</div>` : ''}
     ${inv.length ? '<div class="gold" style="margin-top:6px;font-size:13px">Приглашение спишет 1 действие при старте турнира.</div>' : ''}</div>`;
@@ -3285,7 +3285,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
 function viewFame() {
   ensureFame(); const F2 = G.fame;
   const row = (e, sub) => `<div class="fame ${e.hum ? 'hum' : ''}"><span class="ava">${faceImg(e.face)}</span>
-    <span class="famei"><b>${esc(e.name)} ${flagOf(e.country || '')}</b><small>${sub}</small></span>
+    <span class="famei"><b>${flagOf(e.country || '')} ${esc(e.name)}</b><small>${sub}</small></span>
     ${e.team && e.team.logo ? `<img class="tlogo famet" src="img/team/${e.team.logo}.webp" alt="" title="${esc(e.team.name)}">` : ''}</div>`;
   const ss = e => e.season > 0 ? `сезон ${e.season}` : 'до начала карьеры';
   return wrap(`<div class="fgrid">
@@ -3322,10 +3322,10 @@ function viewHandoff() {
   const n = G.players.length;
   return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Совместная игра · неделя ${S.turn}</div>
     <div class="ava" style="width:96px;height:96px;margin:14px auto">${faceImg(S.face)}</div>
-    <h2>Ход игрока ${G.cur + 1} из ${n}: ${esc(S.nick)} ${flagOf(S.country)}</h2>
+    <h2>Ход игрока ${G.cur + 1} из ${n}: ${flagOf(S.country)} ${esc(S.nick)}</h2>
     <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
     ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div><button class="btn gold" data-a="hskip" style="margin-top:10px">Пропустить неделю</button>` : `<button class="btn gold" data-a="hgo" style="margin-top:14px">Начать неделю</button>`}</div>
-    <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${esc(H.nick)} ${flagOf(H.country)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
+    <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${flagOf(H.country)} ${esc(H.nick)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
     <button class="btn" data-a="menu">Главное меню</button>`;
 }
 function viewSetup() {
@@ -3582,8 +3582,8 @@ function viewLTable() {
   const r = S.sel, L = G.leagues[r];
   let h = `<div class="card"><h2><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h2><div class="dim">${lgStatus(L)}</div></div>`;
   if (!L.teams) {
-    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Элитные Спектры региона:</div><table class="tbl">${lgPool(r).slice(0, proCount(r)).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
-      ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${esc(H.nick)} ${flagOf(H.country)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
+    h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Элитные Спектры региона:</div><table class="tbl">${lgPool(r).slice(0, proCount(r)).map((f, k) => `<tr><td>${k + 1}</td><td>${flagOf(f.country)} ${esc(f.name)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
+      ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${flagOf(H.country)} ${esc(H.nick)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
   } else {
     if (L.fmt === 'eu40' || L.fmt === 'ru20') {
       const ru = L.fmt === 'ru20', piTo = ru ? 6 : 5;
