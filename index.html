@@ -387,6 +387,7 @@ html.land .fza b{font-size:14px}
 .effbox.plus{border-color:rgba(101,217,121,.6)}.effbox.plus span{color:var(--good)}
 .effbox.minus{border-color:rgba(255,139,123,.6)}.effbox.minus span{color:var(--bad)}
 .effbox.rand span{color:var(--gold)}.effbox.nt span{color:var(--dim)}
+.tendimg{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;margin-bottom:10px}
 .victt{color:var(--gold);font-size:26px;text-align:center}
 .vic .evtpic img.big{aspect-ratio:4/3;object-fit:cover}
 .ivq{padding:12px 14px;border-radius:12px;background:var(--nest);border-left:3px solid var(--cyan);font-size:16px;line-height:1.45;margin:8px 0 10px}
@@ -3004,7 +3005,7 @@ function viewTRun() {
   let side = '';
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
-    h += `<div class="card" style="text-align:center"><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
+    h += `<div class="card" style="text-align:center"><img class="tendimg" src="img/win/${won ? 'twin' : 'tlose'}.webp" alt=""><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
       <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} рейтинга, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <button class="btn gold" data-a="tfinish" style="text-align:center">Завершить</button></div>`;
