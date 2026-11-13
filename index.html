@@ -381,14 +381,21 @@ html.land .fzl .flog{max-height:none}
 html.land .fzn b{font-size:18px}
 html.land .fza b{font-size:14px}
 /* ---------- главный экран, нижнее меню, экран действия ---------- */
-#app[data-view=main],#app[data-view=more],#app[data-view=coll]{padding-bottom:96px}
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(11,16,32,.96);border-top:1px solid var(--line);max-width:520px;margin:0 auto}
-.nav button{min-height:52px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--dim);font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.nav button b{font-size:14px;font-weight:600}
-.nav button small{font-size:11px}
-.nav button.on{color:var(--txt);border-color:var(--cyan);background:rgba(50,213,231,.08)}
-.nav button.on b{color:var(--cyan)}
-.nav button:disabled{opacity:.45}
+#app[data-view=main],#app[data-view=more],#app[data-view=coll],#app:has(>.nav){padding-bottom:calc(132px + env(safe-area-inset-bottom))}
+.nav .nvr1{display:flex;align-items:center;justify-content:center;gap:8px}
+.nav .nvr2{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.nav .nvsep{flex:0 0 2px;align-self:stretch;margin:6px 0;background:linear-gradient(transparent,#C9A24A,transparent);border-radius:2px}
+.nav .nvb{all:unset;position:relative;cursor:pointer;display:block;line-height:0;transition:transform .12s,filter .15s;filter:brightness(.82) saturate(.9)}
+.nav .nvb img{width:100%;height:auto;display:block}
+.nav .nv-room,.nav .nv-map{width:calc(50% - 9px)}
+.nav .nv-bureau{width:38%}.nav .nv-more{width:31%}.nav .nv-shop{flex:1}
+.nav .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}
+.nav .nvb:active{transform:scale(.97)}
+.nav .nvb:disabled{filter:grayscale(1) brightness(.55);cursor:default}
+.nav .nvb small{position:absolute;right:14%;top:-6px;line-height:1;font-size:10px;font-weight:700;padding:3px 6px;border-radius:8px;background:#2ECC71;color:#062;box-shadow:0 0 6px rgba(46,204,113,.6)}
+.nav .nvtx{display:flex;align-items:center;justify-content:center;gap:8px;line-height:1;height:var(--nvh,28px);font-weight:800;font-size:13px;color:#F7EBD0;background:linear-gradient(135deg,#1B2747,#0E1630);border:2px solid #C9A24A;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);box-shadow:inset 0 0 0 1px #6B5320}
+.nav .nvtx i{font-style:normal;color:#E2B657;font-size:17px}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:column;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(11,16,32,.96);border-top:1px solid var(--line);max-width:520px;margin:0 auto}
 .mgrid{display:block}
 .inds{display:flex;align-items:center;gap:6px;margin-top:8px}
 .inds{flex-wrap:wrap}
@@ -444,7 +451,15 @@ html.land .fza b{font-size:14px}
 .invp{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font:inherit;font-size:14px;cursor:pointer}
 .invp .ava{width:30px;height:30px;border-radius:50%}
 .invp.on{border-color:var(--good);background:rgba(101,217,121,.15);box-shadow:0 0 0 1px var(--good)}
-.nextwk{margin-top:10px;text-align:center;font-weight:800;font-size:17px;padding:12px}
+.imgbtn{all:unset;box-sizing:border-box;display:block;width:100%;position:relative;cursor:pointer;line-height:0;margin-top:8px;transition:transform .12s,filter .15s}
+.imgbtn img{width:100%;height:auto;display:block}
+.imgbtn:active{transform:scale(.985)}
+.imgbtn:disabled{filter:grayscale(1) brightness(.55);cursor:default}
+.imgbtn.nextwk small{position:absolute;left:31%;bottom:16%;line-height:1;font-size:clamp(10px,2.8vw,13px);font-weight:600;color:#AFC0DA}
+html.land .imgbtn.nextwk small{font-size:12px}
+.imgbtn.nextwk.ready{animation:wkglow 1.8s ease-in-out infinite}
+@keyframes wkglow{50%{filter:drop-shadow(0 0 10px rgba(255,200,90,.8)) brightness(1.1)}}
+.nextwk.btn{margin-top:10px;text-align:center;font-weight:800;font-size:17px;padding:12px}
 .nextwk.soft{font-size:14px;font-weight:600;padding:9px;color:var(--dim)}
 .sstat{margin-top:4px;font-size:13px;font-weight:700;color:var(--cyan)}
 .ivq{padding:12px 14px;border-radius:12px;background:var(--nest);border-left:3px solid var(--cyan);font-size:16px;line-height:1.45;margin:8px 0 10px}
@@ -453,8 +468,10 @@ html.land .fza b{font-size:14px}
 .quote p{margin:0;font-style:italic;line-height:1.45}
 .evtgo{text-align:center;margin-top:6px}
 html.land #app[data-view=main],html.land #app[data-view=card],html.land #app[data-view=cardres],html.land #app[data-view=more],html.land #app[data-view=coll]{column-count:1}
-html.land #app[data-view=main],html.land #app[data-view=more],html.land #app[data-view=coll]{padding-left:112px;padding-bottom:40px}
-html.land .nav{top:0;bottom:0;right:auto;width:96px;max-width:none;grid-template-columns:1fr;grid-auto-rows:min-content;align-content:center;border-top:0;border-right:1px solid var(--line);padding:12px 8px}
+html.land #app[data-view=main],html.land #app[data-view=more],html.land #app[data-view=coll],html.land #app:has(>.nav){padding-left:226px;padding-bottom:40px}
+html.land .nav{top:0;bottom:0;right:auto;width:210px;max-width:none;justify-content:center;border-top:0;border-right:1px solid var(--line);padding:12px 10px}
+html.land .nav .nvr1,html.land .nav .nvr2{flex-direction:column;gap:6px;align-items:stretch}
+html.land .nav{--nvh:38px}html.land .nav .nvtx{font-size:15px}html.land .nav .nvsep{display:none}html.land .nav .nvb{width:100%!important}
 html.land .mgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);column-gap:16px;align-items:start}
 html.land .mgrid>.card{grid-column:2;margin-top:12px}
 html.land .mgrid>.mapcard{grid-column:1;grid-row:1 / span 6;margin-top:12px}
@@ -2805,9 +2822,9 @@ function viewLeague() {
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
   const cur = S.view === 'shop' ? 'shop' : ['more', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
-  const nb = (id, a, v, label, extra, dis) => `<button class="${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''}><b>${label}</b>${extra ? `<small>${extra}</small>` : ''}</button>`;
-  const freeB = freeBureau(S);
-  return `<nav class="nav">${nb('map', 'nav', 'map', 'Карта')}${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '1 дейст.', S.actions <= 0 && !freeB)}${nb('room', 'nav', 'room', 'Комната')}${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</nav>`;
+  const nb = (id, a, v, label, extra, dis) => `<button class="nvb nv-${id} ${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''} aria-label="${label}">${id === 'shop' ? `<span class="nvtx">${label}<i>›</i></span>` : `<img src="img/nav/${id}.webp" alt="">`}${extra ? `<small>${extra}</small>` : ''}</button>`;
+  const freeB = freeBureau(S);   // кнопки-плашки: 1-й ряд — Комната | Карта (крупные), 2-й — Бюро слева, Магазин, Ещё справа
+  return `<nav class="nav"><div class="nvr1">${nb('room', 'nav', 'room', 'Комната')}<i class="nvsep"></i>${nb('map', 'nav', 'map', 'Карта')}</div><div class="nvr2">${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '', S.actions <= 0 && !freeB)}${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</div></nav>`;
 }
 function viewMain() {
   const done = S.actions <= 0;
@@ -2820,7 +2837,7 @@ function viewMain() {
         <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.semi ? `<div class="ctline"><img src="img/team/${SEMI[S.semi.team][1]}.webp" alt=""><span>Контракт: <b>${esc(SEMI_TEAMS[S.semi.team])}</b> · до конца недели ${S.semi.until}${S.semi.worked ? ' · отработан' : ' · нужен полупро-турнир'}</span></div>` : S.league != null ? `<div class="ctline pro"><span>Профессиональная команда · призовые +70%</span></div>` : ''}${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
 </div>
       <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
-    ${done ? '<button class="btn gold nextwk" data-a="next">Следующая неделя ▶</button>' : `<button class="btn nextwk soft" data-a="pass">Завершить неделю · осталось ${S.actions} ${actWord(S.actions)}</button>`}
+    <button class="imgbtn nextwk ${done ? 'ready' : ''}" data-a="${done ? 'next' : 'pass'}" aria-label="Пропустить неделю"><img src="img/nav/skip.webp" alt="">${done ? '' : `<small>осталось ${S.actions} ${actWord(S.actions)}</small>`}</button>
     </div>`;
   const map = `<div class="card mapcard">
       <h2>${S.inRoom ? 'Моя комната' : 'Карта мира'}</h2>
@@ -2829,9 +2846,9 @@ function viewMain() {
     </div>`;
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
   const daily = `<div class="card"><h2>Повседневные действия</h2>
-      <button class="btn" data-a="lib" ${done ? 'disabled' : ''}>Библиотека <span class="dim">· 1 действие</span></button>
-      <button class="btn" data-a="rest" ${done ? 'disabled' : ''}>Отдых <span class="dim">· снимает все бонусы и штрафы · 1 действие</span></button>
-      <button class="btn" data-a="flight" ${done ? 'disabled' : ''}>Перелёт в другой регион <span class="dim">· 1 действие</span></button>
+      <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
+      <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
+      <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
     </div>`;
   const news = S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div></div>` : '';
   return wrap(`<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
