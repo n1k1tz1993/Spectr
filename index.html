@@ -1702,7 +1702,8 @@ function playTour(t) {
         logTo(H, `Команда ${SEMI_TEAMS[ti]} пригласила тебя выступить за неё на турнире! +${SEMI_PICK_BONUS} к силе.`);
       }
     });
-    ps.filter(x => x.h == null).forEach(x => { if (teams.length) x.team = teams.shift(); });
+    const nT = rnd(5, 10) - Object.keys(humT).length;   // на турнире выступают 5–10 случайных полупро-команд, остальные — свободные бойцы
+    shuffle(ps.filter(x => x.h == null)).slice(0, Math.max(0, nT)).forEach(x => { if (teams.length) x.team = teams.shift(); });
   }
   tStart({ tier: t, region: r }, fmt, ps);
 }
@@ -2519,9 +2520,9 @@ function viewTRun() {
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
   let h = `<div class="card thead">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · +${x.tb} к силе</span></div>`).join('')}
-    ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">Все полупрофессиональные команды выставили по бойцу.</div>' : ''}
+    ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
-    <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: полупрофессиональные команды и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div></details></div>`;
+    <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: 5–10 полупрофессиональных команд и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div></details></div>`;
   let side = '';
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
