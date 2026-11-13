@@ -693,7 +693,7 @@ function dhStart() {
 // Топ-2 — сразу в полуфинал; 3–10 места — плей-ин Bo3 (3–10, 4–9, 5–8, 6–7, затем победители между собой) за 2 места.
 // Полуфинал и финал Bo5, каждая серия — один матч лиги. Топ-3 лиги едут на чемпионат мира.
 const LDB = {"teams":[[0,"Team Liquid","usl_0",12],[0,"Cloud9","usl_1",11],[0,"Evil Genesis","usl_2",10],[0,"Sovereign Mid","usl_3",9],[0,"Envy Dominion","usl_4",8],[0,"Counter Logic","usl_5",7],[0,"Dignity Labs","usl_6",6],[0,"Immortal Pact","usl_7",5],[0,"Phoenix Protocol","usl_8",4],[0,"Complexity Core","usl_9",3],[0,"Optic Horizon","usl_10",2],[0,"Echo Union","usl_11",1],[1,"Fanatiq","eut_1",25],[1,"G2 Sovereign","eut_2",24],[1,"Vitalis","eut_3",23],[1,"Astralis Prime","eut_4",22],[1,"Origin Guard","eut_5",21],[1,"Secret Order","eut_6",20],[1,"Alliance Nexus","eut_7",19],[1,"Ninja Protocol","eut_8",18],[1,"Mouz Vector","eut_9",17],[1,"Karmine Crown","eut_10",16],[1,"Heroic Bastion","eut_11",15],[1,"Iron Legion","eut_12",14],[1,"SK Syndicate","eut_13",13],[1,"BDS Equity","eut_14",12],[1,"ENCE Polar","eut_15",11],[1,"BIG Forge","eut_16",10],[1,"Rouge Mirage","eut_17",9],[1,"Iberian Pride","eut_18",8],[1,"SAW Industries","eut_19",7],[1,"Nine Ascent","eut_20",6],[1,"Tundra Vault","eut_21",5],[1,"Gaimin Grid","eut_22",4],[1,"Reason Dynamics","eut_23",3],[1,"Wolven Capital","eut_24",2],[1,"Sprout Genesis","eut_25",1],[2,"Team Empire","t301",3],[2,"Зенит","t314",4],[2,"M19","t303",3],[2,"Moscow Five","t304",3],[2,"OneBreatch Gaming","t305",4],[2,"RoX","t306",4],[2,"ЦСКА","t313",3],[2,"Team Spirit","t308",4],[2,"Vega Squadron","t309",3],[2,"Virtus.pro","t310",1],[3,"ahq e-Sports Club","t401",2],[3,"EDG","t402",4],[3,"EHOME","t403",4],[3,"DetonatioN FocusMe","t404d",4],[3,"Invictus Gaming","t405",6],[3,"LGD Gaming","t406",1],[3,"Sentinels Singapore","t407",4],[3,"AZUBU Taipei Assassins","t4ta",3],[3,"Vici Gaming","t409",3],[3,"Team WE","t410",3],[4,"CJ Entus Blaze","t501",4],[4,"CJ Entus Frost","t502",6],[4,"Longzhu Gaming IM","t5lz",1],[4,"Jin Air Falcons","t504",3],[4,"Jin Air Stealths","t505",4],[4,"KT Rolster A","t506",4],[4,"KT Rolster B","t507",6],[4,"Najin Sword","t508",3],[4,"Najin Shield","t509",4],[4,"Samsung Galaxy","t510",3],[4,"SK Telecom T1","t511",3],[2,"Спартак","t312",3],[2,"NaVi","t57navi",4],[3,"AZUBU Taipei Snipers","t411",2],[3,"PENTAGRAM","t412",2],[4,"Newbee","t512",4]],"players":[[0,"IdRa",65,"US","Молниеносный рывок"],[0,"Meteos",61,"US","Яростный щит"],[0,"Oddie",57,"AR","Неистовый клинок"],[0,"Sneaky",61,"US","Молниеносный взрыв"],[0,"Bjergsen",61,"DK","Яростный клинок"],[0,"Hai",69,"US","Яростный взрыв"],[0,"Miracle-",65,"US","Теневой взрыв"],[0,"Revolta",57,"BR","Призрачный выпад"],[0,"Svenskeren",61,"DK","Ледяной вихрь"],[0,"jockster",55,"BR","Огненный шар"],[0,"Dyrus",62,"CA","Огненный щит"],[0,"NieN",62,"US","Ледяной щит"],[0,"fNb",52,"BR","Огненный залп"],[0,"WildTurtle",58,"US","Стальной залп"],[0,"MaCaO",54,"AR","Мощный удар"],[0,"DoubleLift",70,"US","Ледяной взрыв"],[0,"Tyler",68,"US","Мощный выпад"],[0,"Voyboy",65,"CA","Громовой взрыв"],[0,"Scarra",62,"US","Стальной удар"],[0,"BrTT",60,"BR","Ледяной клинок"],[1,"Froggen",70,"DK","Молниеносный щит"],[1,"MadFroG",62,"DE","Неистовый щит"],[1,"ZveN",68,"DK","Громовой клинок"],[1,"Reckless",72,"DK","Неистовый шар"],[1,"Kev1N",62,"DE","Теневой удар"],[1,"MickyX",55,"SK","Призрачный шар"],[1,"Shock",58,"SE","Стальной прыжок"],[1,"Araneae",55,"ES","Мощный взрыв"],[1,"YellowStar",60,"FR","Неистовый вихрь"],[1,"EdoBoy",52,"DE","Мощный прыжок"],[1,"xLord",70,"DE","Теневой клинок"],[1,"xPeke",67,"ES","Огненный удар"],[1,"Hjarnan",57,"SE","Яростный прыжок"],[1,"ForellenLord",63,"DE","Огненный прыжок"],[1,"Snoopeh",66,"GB","Молниеносный вихрь"],[1,"Nukeduck",68,"NL","Молниеносный клинок"],[1,"Jankos",61,"PL","Стальной выпад"],[1,"Wh1teL0tuS",56,"TR","Ледяной прыжок"],[1,"HollyPhoenix",52,"TR","Громовой залп"],[1,"k0u",59,"NO","Теневой прыжок"],[2,"Dendi",65,"UA","Огненный рывок"],[2,"Dread",60,"BY","Призрачный залп"],[2,"RamzessZ",61,"RU","Мощный рывок"],[2,"Save",57,"MD","Теневой шар"],[2,"TORONTOTOKYO",62,"KZ","Громовой прыжок"],[2,"KreoX",65,"RU","Теневой щит"],[2,"Happy",71,"RU","Яростный удар"],[2,"Solo",65,"RU","Громовой вихрь"],[2,"Dise",62,"RU","Молниеносный шар"],[2,"ZaKCanFly",58,"RU","Стальной рывок"],[2,"Hawk",60,"RU","Стальной вихрь"],[2,"Max",53,"BY","Теневой рывок"],[2,"Cash",67,"RU","Неистовый рывок"],[2,"Smurf",56,"RU","Ледяной рывок"],[2,"Inspired",52,"UZ","Неистовый прыжок"],[2,"Darien",65,"RU","Призрачный вихрь"],[2,"AlexIch",70,"RU","Громовой выпад"],[2,"FlashInTheNight",56,"RU","Огненный выпад"],[2,"Edward",65,"AM","Мощный щит"],[2,"TiTaN",57,"RU","Громовой щит"],[3,"ClearLove",72,"CN","Неистовый взрыв"],[3,"HaRleLuYaR",51,"SG","Мощный клинок"],[3,"Toyz",66,"TW","Стальной взрыв"],[3,"Misaya",72,"CN","Громовой рывок"],[3,"Doinb",67,"KR","Яростный выпад"],[3,"eer0",72,"CN","Призрачный клинок"],[3,"Fortitude",67,"CN","Яростный шар"],[3,"SwordArt",70,"TW","Теневой залп"],[3,"Dendy",70,"KR","Призрачный рывок"],[3,"infi",75,"CN","Призрачный удар"],[3,"Sky",72,"CN","Ледяной удар"],[3,"ColourFull",70,"CN","Неистовый залп"],[3,"TH000",70,"CN","Призрачный прыжок"],[3,"Life",58,"CN","Огненный вихрь"],[3,"Maple",59,"TW","Ледяной шар"],[3,"MiSTaKe",58,"TW","Молниеносный прыжок"],[3,"Ceros",68,"JP","Призрачный взрыв"],[3,"PawN",70,"KR","Стальной клинок"],[3,"kid",58,"TW","Молниеносный удар"],[3,"Sok",68,"KR","Неистовый выпад"],[4,"Faker",75,"KR","Молниеносный выпад"],[4,"Watch",66,"KR","Неистовый удар"],[4,"Reach",68,"KR","Мощный вихрь"],[4,"MC",65,"KR","Яростный вихрь"],[4,"Peanut",68,"KR","Ледяной выпад"],[4,"Moon",72,"KR","Яростный рывок"],[4,"Deft",67,"KR","Громовой удар"],[4,"KaKaO",65,"KR","Громовой шар"],[4,"inSec",65,"KR","Огненный клинок"],[4,"Flash",70,"KR","Огненный взрыв"],[4,"Lyn",72,"KR","Стальной щит"],[4,"Lawliet",66,"KR","Ледяной залп"],[4,"FoCuS",62,"KR","Молниеносный залп"],[4,"Flame",61,"KR","Призрачный щит"],[4,"Jaedong",75,"KR","Мощный шар"],[4,"Crown",68,"KR","Теневой выпад"],[4,"Ambition",70,"KR","Стальной шар"],[4,"MadLife",66,"KR","Мощный залп"],[4,"LustBoy",62,"KR","Яростный залп"],[4,"Imp",70,"KR","Теневой вихрь"]]};
-const LG_SIZE = r => r === 4 ? 14 : r === 1 ? 40 : 12;
+const LG_SIZE = r => r === 4 ? 14 : grpCfg(r) ? grpCfg(r).size : 12;
 const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55;
 const ONLY_ELITE = { 1: true };   // в Европе только расписанные вручную Элитные Спектры, старая база убрана
 const proCount = r => ONLY_ELITE[r] ? Object.keys(ELITE_DATA[r] || {}).length : PRO_COUNT;   // Элитных Спектров в регионе
@@ -702,10 +702,18 @@ const LSHORT = ['USA', 'LCS', 'Северная Лига', 'ASL', 'SSS'];
 const LG_STAGE = { RR: 'Регулярный сезон', PI1: 'Плей-ин · раунд 1', PI2: 'Плей-ин · раунд 2', SF: 'Полуфинал', F: 'Финал',
   W1: 'Wild Card · этап 1 · раунд 1', W2: 'Wild Card · этап 1 · раунд 2', W3: 'Wild Card · этап 1 · раунд 3', W4: 'Wild Card · этап 1 · раунд 4', W5: 'Wild Card · этап 1 · раунд 5',
   R64: '1/32 финала', R32: '1/16 финала', R16: '1/8 финала',
+  RPA: 'Плей-ин · первый раунд', RPB: 'Плей-ин · второй раунд', RPC: 'Плей-ин · финал',
   EPA: 'Плей-ин · первый раунд', EPB: 'Плей-ин · верхняя и нижняя сетка', EPC: 'Плей-ин · финал нижней сетки', EPD: 'Плей-ин · финал', QF: 'Четвертьфинал' };
 // Лига Европы: 25 про-команд + 15 случайных полупро (бонус +0), 4 группы по 10, Bo1 в 2 круга.
 // 1-е место группы — сразу в плей-офф на 8; места 2–5 играют плей-ин Bo3 с нижней сеткой, выходит один. Плей-офф и финал Bo5.
-const EU40 = r => r === 1, EU_PRO = 25, EU_SEMI = 15, EU_GROUPS = 4;
+const EU_PRO = 25, EU_SEMI = 15, EU_GROUPS = 4;
+// лиги с группами: Европа — 40 команд в 4 группах; Северная лига — 20 команд в 2 группах (включается, когда в базе 20 команд)
+const GROUP_CFG = {
+  1: { fmt: 'eu40', size: 40, pro: 25, semi: 15, groups: 4, last: 2, pi: 5, fill: ['DE', 'FR', 'GB', 'ES', 'IT', 'PL', 'SE', 'DK', 'NL', 'PT', 'CZ', 'NO', 'FI', 'BE', 'AT', 'CH'] },
+  2: { fmt: 'ru20', size: 20, pro: 20, semi: 0, groups: 2, last: 4, pi: 6, fill: ['RU', 'UA', 'BY', 'KZ', 'UZ', 'AM', 'GE', 'MD'] }
+};
+const grpCfg = r => { const c = GROUP_CFG[r]; return c && (r === 1 || LDB.teams.filter(t => t[0] === r).length >= c.size) ? c : null; };
+const EU40 = r => !!grpCfg(r);
 const EU_FILL_C = ['DE', 'FR', 'GB', 'ES', 'IT', 'PL', 'SE', 'DK', 'NL', 'PT', 'CZ', 'NO', 'FI', 'BE', 'AT', 'CH'];
 // Элитные Спектры — 12 сильнейших в каждом регионе, сила 50–77 по общему мировому рейтингу (77 — сильнейший в мире); остальные слабее 50
 // Элитные Спектры, расписанные вручную: регион → место в списке (с 0). Остальные места пока из старой базы.
@@ -772,15 +780,16 @@ const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues
 const heroIdx = H => G.players.indexOf(H);
 // бонус команды к силе бойца: от +20 у сильнейшей до +1 у слабейшей
 const TEAM_BONUS_12 = [20, 18, 16, 15, 13, 11, 10, 8, 6, 5, 3, 1];
-const teamBonus = (i, n) => n === 12 ? TEAM_BONUS_12[i] : Math.round(20 - i * 19 / (n - 1));
+const TEAM_BONUS_MIN = { 0: 4 };   // Америка: от +20 у сильнейшей до +4 у слабейшей
+const teamBonus = (i, n, r) => TEAM_BONUS_MIN[r] != null ? Math.round(20 - i * (20 - TEAM_BONUS_MIN[r]) / (n - 1)) : n === 12 ? TEAM_BONUS_12[i] : Math.round(20 - i * 19 / (n - 1));
 const allRegionTeams = r => LDB.teams.filter(t => t[0] === r).map(t => [t[1], t[2], t[3], t[4]]).concat(r === 4 ? LG_EXTRA : []).sort((a, b) => b[2] - a[2]);
 const regionTeams = r => EU40(r) ? allRegionTeams(r) : allRegionTeams(r).slice(0, LG_SIZE(r));   // в лиге играют сильнейшие LG_SIZE команд
-const teamBonusOf = (r, name) => { const T = allRegionTeams(r), i = T.findIndex(t => t[0] === name); return i < 0 ? 0 : teamBonus(i, T.length); };
-function euFiller(taken) {   // случайный боец 40–55 — дозаполняет драфт Европы
+const teamBonusOf = (r, name) => { const T = allRegionTeams(r), i = T.findIndex(t => t[0] === name); return i < 0 ? 0 : teamBonus(i, T.length, r); };
+function euFiller(taken, C) {   // случайный боец 40–55 — дозаполняет драфт Европы
   const pool = NAMES.filter(x => !taken.has(x.toLowerCase())), name = pool.length ? pool[rnd(0, pool.length - 1)] : 'Spectre' + rnd(100, 999);
   taken.add(name.toLowerCase());
   const p = rnd(40, 55), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
-  return { name, p, rating: npcRating(p), country: EU_FILL_C[rnd(0, EU_FILL_C.length - 1)], face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) }, filler: true };
+  return { name, p, rating: npcRating(p), country: (C || EU_FILL_C)[rnd(0, (C || EU_FILL_C).length - 1)], face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) }, filler: true };
 }
 function rrRounds(ids) {   // круговая система: список туров, в туре — пары
   ids = ids.slice(); const n = ids.length, R = [];
@@ -791,15 +800,15 @@ function rrRounds(ids) {   // круговая система: список ту
   return R;
 }
 function lgDraftEU(L) {
-  const r = L.r, n = LG_SIZE(r);
+  const r = L.r, n = LG_SIZE(r), cfg = grpCfg(r);
   const humans = G.players.map((H, h) => ({ h, H })).filter(o => o.H.draft === r);
   const pool = lgPool(r).map(f => ({ f, rating: f.rating })).concat(humans.map(o => ({ h: o.h, rating: o.H.rating })));
   const taken = new Set(pool.map(o => (o.f ? o.f.name : G.players[o.h].nick).toLowerCase()));
-  while (pool.length < n) { const f = euFiller(taken); pool.push({ f, rating: f.rating }); }
+  while (pool.length < n) { const f = euFiller(taken, cfg.fill); pool.push({ f, rating: f.rating }); }
   pool.sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
   const picked = pool.slice(0, n);
-  const pro = allRegionTeams(r).slice(0, EU_PRO).map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, EU_PRO), city: null }));
-  const semi = shuffle(SEMI.slice()).slice(0, EU_SEMI).map(t => ({ name: t[0], logo: t[1], bonus: 0, city: null, semi: true }));
+  const pro = allRegionTeams(r).slice(0, cfg.pro).map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, cfg.pro, r), city: null }));
+  const semi = shuffle(SEMI.slice()).slice(0, cfg.semi).map(t => ({ name: t[0], logo: t[1], bonus: 0, city: null, semi: true }));
   L.teams = pro.concat(semi).map((T, i) => Object.assign(T, { h: picked[i].h != null ? picked[i].h : null, f: picked[i].f || null }));   // сильная команда берёт сильнейшего
   for (const o of humans) {
     const ti = L.teams.findIndex(T => T.h === o.h);
@@ -807,16 +816,30 @@ function lgDraftEU(L) {
     if (ti >= 0) { o.H.league = r; logTo(o.H, `Драфт: тебя взяла команда ${L.teams[ti].name}! Лига ${LSHORT[r]} стартует со следующей недели.`); histTo(o.H, r, 'Драфт: команда ' + L.teams[ti].name); }
     else logTo(o.H, `Драфт ${LSHORT[r]}: не хватило рейтинга. Подними рейтинг в бюро и попробуй в следующем сезоне.`);
   }
-  // посев «змейкой» по силе команды: 4 группы по 10
-  L.groups = [[], [], [], []];
-  for (let i = 0; i < n; i++) { const row = Math.floor(i / EU_GROUPS), col = i % EU_GROUPS; L.groups[row % 2 ? EU_GROUPS - 1 - col : col].push(i); }
+  // посев «змейкой» по силе команды
+  const NG = cfg.groups; L.groups = [...Array(NG)].map(() => []);
+  for (let i = 0; i < n; i++) { const row = Math.floor(i / NG), col = i % NG; L.groups[row % 2 ? NG - 1 - col : col].push(i); }
   const GR = L.groups.map(g => { const R1 = rrRounds(g); return R1.concat(R1.map(rd => rd.map(([a, b]) => [b, a]))); });
   L.sched = GR[0].map((_, k) => [].concat(...GR.map(R => R[k])));
-  L.fmt = 'eu40'; L.rrBo = 1; L.phase = 'RR'; L.ri = 0;
+  L.fmt = cfg.fmt; L.rrBo = 1; L.phase = 'RR'; L.ri = 0;
 }
 const lgGroupOf = (L, i) => L.groups ? L.groups.findIndex(g => g.includes(i)) : -1;
 const lgGroupTable = (L, g) => lgTable(L).filter(x => L.groups[g].includes(x.i));
+function lgNextRU(L) {   // Северная лига: 1-е место — в полуфинал, места 2–6 играют плей-ин Bo3, из группы выходит один
+  const st = (k, g) => lgStage(L, k).filter(m => m.grp === g), W = m => m.w;
+  const add = (k, g, a, b, label) => Object.assign(lgAdd(L, k, a, b, 3, label), { grp: g });
+  const G2 = [0, 1];
+  if (L.phase === 'RR') {
+    L.gt = G2.map(g => lgGroupTable(L, g).map(x => x.i)); L.gtop = L.gt.map(t => t[0]); L.top = L.gtop.slice();
+    L.phase = 'RPA'; return G2.map(g => add('RPA', g, L.gt[g][4], L.gt[g][5], `Группа ${GL[g]} · 5-е против 6-го`));
+  }
+  if (L.phase === 'RPA') { L.phase = 'RPB'; return [].concat(...G2.map(g => [add('RPB', g, L.gt[g][2], L.gt[g][3], `Группа ${GL[g]} · 3-е против 4-го`), add('RPB', g, L.gt[g][1], W(st('RPA', g)[0]), `Группа ${GL[g]} · 2-е против победителя 5–6`)])); }
+  if (L.phase === 'RPB') { L.phase = 'RPC'; return G2.map(g => { const [x, y] = st('RPB', g); return add('RPC', g, W(y), W(x), `Группа ${GL[g]} · финал плей-ина`); }); }
+  if (L.phase === 'RPC') { const pi = G2.map(g => W(st('RPC', g)[0])); L.phase = 'SF'; return [lgAdd(L, 'SF', L.gtop[0], pi[1], 5, '1-е группы A против плей-ина B'), lgAdd(L, 'SF', L.gtop[1], pi[0], 5, '1-е группы B против плей-ина A')]; }
+  return null;
+}
 function lgNextEU(L) {   // стадии после групп в лиге Европы
+  if (L.fmt === 'ru20') return lgNextRU(L);
   const st = (k, g) => lgStage(L, k).filter(m => m.grp === g), W = m => m.w, Lo = m => m.w === m.a ? m.b : m.a;
   const add = (k, g, a, b, bo, label) => Object.assign(lgAdd(L, k, a, b, bo, label), { grp: g });
   const G4 = [0, 1, 2, 3];
@@ -855,7 +878,7 @@ function lgDraft(L) {
   pool.sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
   const picked = pool.slice(0, n);
   const teams = regionTeams(r);
-  L.teams = teams.map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, allRegionTeams(r).length), city: t[3] || null, h: picked[i].h != null ? picked[i].h : null, f: picked[i].f || null }));   // сильная команда берёт сильнейшего
+  L.teams = teams.map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, allRegionTeams(r).length, r), city: t[3] || null, h: picked[i].h != null ? picked[i].h : null, f: picked[i].f || null }));   // сильная команда берёт сильнейшего
   for (const o of humans) {
     const ti = L.teams.findIndex(T => T.h === o.h);
     o.H.draft = null;
@@ -895,7 +918,7 @@ function lgNextRound(L) {   // создать следующий «матч ли
   if (L.wc) return wcNext(L);
   if (L.wf) return wfNext(L);
   const win = st => lgStage(L, st).map(m => m.w);
-  if (L.fmt === 'eu40' && L.phase !== 'SF' && L.phase !== 'F' && !(L.phase === 'RR' && L.ri < L.sched.length)) return lgNextEU(L);
+  if ((L.fmt === 'eu40' || L.fmt === 'ru20') && L.phase !== 'SF' && L.phase !== 'F' && !(L.phase === 'RR' && L.ri < L.sched.length)) return lgNextEU(L);
   if (L.phase === 'RR') {
     if (L.ri < L.sched.length) { const rd = L.sched[L.ri++]; return rd.map(([a, b]) => lgAdd(L, 'RR', a, b, L.rrBo || 2, 'Тур ' + L.ri)); }
     const t = lgTable(L).map(x => x.i); L.top = t.slice(0, 2); L.final10 = t;
@@ -914,7 +937,7 @@ function lgNextRound(L) {   // создать следующий «матч ли
 const WC_GAIN = 5, WC_SW_ROUNDS = 5;
 function wcCollect(L) {   // кто из лиги идёт в Wild Card
   const order = lgTable(L).map(x => x.i), last = new Set();
-  if (L.fmt === 'eu40') L.groups.forEach((_, g) => lgGroupTable(L, g).slice(-2).forEach(x => last.add(x.i)));
+  if (L.groups && (L.fmt === 'eu40' || L.fmt === 'ru20')) L.groups.forEach((_, g) => lgGroupTable(L, g).slice(L.fmt === 'ru20' ? -4 : -2).forEach(x => last.add(x.i)));
   else order.slice(-2).forEach(i => last.add(i));
   const ent = i => { const T = L.teams[i]; return { h: T.h, f: T.f, bonus: T.bonus, name: T.name, logo: T.logo, r: L.r }; };
   G.wcPool = G.wcPool || {};   // null — пул собран, ждём чемпионат мира
@@ -1814,7 +1837,7 @@ const lgScore = m => { const wa = m.g.filter(x => x === m.a).length; return `${w
 const lgSeries = (L, m) => `<div class="ser ${lgHum(L, m.a) || lgHum(L, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${esc(lgTeamName(L, m.a))}</span><b class="ssc">${m.done || m.g.length ? lgScore(m) : '—'}</b><span class="${m.w === m.b ? 'win' : ''}">${esc(lgTeamName(L, m.b))}</span></div>`;
 function lgStatus(L) {
   if (L.phase === 'draft') return `Драфт открыт до конца недели ${L.draftEnd}${G.week <= L.draftEnd ? ` (осталось недель: ${L.draftEnd - G.week + 1})` : ''}. ` + (EU40(L.r)
-    ? `В лиге ${EU_PRO} про-команд и ${EU_SEMI} полупро: команды по очереди, от сильнейшей, берут бойцов по рейтингу. Свободные места занимают случайные бойцы.`
+    ? `В лиге ${grpCfg(L.r).pro} про-команд${grpCfg(L.r).semi ? ' и ' + grpCfg(L.r).semi + ' полупро' : ''}: команды по очереди, от сильнейшей, берут бойцов по рейтингу. Свободные места занимают случайные бойцы.`
     : `В драфте 20 мест, в лигу проходят ${LG_SIZE(L.r)} лучших по рейтингу.`);
   if (L.phase === 'RR') return `Сезон ${L.season} · регулярный сезон, сыграно туров: ${L.ri} из ${L.sched.length}.`;
   if (L.phase === 'done') return `Сезон ${L.season} окончен. Дальше — когда доиграют все лиги — Wild Card, чемпионат мира и перерыв ${BREAK_WEEKS} недель с драфтом нового сезона.`;
@@ -1874,10 +1897,12 @@ function viewLTable() {
     h += `<div class="card"><h3>Кто в драфте</h3><div class="dim">Элитные Спектры региона:</div><table class="tbl">${lgPool(r).slice(0, proCount(r)).map((f, k) => `<tr><td>${k + 1}</td><td>${esc(f.name)} ${flagOf(f.country)}</td><td style="text-align:right">${rateHtml(f.rating)}</td></tr>`).join('')}</table>
       ${G.players.filter(H => H.draft === r).map(H => `<div style="margin-top:6px">${esc(H.nick)} ${flagOf(H.country)} · ${rateHtml(H.rating)}</div>`).join('')}</div>`;
   } else {
-    if (L.fmt === 'eu40') {
-      h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 1 ? 'z1' : k < 5 ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('')
-        + `<div class="card dim">Bo1 в два круга. 1-е место — сразу в плей-офф, 2–5 — плей-ин Bo3 с нижней сеткой, из него выходит один. Плей-офф и финал Bo5. Топ-3 — на чемпионат мира.</div>`;
-      for (const st of ['EPA', 'EPB', 'EPC', 'EPD', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => (m.label ? `<div class="dim" style="font-size:12px;margin-top:6px">${esc(m.label)}</div>` : '') + lgSeries(L, m)).join('')}</div>`; }
+    if (L.fmt === 'eu40' || L.fmt === 'ru20') {
+      const ru = L.fmt === 'ru20', piTo = ru ? 6 : 5;
+      h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 1 ? 'z1' : k < piTo ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('')
+        + (ru ? `<div class="card dim">Bo1 в два круга. 1-е место — сразу в полуфинал, места 2–6 играют плей-ин Bo3 (5-е с 6-м, затем 3-е с 4-м и 2-е с победителем, затем финал), из группы выходит один. Полуфинал и финал Bo5. Топ-3 — на чемпионат мира, последние 4 места групп — в первый этап Wild Card.</div>`
+          : `<div class="card dim">Bo1 в два круга. 1-е место — сразу в плей-офф, 2–5 — плей-ин Bo3 с нижней сеткой, из него выходит один. Плей-офф и финал Bo5. Топ-3 — на чемпионат мира.</div>`);
+      for (const st of ru ? ['RPA', 'RPB', 'RPC', 'SF', 'F'] : ['EPA', 'EPB', 'EPC', 'EPD', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => (m.label ? `<div class="dim" style="font-size:12px;margin-top:6px">${esc(m.label)}</div>` : '') + lgSeries(L, m)).join('')}</div>`; }
       return wrap(h + `<button class="btn" data-a="lback">Назад</button>`);
     }
     const t = lgTable(L);
