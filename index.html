@@ -450,6 +450,23 @@ html:not(.land) .fzteam{align-items:center}
 html:not(.land) .fzteam img{width:38px;height:38px;flex:0 0 auto}
 html:not(.land) .fzteam small{font-size:12px;line-height:1.2;flex:1;min-width:0}
 html.land .fzteam small{font-size:12px;text-align:center}
+
+/* бой: квадратная кнопка способности — в альбомном режиме снизу справа, под большой палец */
+.fzsp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.fzsq{display:none}
+html.land .fzk{display:flex;gap:10px;align-items:stretch}
+html.land .fzsp{flex:1;grid-template-columns:1fr;gap:8px}
+html.land .fzsp button{padding:6px 0}
+html.land .fzsq{display:flex;flex:0 0 auto;width:152px;height:152px;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;border-radius:18px;border:2px solid #3D7BE0;background:radial-gradient(circle at 50% 35%,#1B2A4E,#0B1224 75%);color:var(--txt);font-family:inherit;cursor:pointer;text-align:center}
+html.land .fzsq.fb{border-color:#E0604A}
+html.land .fzsq .aic{width:72px;height:72px;border-radius:14px}
+html.land .fzsq b{font-size:14px;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.land .fzsq em{font-style:normal;font-size:11px;color:var(--dim)}
+html.land .fzsq.ready{border-color:var(--good);box-shadow:0 0 0 2px rgba(101,217,121,.25),0 0 22px rgba(101,217,121,.35)}
+html.land .fzsq.ready em{color:var(--good)}
+html.land .fzsq.act{border-color:var(--gold)}html.land .fzsq.act em{color:var(--gold)}
+html.land .fzsq.cd .aic{filter:grayscale(1) brightness(.6)}
+html.land .fzsq:active{transform:scale(.96)}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -2367,7 +2384,8 @@ function viewFight() {
     <div class="fzh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b><span class="fzst">${esc(F.title)}</span></div>
     <div class="fzf">${fzCard(F.a, 'fa')}<div class="fzvs">VS</div>${fzCard(F.b, 'fb')}</div>
     <div class="fzl"><h3>Журнал боя</h3><div class="flog" id="flog" onscroll="const f=document.getElementById('flast');if(f)f.hidden=this.scrollHeight-this.scrollTop-this.clientHeight<24"></div><button class="fzlast" id="flast" data-a="flast" hidden>К последнему ↓</button><div id="fend"></div></div>
-    <div class="fzk" id="fctl"><button data-a="fspeed" data-v="1">×1</button><button data-a="fspeed" data-v="3">×3</button><button data-a="fskip">Skip</button></div>
+    <div class="fzk" id="fctl"><div class="fzsp"><button data-a="fspeed" data-v="1">×1</button><button data-a="fspeed" data-v="3">×3</button><button data-a="fskip">Skip</button></div>
+      ${[[F.a, 'fa'], [F.b, 'fb']].filter(([x]) => x.me).map(([x, id]) => `<button class="fzsq ${id}" id="${id}-sq" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}<b>${esc(x.abil.name)}</b><em id="${id}-sqst"></em></button>`).join('')}</div>
   </div>`;
 }
 function fightPaint() {
@@ -2384,6 +2402,8 @@ function fightPaint() {
     const active = x.abT != null && F.t - x.abT < 0.8;
     st.textContent = active ? 'Активна' : x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + x.acd.toFixed(1) + ' с' : ready ? 'Готово' : 'Недостаточно Цы';
     st.className = active ? 'act' : ready ? 'ok' : '';
+    const sq = document.getElementById(id + '-sq');
+    if (sq) { sq.classList.toggle('cd', !ready && !active); sq.classList.toggle('ready', ready); sq.classList.toggle('act', active); const t = document.getElementById(id + '-sqst'); t.textContent = st.textContent; }
     document.getElementById(id + '-ab').classList.toggle('cd', !ready);
   }
   for (const e of F.fx) {
