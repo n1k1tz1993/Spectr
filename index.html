@@ -361,6 +361,7 @@ html.land .fza b{font-size:14px}
 .inds{display:flex;align-items:center;gap:6px;margin-top:8px}
 .inds{flex-wrap:wrap}
 .inds .dim{margin-left:6px;font-size:13px;white-space:nowrap}
+.arow.done{opacity:.4;filter:grayscale(1);cursor:default}
 .arow{width:100%;border:1px solid var(--line);font-family:inherit;color:var(--txt);text-align:left;background:var(--nest)}
 .arow .ds{color:var(--dim);font-size:13px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
@@ -804,7 +805,17 @@ const ROOMS = [
   { n: 'Роскошная вилла', cost: 4000, perk: 'Поход в бюро не тратит действие' },
   { n: 'Собственный остров', cost: 5000, perk: 'Бюро без траты действия и перелёты без джетлага' }
 ];
-const ROOM_PICS = ['Интерьер', 'Вид из окна'];
+const ROOM_PICS = ['Интерьер', 'Вид из окна', 'Гараж'];
+// ---------- машины: стоят в гараже (третья картинка комнаты); дают дополнительные действия в неделю ----------
+const CARS = [
+  { n: 'Городской седан', cost: 1500, a: 1 },
+  { n: 'Дорогой спорткар', cost: 3000, a: 2 },
+  { n: 'Гиперкар', cost: 6000, a: 3 }
+];
+const carLvl = H => (H.cars || []).reduce((m, j) => Math.max(m, j + 1), 0);   // 0 — гараж пуст
+const carBonus = H => { const l = carLvl(H); return l ? CARS[l - 1].a : 0; };
+const maxActs = H => 3 + carBonus(H);
+const actWord = n => n === 1 ? 'действие' : n < 5 ? 'действия' : 'действий';
 const hasRoom = (H, k) => (H.rooms || []).includes(k);
 const freeBureau = H => (H.rooms || []).length > 0;   // любое купленное жильё — бюро без траты действия
 const BASE_ROOM = { n: 'Базовое жильё' };   // есть у каждого игрока с начала, картинки img/room/base_0/1
@@ -812,8 +823,10 @@ const roomOf = k => k < 0 ? BASE_ROOM : ROOMS[k];
 const roomImg = (k, v) => `img/room/${k < 0 ? 'base' : k}_${v}.webp`;
 function roomHtml() {
   const own = [-1, ...(S.rooms || [])];
-  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = S.roomPic | 0;
-  return `<div class="room" data-a="rpic"><div class="roomph">${esc(roomOf(k).n)}<br>${ROOM_PICS[v]}</div><img src="${roomImg(k, v)}" alt="" onerror="this.remove()">
+  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = (S.roomPic | 0) % 3, cl = carLvl(S);
+  const ph = v === 2 ? (cl ? esc(CARS[cl - 1].n) : 'Гараж пуст') : esc(roomOf(k).n);
+  const src = v === 2 ? `img/room/garage_${cl}.webp` : roomImg(k, v);
+  return `<div class="room" data-a="rpic"><div class="roomph">${ph}<br>${ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">
       <div class="rtag">${ROOM_PICS[v]} · нажми, чтобы сменить</div></div>
     ${own.length > 1 ? `<div class="row" style="margin-top:8px;gap:6px">${own.slice().sort((a, b) => a - b).map(j => `<button class="btn ${j === k ? 'here' : ''}" data-a="rsel" data-v="${j}" style="width:auto;flex:1 1 45%;text-align:center;font-size:13px;margin:0">${esc(roomOf(j).n)}</button>`).join('')}</div>` : ''}`;
 }
@@ -904,7 +917,7 @@ const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
 function endTurn() {
   S.lgBonus = heroPower(S) - S.power - gameBonus(S);   // бонусы и минусы на конец своей недели — с ними играются матчи лиги (бонус на бой — отдельно)
-  S.turn++; S.actions = 3;
+  S.turn++; S.actions = maxActs(S);
   S.effects = S.effects.filter(e => e.game || e.to >= S.turn);
   S.hand = drawHand();
   S.view = 'main'; S.sel = null;
@@ -972,15 +985,15 @@ function cardExpect(c) {   // ожидаемый эффект до нажати�
 }
 function useCard(i, ivDone) {
   const c = S.hand[i];
-  if (!c || (!ivDone && !spend())) return;
+  if (!c || (c.used && !ivDone) || (!ivDone && !spend())) return;
   if (isIv(c) && !ivDone) {   // интервью: сначала три вопроса, эффект — после ответов
-    S.iv = { sel: i, q: ivQuestions(S), n: 0, jet: !!S.jetlag };
+    c.used = true; S.iv = { sel: i, q: ivQuestions(S), n: 0, jet: !!S.jetlag };
     clearJet(); S.view = 'iv'; save(); return;
   }
   const jet = ivDone ? S.iv.jet : !!S.jetlag; clearJet();   // любое действие недели снимает джетлаг
-  if (c.k === 'dh') { S.hand.splice(i, 1); dhStart(); save(); return; }
-  if (c.k === 'beast' || c.k === 'duel') { S.hand.splice(i, 1); specialFight(c.k); save(); return; }
-  if (c.k === 'contract') { S.hand.splice(i, 1); contractStart(); save(); return; }
+  if (c.k === 'dh') { c.used = true; dhStart(); save(); return; }
+  if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
+  if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
   let R;
   if (c.k === 'm') {   // штраф и небольшой бонус
     const [b, bd] = mbOf(c); addEff(c.v, c.d); addEff(b, bd);
@@ -1003,8 +1016,8 @@ function useCard(i, ivDone) {
   }
   if (jet) R.txt += '. Джетлаг снят';
   if (ivDone) { R.phrase = IV_END[isPod(c) ? 'pod' : 'iv']; S.iv = null; }
-  S.hand.splice(i, 1);
-  logMsg(c.t + ': ' + R.kind.toLowerCase() + ' — ' + R.txt + '.');
+  c.used = true;   // событие недели выполняется один раз и становится серым
+  logMsg(c.t + ': ' + R.txt.charAt(0).toLowerCase() + R.txt.slice(1) + '.');
   S.cardRes = Object.assign({ c }, R); S.view = 'cardres'; S.sel = null; save();
 }
 
@@ -2291,13 +2304,13 @@ function navBar() {
 }
 function viewMain() {
   const done = S.actions <= 0;
-  const ind = [0, 1, 2].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
+  const MA = maxActs(S), ind = [...Array(Math.max(MA, S.actions)).keys()].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
   const rows = S.hand.length
-    ? S.hand.map((c, i) => { const E = cardExpect(c); return `<button class="arow" data-a="card" data-v="${i}">${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${descOf(c) ? esc(descOf(c)) : TEXT}</div><div class="tag ${E.cls}">${E.kind}</div></div></button>`; }).join('')
+    ? S.hand.map((c, i) => { const E = c.used ? { cls: 'nt', kind: 'Выполнено' } : cardExpect(c); return `<button class="arow ${c.used ? 'done' : ''}" data-a="card" data-v="${i}" ${c.used ? 'disabled' : ''}>${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${descOf(c) ? esc(descOf(c)) : TEXT}</div><div class="tag ${E.cls}">${E.kind}</div></div></button>`; }).join('')
     : '<div class="dim">Все действия этой недели выполнены.</div>';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2><div class="dim">Сезон ${seasonNo()}${seasonPhase() ? ' · ' + seasonPhase() : ''}</div>
-        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из 3</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}</div>
+        <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}</div>
       <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
     </div>`;
   const map = `<div class="card mapcard">
@@ -2333,7 +2346,7 @@ function viewMore() {   // «Ещё»: библиотека, магазин, и�
 function viewColl() { return wrap(`<div class="card">${trophiesHtml() || '<div class="dim">Пока нет ни одного трофея.</div>'}</div>`) + navBar(); }
 function viewCard() {   // до выполнения: картинка, описание, ожидаемый эффект, одна жёлтая кнопка
   const c = S.hand[S.sel];
-  if (!c) { S.view = 'main'; return viewMain(); }
+  if (!c || c.used) { S.view = 'main'; return viewMain(); }
   const E = cardExpect(c), none = S.actions <= 0;
   return wrap(`<div class="card evt">
       <div class="evtpic">${evtImg(c)}</div>
@@ -2630,9 +2643,10 @@ function viewShop() {   // магазин: только названия и це
   const own = S.items || [], ro = S.rooms || [];
   const row = (name, cost, has, a, v, perk) => `<div class="srow"><span>${esc(name)}${perk ? `<div class="gold" style="font-size:12px">${esc(perk)}</div>` : ''}</span>${has ? '<span class="dim">✓ Куплено</span>'
     : `<button class="btn" data-a="${a}" data-v="${v}" ${S.rating < cost ? 'disabled' : ''}>${cost}</button>`}</div>`;
-  return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются рейтингом. Жильё меняет вид комнаты, артефакты надеваются в инвентаре.</div>
+  return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются рейтингом. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
+    <div class="card"><h3>Машины</h3><div class="dim">Машина стоит в гараже и даёт дополнительные действия в неделю. Работает лучшая из купленных.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `+${C2.a} ${actWord(C2.a)} в неделю`)).join('')}</div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>` + back);
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
@@ -3100,7 +3114,7 @@ function act(a, v) {
     case 'lhist': S.lret = S.view; S.view = 'lhist'; S.sel = +v; break;
     case 'lback': S.view = S.lret === 'league' ? 'league' : S.lret || 'bureau'; if (S.view === 'league') S.sel = S.sel; break;
     case 'menu': save(); G = null; S = null; SETUP = null; F = null; break;
-    case 'card': S.view = 'card'; S.sel = +v; break;
+    case 'card': if (S.hand[+v] && !S.hand[+v].used) { S.view = 'card'; S.sel = +v; } break;
     case 'league': S.view = 'league'; S.sel = +v; break;
     case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
@@ -3143,8 +3157,10 @@ function act(a, v) {
     case 'iren': { const i = +v, el = document.getElementById('iname'), t = el ? el.value.trim() : ''; S.iname = S.iname || {}; if (t) S.iname[i] = t; else delete S.iname[i]; S.renaming = null; break; }
     case 'rbuy': { const j = +v; S.rooms = S.rooms || []; if (S.rooms.includes(j) || S.rating < ROOMS[j].cost) return; S.rating -= ROOMS[j].cost; S.rooms.push(j); S.room = j; S.roomPic = 0; logMsg('Куплено жильё: ' + ROOMS[j].n + '.'); break; }
     case 'room': S.inRoom = !S.inRoom; break;
-    case 'rpic': S.roomPic = (S.roomPic | 0) ? 0 : 1; break;
+    case 'rpic': S.roomPic = ((S.roomPic | 0) + 1) % 3; break;
     case 'rsel': S.room = +v; S.roomPic = 0; break;
+    case 'cbuy': { const j = +v; S.cars = S.cars || []; if (S.cars.includes(j) || S.rating < CARS[j].cost) return; const was = carBonus(S); S.rating -= CARS[j].cost; S.cars.push(j);
+      S.actions += carBonus(S) - was; S.roomPic = 2; logMsg(`Куплена машина: ${CARS[j].n}. Теперь ${maxActs(S)} действий в неделю.`); break; }
     case 'shop': S.view = 'shop'; break;
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
