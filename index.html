@@ -71,6 +71,9 @@ img.pic{object-fit:cover;padding:0;background:#fff}
 .bigpic.tall{width:220px;height:auto}
 .beastmark{display:inline-flex;vertical-align:middle;margin-left:6px}
 .beastmark .aic{width:26px;height:26px;border-radius:6px}
+.ttag{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px}
+.semipick{display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 8px;border:1px solid var(--gold);border-radius:10px}
+.semipick .ttag{width:40px;height:40px}
 .ctteams{display:flex;justify-content:center;gap:8px;margin-bottom:6px}
 .ctteams img{width:56px;height:56px;border-radius:10px;opacity:.55}
 .ctteams img.my{opacity:1;outline:2px solid var(--gold)}
@@ -432,7 +435,7 @@ const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'вор�
 const DUEL_WIN = 50, CONTRACT_WIN = 250;
 SPECIAL.forEach((c, i) => { IMGBY[c.t] = `img/act/sp_${i}.webp`; });
 // полупрофессиональные команды: имя и логотип img/team/<logo>.webp (бывшие команды лиги Америки — тоже здесь)
-const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths', 'semi_2'], ['Static Fangs', 'semi_3'], ['Night Circuit', 'semi_4'], ['NBees Vanguard', 'semi_5'], ['Aster Bloom', 'semi_6'],
+const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths', 'semi_2'], ['Static Fangs', 'semi_3'], ['Night Circuit', 'semi_4'], ['NBees Vanguard', 'semi_5'], ['Aster Bloom', 'semi_6'], ['Austral Kings', 'semi_7'], ['Imperial Verde', 'semi_8'], ['Northern Guard', 'semi_9'],
   ['Gotham Volt', 'us_0'], ['Pacific Mirage', 'us_1'], ['Lone Star Fangs', 'us_2'], ['Neon Jackpots', 'us_3'], ['Great Lakes Forge', 'us_4'], ['Everglade Vipers', 'us_5'],
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
@@ -510,7 +513,7 @@ const ABIL_LIST = [   // способности соперников: назва
   ['Багровая волна', 'накрывает врага багровой волной'], ['Призрачный каскад', 'наносит каскад призрачных ударов']
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
-const FACE_COUNT = 36;   // портреты: img/face/0..35.webp
+const FACE_COUNT = 48;   // портреты: img/face/0..47.webp (выбор героя и сгенерированные бойцы)
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
@@ -1278,7 +1281,8 @@ function lgAfterGame(L, m) {
 
 // ---------- турниры ----------
 // Любой турнир играется по случайному формату из четырёх.
-const NAMES = [...NICKS, 'Kira', 'Ronin', 'Jinx', 'Axel', 'Luna', 'Rex', 'Zane', 'Ivy', 'Onyx', 'Sable'];
+const NAMES = [...NICKS, 'Kira', 'Ronin', 'Jinx', 'Axel', 'Luna', 'Rex', 'Zane', 'Ivy', 'Onyx', 'Sable',
+  'Talon', 'Ghost', 'Volt', 'Ash', 'Frost', 'Echo', 'Riven', 'Sol', 'Hex', 'Dusk', 'Blitz', 'Cobra', 'Nomad', 'Spark', 'Titan', 'Wolf', 'Zero', 'Pyro', 'Saber', 'Halo'];
 const FMT = {
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
@@ -1297,7 +1301,8 @@ function playTour(t) {
   if (inv.length && S.actions < 1) { logMsg('Не хватает действия, чтобы позвать игроков.'); return; }
   if (inv.length) S.actions -= 1;          // позвать любое число игроков — одно действие
   S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
-  const fmt = Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
+  const semiT = t === 2;   // полупрофессиональный турнир: все полупро-команды выставляют по бойцу, формат на 32
+  const fmt = semiT ? 'dh32' : Object.keys(FMT)[rnd(0, 3)], n = FMT[fmt].n;
   const invd = (S.tourInvade || []).filter(h => h !== G.cur && G.players[h] && !inv.includes(h));
   invd.forEach(h => { G.players[h].skipNext = true; logTo(G.players[h], 'Ты вторгся на турнир игрока ' + S.nick + ' и пропустишь свою неделю.'); });
   S.tourInvade = [];
@@ -1308,8 +1313,21 @@ function playTour(t) {
     const p = rnd(T.lo, T.hi), [an, ad] = ABIL_LIST[rnd(0, ABIL_LIST.length - 1)];
     return { id: hums.length + i, name, p, rating: npcRating(p), seed: Math.random(), face: rnd(0, FACE_COUNT - 1), abil: { name: an, desc: ad, icon: rnd(0, ABIL_ICON_COUNT - 1) } };
   }));
+  if (semiT) {   // бойцы под флагами команд
+    const teams = shuffle(SEMI.map((_, i) => i)), humT = {};
+    ps.filter(x => x.h != null).forEach(x => {   // 10%: игрока с рейтингом выше 1500 берёт команда (+1 к силе на турнир)
+      const H = G.players[x.h];
+      if (H.rating > SEMI_PICK_RATING && Math.random() < SEMI_PICK_CHANCE && teams.length) {
+        const ti = teams.shift(); x.team = ti; x.tb = SEMI_PICK_BONUS; humT[x.h] = ti;
+        logTo(H, `Команда ${SEMI_TEAMS[ti]} пригласила тебя выступить за неё на турнире! +${SEMI_PICK_BONUS} к силе.`);
+      }
+    });
+    ps.filter(x => x.h == null).forEach(x => { if (teams.length) x.team = teams.shift(); });
+  }
   tStart({ tier: t, region: r }, fmt, ps);
 }
+const SEMI_PICK_RATING = 1500, SEMI_PICK_CHANCE = 0.1, SEMI_PICK_BONUS = 1;
+const teamTag = x => x && x.team != null && SEMI[x.team] ? `<img class="ttag" src="img/team/${SEMI[x.team][1]}.webp" alt="" title="${esc(SEMI_TEAMS[x.team])}">` : '';
 function tStart(meta, fmt, ps) {   // сетка любого формата из готового списка участников
   const R = Object.assign({ fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, outs: {}, tbOut: {}, tbn: 0 }, meta);
   const ids = shuffle(ps.map(x => x.id));
@@ -1346,7 +1364,7 @@ function tGame(m, w) {   // записать бой серии; Bo2 — всег
   if (m.bo === 2) { if (m.g.length === 2) { m.done = true; m.w = wa === wb ? null : wa > wb ? m.a : m.b; } }
   else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
 }
-function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil, x.face); const H = G.players[h]; return fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face); }
+function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return fighter(x.name, x.p, x.rating, false, x.abil, x.face); const H = G.players[h]; return fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face); }
 function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
   const keep = F;
   F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -1698,6 +1716,9 @@ const TEAM_INFO_RU = {
 };
 // полупрофессиональные команды — объединения бойцов и самих Спектров: одно предложение
 const SEMI_INFO = {
+  "Austral Kings": "Союз бойцов с юга континента, которые держатся как короли, даже когда проигрывают.",
+  "Imperial Verde": "Гордое братство Спектров, сражающихся под зелёным шлемом и лавровым венком.",
+  "Northern Guard": "Объединение канадских Спектров, спокойных и стойких, как северный лес зимой.",
   "Rift Foxes": "Хитрые одиночки, объединившиеся ради турниров: бьют из разломов и исчезают раньше, чем соперник успеет ответить.",
   "Neon Rooks": "Клуб Спектров-стратегов, которые играют бой как шахматную партию и всегда думают на несколько ходов вперёд.",
   "Iron Moths": "Братство бойцов из промышленных окраин, летящих на свет больших арен вопреки всем прогнозам.",
@@ -2026,10 +2047,12 @@ function viewTRun() {
   const R = S.trun;
   if (!R) { S.view = 'tour'; return viewTour(); }
   const f = FMT[R.fmt], me = tMine(R), hums = R.ps.filter(x => isHum(R, x.id));
-  const nm = id => isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b>` : esc(R.ps[id].name);
+  const nm = id => teamTag(R.ps[id]) + (isHum(R, id) ? `<b class="gold">${esc(R.ps[id].name)}</b>` : esc(R.ps[id].name));
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
-  let h = `<div class="card">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${f.name}</h2>`}<div class="dim">${f.desc}</div>
+  let h = `<div class="card">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}<div class="dim">${R.tier === 2 ? '32 бойца: полупрофессиональные команды и свободные бойцы. 8 групп по 4, в группе двойное выбывание (Bo1), выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div>
+    ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · +${x.tb} к силе</span></div>`).join('')}
+    ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">Все полупрофессиональные команды выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div></div>`;
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
