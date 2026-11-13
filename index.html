@@ -268,7 +268,18 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .fzp{position:relative;aspect-ratio:1/1;background:radial-gradient(circle at 50% 35%,#24324F,#0B1120 75%);container-type:inline-size;overflow:hidden}
 .fzp img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
 .fzp .ff-fx{position:absolute;inset:0}
-.fzn{display:flex;align-items:flex-end;justify-content:space-between;gap:4px;padding:6px 8px 4px;background:#111B33}
+.fzn{display:flex;flex-direction:column;gap:3px;padding:6px 8px 4px;background:#111B33}
+.fznb{font-size:15px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fzn2{display:flex;align-items:flex-end;justify-content:space-between;gap:4px;min-height:24px}
+.fznm small{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+html.land .fznb{font-size:19px}
+html.land .fznm small{font-size:12px}
+.fznm{display:flex;align-items:center;gap:5px;min-width:0}
+.fzt{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
+.fznn{display:flex;flex-direction:column;min-width:0}
+.fznn small{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.land .fzt{width:34px;height:34px}
+html.land .fznn small{font-size:11px}
 .fzn b{font-size:14px;letter-spacing:-.01em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .fzr{display:flex;flex-direction:column;align-items:flex-end;flex:0 0 auto}
 .fzr small{font-size:9px;color:var(--dim)}
@@ -622,7 +633,12 @@ const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUN
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), lastCrit: false, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
   thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
-function startFight(title, opp, onEnd) { startFightAB(title, fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), opp, onEnd); }
+// команда героя: если он сейчас играет в лиге — её логотип и название
+const heroTeam = (H, hi) => { if (!G || !G.leagues || H.league == null) return null; const L = G.leagues[H.league], T = L && L.teams && L.teams.find(t => t.h === hi); return T ? { logo: T.logo, name: T.name } : null; };
+// команда Элитного Спектра в текущем сезоне его лиги
+const eliteTeam = (r, name) => { const L = G && G.leagues && G.leagues[r], T = L && L.teams && L.teams.find(t => t.f && t.f.name === name); return T ? { logo: T.logo, name: T.name } : null; };
+const withMeta = (f, country, team) => Object.assign(f, { country: country || f.country || null, team: team || f.team || null });
+function startFight(title, opp, onEnd) { startFightAB(title, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
   F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7;   // кто бьёт первым — случайно
@@ -719,7 +735,7 @@ function bureauFight(kind) {
     opp = fighter(name, p, npcRating(p), false, g.abil, g.face); opp.country = g.country;
   } else {                   // один из 12 про-игроков региона
     const f = lgPool(S.region)[rnd(0, proCount(S.region) - 1)];
-    name = f.name; opp = fighter(f.name, f.p, f.rating, false, f.abil, f.face);
+    name = f.name; opp = withMeta(fighter(f.name, f.p, f.rating, false, f.abil, f.face), f.country, eliteTeam(S.region, f.name));
   }
   startFight(title, opp, won => {
     const big = (S.ladderGames || 0) < 10;   // первые 10 лестничных матчей — по 150: десять побед подряд дают золото
@@ -1104,8 +1120,9 @@ const lgRating = (L, i) => { const T = L.teams[i]; return T.h != null ? G.player
 const lgHum = (L, i) => L.teams[i].h != null;
 function lgFighter(L, i) {
   const T = L.teams[i], bonus = T.bonus + (L.wc && L.phase !== 'B' ? (T.wcPlus || 0) : 0);   // полупро в 1-м этапе Wild Card: +2
-  if (T.h != null) { const H = G.players[T.h]; return fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus : heroPower(H)) + bonus, H.rating, true, H.ability, H.face); }
-  return fighter(T.f.name, T.f.p + bonus, npcRating(T.f.p + bonus), false, T.f.abil, T.f.face);   // рейтинг — по силе вместе с бонусом команды
+  const team = T.logo || T.name ? { logo: T.logo, name: T.name } : null;
+  if (T.h != null) { const H = G.players[T.h]; return withMeta(fighter(H.nick, (H.lgBonus != null ? H.power + H.lgBonus : heroPower(H)) + bonus, H.rating, true, H.ability, H.face), H.country, team); }
+  return withMeta(fighter(T.f.name, T.f.p + bonus, npcRating(T.f.p + bonus), false, T.f.abil, T.f.face), T.f.country, team);   // рейтинг — по силе вместе с бонусом команды
 }
 function lgTable(L) {
   const t = L.teams.map((T, i) => ({ i, pts: 0, w: 0, d: 0, l: 0, gw: 0, gl: 0, pl: 0 }));
@@ -1482,7 +1499,13 @@ function tGame(m, w) {   // записать бой серии; Bo2 — всег
   if (m.bo === 2) { if (m.g.length === 2) { m.done = true; m.w = wa === wb ? null : wa > wb ? m.a : m.b; } }
   else { const need = Math.ceil(m.bo / 2); if (wa >= need || wb >= need) { m.done = true; m.w = wa > wb ? m.a : m.b; } }
 }
-function tFighter(R, id) { const x = R.ps[id], h = humOf(R, id); if (h == null) return Object.assign(fighter(x.name, x.p, x.rating, false, x.abil, x.face), { country: x.country }); const H = G.players[h]; return fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face); }
+function tFighter(R, id) {   // боец турнира: флаг и логотип команды (полупро-команда или команда по контракту)
+  const x = R.ps[id], h = humOf(R, id);
+  const semi = t => t != null && SEMI[t] ? { logo: SEMI[t][1], name: SEMI[t][0] } : null;
+  if (h == null) return withMeta(fighter(x.name, x.p, x.rating, false, x.abil, x.face), x.country, semi(x.team));
+  const H = G.players[h];
+  return withMeta(fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face), H.country, semi(x.team != null ? x.team : R.kind === 'contract' ? R.team : null) || heroTeam(H, h));
+}
 function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
   const keep = F;
   F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
@@ -2118,7 +2141,8 @@ const fabRow = (x, id) => `<button class="ff-ab" id="${id}-ab" data-a="fabil" da
 function fzCard(x, id) {
   return `<div class="fzc ${id}">
     <div class="fzp">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
-    <div class="fzn"><b>${esc(x.name)} ${flagOf(x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '')}</b>${x.beast ? `<span class="beastmark">${abilIcon(30)}</span>` : `<span class="fzr"><small>Рейтинг</small>${rateHtml(x.rating, 'fzrt')}</span>`}</div>
+    <div class="fzn"><b class="fznb">${esc(x.name)} ${flagOf(x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '')}</b>
+      <div class="fzn2"><span class="fznm">${x.team && x.team.logo ? `<img class="fzt" src="img/team/${x.team.logo}.webp" alt="">` : ''}${x.team ? `<small>${esc(x.team.name)}</small>` : ''}</span>${x.beast ? `<span class="beastmark">${abilIcon(30)}</span>` : `<span class="fzr"><small>Рейтинг</small>${rateHtml(x.rating, 'fzrt')}</span>`}</div></div>
     <div class="fzb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
     <div class="fzb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
     <button class="fza" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${abilIcon(x.abil.icon)}
