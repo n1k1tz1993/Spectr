@@ -3378,7 +3378,7 @@ function fzCard(x, id) {   // карточка бойца по макету: п�
   return `<div class="fyc ${id}">
     <div class="fyp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
     <div class="fyi">
-      <div class="fyn"><b>${esc(x.name)}</b>${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}</div>
+      <div class="fyn">${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}<b>${esc(x.name)}</b></div>
       <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div>
       ${team}
     </div>
