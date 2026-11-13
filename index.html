@@ -253,6 +253,10 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .gbar{height:8px;border-radius:4px;background:#0B0F1C;overflow:hidden}
 .gbar i{display:block;height:100%;background:linear-gradient(90deg,#3A7BFF,#2FD7FF)}
 .grow b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;color:#7DE8FF}
+.wfcup{position:relative;container-type:inline-size;height:120px;aspect-ratio:764/1529}
+.wfcup img{height:100%!important;width:100%!important;max-width:none!important;display:block}
+.wfcup.huge{height:min(70vh,560px);margin:0 auto}
+.engr{position:absolute;left:50%;top:86.3%;transform:translate(-50%,-50%);width:38%;text-align:center;white-space:nowrap;overflow:hidden;font-family:'Exo 2',Rubik,serif;font-weight:800;letter-spacing:.02em;color:#5a3d0c;text-shadow:0 1px 0 rgba(255,236,170,.75),0 -1px 0 rgba(60,35,0,.55)}
 .ctrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:6px 0 12px}
 .ctro{display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;font-size:12px;color:var(--gold);text-align:center}
 .ctro img{height:84px;width:auto;max-width:72px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
@@ -2311,7 +2315,7 @@ const topBar = () => {   // компактная шапка: портрет 40×
     <div class="tgrow ${pct >= 100 ? 'done' : ''}"><span>${pct >= 100 ? 'Рост силы завершён' : 'Рост силы'}</span><div class="tbar"><i style="width:${pct.toFixed(1)}%"></i></div><b>${Math.round(pct)}%</b></div></div>`;
 };
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'more'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
@@ -2329,9 +2333,12 @@ const labelOf = c => {
   return '<div class="bonus plus">Бонус!</div>';
 };
 const logHtml = () => `<div class="log">${S.log.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
+// Хрустальный глобус с гравировкой: ник и флаг чемпиона на табличке
+const wfCup = H => { const n = H.nick, fs = n.length > 12 ? 4.2 : n.length > 8 ? 5.2 : 6.4;
+  return `<div class="wfcup"><img src="img/trophy/wf.webp" alt="Хрустальный глобус"><span class="engr" style="font-size:${fs}cqw">${flagOf(H.country)} ${esc(n)}</span></div>`; };
 const trophiesHtml = () => {   // коллекция: трофеи лиг картинками по регионам, кубки Wild Card и чемпионата мира, медаль ESL
   const names = [...TIERS.map(t => t.name), 'Кубок лиги'], lbl = [...TIER_SHORT, 'Лига'];
-  const big = [S.wfWon ? `<div class="ctro big"><img src="img/trophy/wf.webp" alt=""><span>Чемпион мира${S.wfWon > 1 ? ' ×' + S.wfWon : ''}</span></div>` : '',
+  const big = [S.wfWon ? `<div class="ctro big" data-a="cupview" style="cursor:pointer">${wfCup(S)}<span>Чемпион мира${S.wfWon > 1 ? ' ×' + S.wfWon : ''}</span></div>` : '',
     S.wcWon ? `<div class="ctro big"><img src="img/trophy/wc.webp" alt=""><span>Wild Card${S.wcWon > 1 ? ' ×' + S.wcWon : ''}</span></div>` : '',
     S.eslWins ? `<div class="ctro big"><img class="esl" src="img/esl.webp" alt=""><span>ESL ONE ×${S.eslWins}</span></div>` : ''].join('');
   const regs = REGIONS.map((R, r) => { const own = names.map((n, i) => S.troph.some(x => x.r === r && x.n === n) ? i : -1).filter(i => i >= 0);
@@ -2463,6 +2470,10 @@ const VIC = {
   wf: { t: 'Чемпион мира!', img: 'img/win/wf', d: n => `${n}, весь мир смотрит на тебя! Лучшие Спектры пяти лиг остались позади, и в твоих руках Хрустальный глобус. Трибуны скандируют твоё имя, а в Зале славы уже появилась новая строчка. Отныне каждый соперник будет знать: перед ним чемпион мира. Поздравляем — это вершина, о которой мечтает каждый Спектр!` },
   wc: { t: 'Победитель Wild Card!', img: 'img/win/wc', d: n => `${n}, это было невозможно — и всё же это случилось! Сто бойцов вышли на отбор, и лишь в твоих руках Золотая пума. Все, кто мечтал о втором шансе, остались позади, а впереди — чемпионат мира. Поздравляем! Теперь мир узнает, на что способен тот, кого рано списали со счетов.` }
 };
+function viewCup() {   // глобус крупно: видно гравировку
+  return wrap(`<div class="card" style="text-align:center"><div class="wfcup huge">${wfCup(S).replace('<div class="wfcup">', '').replace(/<\/div>$/, '')}</div>
+    <h2 style="color:var(--gold)">Хрустальный глобус</h2><div class="dim">Кубок чемпиона мира${S.wfWon > 1 ? ' · побед: ' + S.wfWon : ''}</div></div>`);
+}
 function viewVic() {
   const V = VIC[S.vic];
   if (!V) { S.vic = null; S.view = 'main'; return viewMain(); }
@@ -3186,7 +3197,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   document.documentElement.classList.toggle('ingame', !!G);
@@ -3254,6 +3265,7 @@ function act(a, v) {
     case 'use': if (S.view === 'card') useCard(S.sel); break;   // повторное нажатие не списывает действие
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
+    case 'cupview': S.view = 'cup'; break;
     case 'vicok': S.vic = null; S.view = 'main'; break;
     case 'ivans': if (S.iv) { if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
