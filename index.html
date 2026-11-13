@@ -750,51 +750,48 @@ html.land .fyl .flog{max-height:110px}
 .tgnext{flex:0 0 100%;font-size:11px;color:var(--dim)}
 .tgnext b{color:var(--gold);font-weight:700}
 
-/* ===== шапка по макету ===== */
-.top.hd{display:block;padding:12px;border:1.5px solid #27B8E8;border-radius:18px;background:linear-gradient(180deg,#0F1A33,#0A1226);box-shadow:0 0 18px rgba(39,184,232,.28),inset 0 0 22px rgba(39,184,232,.06);overflow:visible}
-.hd .topor{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:10px;border:1px solid #2A5A80;background:#10203A;color:var(--cyan);font-size:20px;z-index:2}
-.hdm{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"a i" "r r";gap:10px 12px;align-items:center}
-.hdava{grid-area:a;width:84px !important;height:84px !important;border-radius:14px !important;border:2px solid #27B8E8;box-shadow:0 0 12px rgba(39,184,232,.4);overflow:hidden}
-.hdid{grid-area:i;display:flex;flex-direction:column;gap:6px;min-width:0;padding-right:40px}
-.hdid .topid{display:flex;flex-direction:column;align-items:flex-start;background:none;border:0;padding:0;color:inherit;font-family:inherit;text-align:left;cursor:pointer;min-width:0}
-.hdid .nick{font-size:22px;font-weight:800;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.hdid .sub{font-size:14px;color:#9FB3D9}
-.hd .stat{justify-content:flex-start;gap:8px;margin:0}
-.hd .sti{width:38px;height:38px;border-radius:10px;border:1px solid #2A4A70;background:#0E1A30}
-.hd .sti svg{width:20px;height:20px}
-.hd .sti:not(.on){color:#4A6A95}
-.hd .sti.on.g{box-shadow:0 0 0 1px #2ECC71,0 0 10px rgba(46,204,113,.4)}.hd .sti.on.r{box-shadow:0 0 0 1px #FF4D4F,0 0 10px rgba(255,77,79,.4)}
-.hdr{grid-area:r;display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid rgba(39,184,232,.25)}
-.hdrt{display:flex;align-items:center;gap:12px}
-.hdrt img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,140,60,.35))}
-.hdrt b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:36px;line-height:1;background:linear-gradient(180deg,#FFF6D6,#F5C84C 60%,#C98A1E);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 6px rgba(245,170,40,.35))}
-.hdbal{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid rgba(39,184,232,.18);border-bottom:1px solid rgba(39,184,232,.18)}
-.hdbal>span{color:#9FB3D9;font-size:14px}
-.hdbal .coins{font-size:20px}.hdbal .coins .coin{width:22px;height:22px}
-.hdteam{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid #27B8E8;background:linear-gradient(90deg,rgba(39,184,232,.1),rgba(10,18,38,.6));box-shadow:inset 0 0 14px rgba(39,184,232,.12)}
-.hdteam img{width:42px;height:42px;border-radius:8px;object-fit:contain;padding-right:12px;border-right:1px solid rgba(39,184,232,.35);box-sizing:content-box}
-.hdtn{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:#fff;display:flex;flex-direction:column;line-height:1.1;min-width:0}
-.hdtn small{font-family:'Noto Sans',sans-serif;font-style:normal;font-weight:600;font-size:11px;letter-spacing:0;text-transform:none;color:var(--gold)}
-.hdfa{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:20px;letter-spacing:.06em;color:#fff}
+/* ===== шапка по макету: пропорции картинки 1683×935, всё в долях ширины (cqw) — на любом экране выглядит одинаково ===== */
+.top.hd{display:block;padding:0;margin:0 -8px;border:0;background:none;box-shadow:none;container-type:inline-size;overflow:visible}
+.hdin{position:relative;padding:0 2.4cqw 2.4cqw;border:max(1.5px,.12cqw) solid #27B8E8;border-radius:2.6cqw;background:linear-gradient(180deg,#0F1A33,#0A1226);box-shadow:0 0 2cqw rgba(39,184,232,.3),inset 0 0 2.4cqw rgba(39,184,232,.06)}
+.hdtop{display:flex;justify-content:flex-end;padding:1.3cqw 0 1cqw;border-bottom:1px solid rgba(39,184,232,.35);margin-bottom:1.8cqw}
+.hd .topor{position:static;width:5.4cqw;height:4.2cqw;min-width:28px;min-height:24px;border-radius:.9cqw;border:1px solid #2A5A80;background:#10203A;color:var(--cyan);font-size:max(14px,2.6cqw);display:flex;align-items:center;justify-content:center;padding:0}
+.hdm{display:grid;grid-template-columns:23.4cqw minmax(0,1fr) 40.8cqw;grid-template-areas:"a i r";gap:0;align-items:stretch}
+.hdava{grid-area:a;width:23.4cqw !important;height:24.4cqw !important;border-radius:2.2cqw !important;border:max(1.5px,.15cqw) solid #27B8E8;box-shadow:0 0 1.4cqw rgba(39,184,232,.45);overflow:hidden;align-self:center}
+.hdid{grid-area:i;display:flex;flex-direction:column;justify-content:center;gap:2cqw;min-width:0;padding:0 1.4cqw 0 3.6cqw;border-left:1px solid rgba(39,184,232,.25);margin-left:1.4cqw;border-right:1px solid rgba(39,184,232,.25)}
+.hdid .topid{display:flex;flex-direction:column;align-items:flex-start;background:none;border:0;padding:0;color:inherit;font-family:inherit;text-align:left;cursor:pointer;min-width:0;gap:.6cqw}
+.hdid .nick{font-size:max(14px,4.3cqw);font-weight:800;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hdid .sub{font-size:max(11px,2.4cqw);color:#9FB3D9;white-space:nowrap}
+.hd .stat{justify-content:flex-start;gap:1.1cqw;margin:0}
+.hd .sti{width:7cqw;height:6.8cqw;min-width:24px;min-height:24px;border-radius:1.2cqw;border:1px solid #2A4A70;background:#0E1A30}
+.hd .sti svg{width:3.4cqw;height:3.4cqw;min-width:12px;min-height:12px}
+.hd .sti:not(.on){color:#7FA7D8}
+.hd .sti.on.g{box-shadow:0 0 0 1px #2ECC71,0 0 1.2cqw rgba(46,204,113,.45)}.hd .sti.on.r{box-shadow:0 0 0 1px #FF4D4F,0 0 1.2cqw rgba(255,77,79,.45)}
+.hdr{grid-area:r;display:flex;flex-direction:column;justify-content:center;gap:0;padding:0 0 0 1.4cqw;border:0;margin:0}
+.hdrt{display:flex;align-items:center;gap:2cqw;padding-bottom:1.6cqw;border-bottom:1px solid rgba(39,184,232,.25)}
+.hdrt img{width:9.4cqw;height:9.4cqw;object-fit:contain;filter:drop-shadow(0 0 1cqw rgba(255,140,60,.35))}
+.hdrt b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:max(18px,6.6cqw);line-height:1;background:linear-gradient(180deg,#FFF6D6,#F5C84C 60%,#C98A1E);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .3cqw .8cqw rgba(245,170,40,.4))}
+.hdbal{display:flex;align-items:center;justify-content:space-between;padding:1.4cqw 0;border:0;border-bottom:1px solid rgba(39,184,232,.18)}
+.hdbal>span{color:#9FB3D9;font-size:max(10px,2.3cqw)}
+.hdbal .coins{font-size:max(12px,3.3cqw);gap:1cqw}.hdbal .coins .coin{width:3.6cqw;height:3.6cqw;min-width:13px;min-height:13px}
+.hdteam{display:flex;align-items:center;gap:1.6cqw;margin-top:1.4cqw;min-height:8.4cqw;padding:.8cqw 1.6cqw;border-radius:1.6cqw;border:1px solid #27B8E8;background:linear-gradient(90deg,rgba(39,184,232,.1),rgba(10,18,38,.6));box-shadow:inset 0 0 1.6cqw rgba(39,184,232,.14)}
+.hdteam img{width:6.8cqw;height:6.8cqw;border-radius:1cqw;object-fit:contain;padding-right:1.6cqw;border-right:1px solid rgba(39,184,232,.35);box-sizing:content-box}
+.hdtn{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:max(11px,2.9cqw);letter-spacing:.03em;text-transform:uppercase;color:#fff;display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.hdtn small{font-family:'Noto Sans',sans-serif;font-style:normal;font-weight:600;font-size:max(9px,1.7cqw);letter-spacing:0;text-transform:none;color:var(--gold)}
+.hdfa{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:max(13px,3.4cqw);letter-spacing:.04em;color:#fff;margin:0 auto}
 .hdfa em{color:var(--cyan);font-style:italic}
-.hdgrow{margin-top:12px;padding:10px 12px;border:1px solid rgba(39,184,232,.45);border-radius:12px;background:#0B1428}
-.hdgl{display:flex;align-items:center;gap:10px}
-.hdgl>span{font-size:14px;white-space:nowrap}
-.hdgl .tbar{flex:1;position:relative;height:9px;border-radius:5px;background:#060C1A}
-.hdgl .tbar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#2C7BE5,var(--cyan))}
+.hdgrow{margin-top:2cqw;padding:2.4cqw 2.8cqw;border:1px solid rgba(39,184,232,.45);border-radius:2cqw;background:#0B1428}
+.hdgl{display:flex;align-items:center;gap:2.6cqw}
+.hdgl>span{font-size:max(11px,2.7cqw);white-space:nowrap}
+.hdgl .tbar{flex:1;position:relative;height:max(6px,1.8cqw);border-radius:1cqw;background:#060C1A}
+.hdgl .tbar i{display:block;height:100%;border-radius:1cqw;background:linear-gradient(90deg,#2C7BE5,var(--cyan))}
+.hdgl .tmark{top:-.8cqw;bottom:-.8cqw;width:max(3px,.6cqw);margin-left:-.3cqw}
 .hdgrow.done .tbar i{background:linear-gradient(90deg,#C9962C,var(--gold))}
-.hdgl b{color:var(--cyan);font-size:16px;min-width:40px;text-align:right}
+.hdgl b{color:var(--cyan);font-size:max(13px,3.2cqw);min-width:7cqw;text-align:right}
 .hdgrow.done .hdgl b{color:var(--gold)}
-.hdgrow .tgnext{margin-top:6px;font-size:13px;color:#9FB3D9}
-@media (min-width:600px){
-  .hdm{grid-template-columns:auto 1fr 1.2fr;grid-template-areas:"a i r"}
-  .hdr{border-top:0;padding-top:0;padding-left:14px;border-left:1px solid rgba(39,184,232,.25)}
-  .hdava{width:120px !important;height:120px !important}
-  .hd .topor{position:static;float:right;margin:-2px -2px 6px 8px}
-}
-html.land .top.hd{column-span:all}
+.hdgrow .tgnext{margin-top:1.4cqw;font-size:max(11px,2.6cqw);color:#9FB3D9}
 .hdbal .coins b{color:#FFE7A3;font-weight:800}
-@media (min-width:600px){.hdm{grid-template-columns:auto minmax(0,1fr) minmax(0,1.3fr)}.hdr{margin-right:44px}}
+html.land .top.hd{column-span:all;margin:0}
+html.land .hdin{max-width:none}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -2678,8 +2675,8 @@ const topBar = () => {   // шапка по макету: портрет, ник
   const pt = heroTeam(S, heroIdx(S)), st = S.semi ? { logo: SEMI[S.semi.team][1], name: SEMI_TEAMS[S.semi.team] } : null, tm = pt || st;
   const team = tm ? `<img src="img/team/${tm.logo}.webp" alt=""><span class="hdtn">${esc(tm.name)}${st && !pt ? '<small>контракт</small>' : ''}</span>` : '<span class="hdfa">FREE <em>AGENT</em></span>';
   const k = TIERS.findIndex(t => S.power < t.cap);
-  return `<div class="top hd">
-    <button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
+  return `<div class="top hd"><div class="hdin">
+    <div class="hdtop"><button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button></div>
     <div class="hdm">
       <div class="ava hdava">${faceImg(S.face)}</div>
       <div class="hdid"><button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${esc(S.nick)} ${flagOf(S.country)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400;font-size:.6em">${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="sub">${REGIONS[S.region].name} · ${full}</span></button>${statusHtml(S)}</div>
@@ -2689,7 +2686,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
     </div>
     <div class="hdgrow ${pct >= 100 ? 'done' : ''}"><div class="hdgl"><span>${pct >= 100 ? 'Рост силы завершён' : 'Рост силы'}</span><div class="tbar"><i style="width:${pct.toFixed(1)}%"></i>${TIERS.slice(0, 2).map(t => `<em class="tmark ${S.power >= t.cap ? 'past' : ''}" style="left:${((t.cap - GROW_FROM) / (GROW_TO - GROW_FROM) * 100).toFixed(1)}%" title="Потолок: ${t.name}"></em>`).join('')}</div><b>${Math.round(pct)}%</b></div>
       ${pct < 100 ? `<div class="tgnext">${k === 2 ? 'Сила растёт только на <b>полупрофессиональных</b> турнирах' : k === 1 ? 'Сила растёт на <b>любительских</b> и полупро турнирах' : 'Сила растёт на любых турнирах Бюро'}</div>` : ''}</div>
-  </div>`;
+  </div></div>`;
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
