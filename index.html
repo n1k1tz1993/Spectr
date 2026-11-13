@@ -1030,8 +1030,8 @@ function lgProcess() {
     if (!L.cur) { if (L.wc) wcFinish(L); L.left = 0; continue; }
     for (const m of L.cur) if (!lgHum(L, m.a) && !lgHum(L, m.b)) lgSimMatch(L, m);
   }
-  // неделя закончилась: у завершённых лиг открывается новый драфт
-  G.leagues.forEach((L, r) => { if (L.phase === 'done') G.leagues[r] = Object.assign(newSeason(r, G.week + 1, L), { past: L.past, prevWorlds: L.worlds.map(i => lgTeamName(L, i)) }); });
+  // неделя закончилась: когда доиграли все лиги — перерыв 5 недель (драфт), новый сезон у всех лиг одновременно
+  if (G.leagues.every(L => L.phase === 'done')) G.leagues.forEach((L, r) => { G.leagues[r] = Object.assign(newSeason(r, G.week + 1, L), { past: L.past, prevWorlds: L.worlds.map(i => lgTeamName(L, i)) }); });
   G.lq = null; G.lview = null; G.lann = null; G.week++;
 }
 function lgAfterGame(L, m) {
@@ -1742,6 +1742,7 @@ function lgStatus(L) {
     ? `В лиге ${EU_PRO} про-команд и ${EU_SEMI} полупро: команды по очереди, от сильнейшей, берут бойцов по рейтингу. Свободные места занимают случайные бойцы.`
     : `В драфте 20 мест, в лигу проходят ${LG_SIZE(L.r)} лучших по рейтингу.`);
   if (L.phase === 'RR') return `Сезон ${L.season} · регулярный сезон, сыграно туров: ${L.ri} из ${L.sched.length}.`;
+  if (L.phase === 'done') return `Сезон ${L.season} окончен. Ждём, пока доиграют остальные лиги, затем перерыв ${DRAFT_WEEKS} недель и драфт нового сезона.`;
   return `Сезон ${L.season} · ${LG_STAGE[L.phase] || ''}`;
 }
 function wcCardHtml() {   // карточка Wild Card в бюро
