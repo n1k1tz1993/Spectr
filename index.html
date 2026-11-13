@@ -286,6 +286,8 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .caricon{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;background:var(--nest);font-size:24px}
 .carrow{display:flex;gap:10px;align-items:center}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
+.gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
+.gph b{font-size:56px}
 .rtag{position:absolute;left:8px;bottom:8px;line-height:1.3;font-size:12px;background:rgba(0,0,0,.55);color:#fff;padding:3px 8px;border-radius:8px}
 .item.prestige{background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(140,60,220,.14))}
 .item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
@@ -816,11 +818,17 @@ const CARS = [
   { n: 'Norden X8', cost: 2000, a: 1, img: 'norden', kind: 'Внедорожник премиум-класса' },
   { n: 'Vesper GT', cost: 3000, a: 1, img: 'vesper', kind: 'Спорткар гран-туризмо' },
   { n: 'Astrion R1', cost: 4500, a: 1, img: 'astrion', kind: 'Гиперкар' },
-  { n: 'Вертолёт', cost: 7000, a: 2, kind: 'Личный вертолёт', emo: '🚁' }
+  { n: 'Вертолёт', cost: 7000, a: 2, kind: 'Личный вертолёт', emo: '🚁' },
+  { n: 'Bravik T6', cost: 1800, a: 1, img: 'bravik', kind: 'Рамный внедорожник' },
+  { n: 'Korvex R9', cost: 2600, a: 1, img: 'korvex', kind: 'Экспедиционный внедорожник' },
+  { n: 'Alvera L7', cost: 2200, a: 1, img: 'alvera', kind: 'Кроссовер бизнес-класса' },
+  { n: 'Raveno S2', cost: 2500, a: 1, img: 'raveno', kind: 'Спортивное купе' }
 ];
+const CAR_ORDER = CARS.map((_, j) => j).sort((a, b) => CARS[a].cost - CARS[b].cost);   // в магазине — по цене
 const carIcon = j => CARS[j].img ? `<img class="caricon" src="img/car/${CARS[j].img}_icon.webp" alt="">` : `<span class="caricon ph">${CARS[j].emo || '🚗'}</span>`;
-const carLvl = H => (H.cars || []).filter(j => CARS[j] && CARS[j].img).reduce((m, j) => Math.max(m, j + 1), 0);   // в гараже — самый дорогой транспорт с картинкой   // в гараже — самая дорогая машина; 0 — гараж пуст
-const carBonus = H => (H.cars || []).reduce((m, j) => Math.max(m, CARS[j] ? CARS[j].a : 0), 0);
+// бонус даёт только то, что стоит в гараже (H.garage); смена — со следующей недели
+const garageOf = H => H.garage != null && (H.cars || []).includes(H.garage) && CARS[H.garage] ? H.garage : null;
+const carBonus = H => { const g = garageOf(H); return g == null ? 0 : CARS[g].a; };
 const maxActs = H => 3 + carBonus(H);
 const actWord = n => n === 1 ? 'действие' : n < 5 ? 'действия' : 'действий';
 const hasRoom = (H, k) => (H.rooms || []).includes(k);
@@ -830,11 +838,12 @@ const roomOf = k => k < 0 ? BASE_ROOM : ROOMS[k];
 const roomImg = (k, v) => `img/room/${k < 0 ? 'base' : k}_${v}.webp`;
 function roomHtml() {
   const own = [-1, ...(S.rooms || [])];
-  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = (S.roomPic | 0) % 3, cl = carLvl(S);
-  const ph = v === 2 ? (cl ? esc(CARS[cl - 1].n) : 'Гараж пуст') : esc(roomOf(k).n);
-  const src = v === 2 ? 'img/room/garage.webp' : roomImg(k, v), car = v === 2 && cl && CARS[cl - 1].img;
-  return `<div class="room ${v === 2 ? 'garage' : ''}" data-a="rpic"><div class="roomph">${car ? '' : ph + '<br>' + ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">${car ? `<img class="rcar" src="img/car/${car}.webp" alt="${esc(CARS[cl - 1].n)}">` : ''}
-      <div class="rtag">${ROOM_PICS[v]} · нажми, чтобы сменить</div></div>
+  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = (S.roomPic | 0) % 3, g = garageOf(S);
+  const src = v === 2 ? 'img/room/garage.webp' : roomImg(k, v), car = v === 2 && g != null && CARS[g].img;
+  const label = v === 2 && g != null && !car ? `<div class="gph"><b>${CARS[g].emo || ''}</b>${esc(CARS[g].n)}</div>` : '';
+  const gsel = v === 2 && (S.cars || []).length ? `<div class="dim" style="margin-top:8px">Что поставить в гараж (бонус — только у него, смена со следующей недели):</div><div class="row" style="margin-top:6px;gap:6px">${CAR_ORDER.filter(j => S.cars.includes(j)).map(j => `<button class="btn ${j === g ? 'here' : ''}" data-a="gsel" data-v="${j}" style="width:auto;flex:1 1 30%;text-align:center;font-size:13px;margin:0">${esc(CARS[j].n)} · +${CARS[j].a}</button>`).join('')}</div>` : '';
+  return `<div class="room ${v === 2 ? 'garage' : ''}" data-a="rpic"><div class="roomph">${esc(v === 2 ? 'Гараж' : roomOf(k).n)}<br>${ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">${car ? `<img class="rcar" src="img/car/${car}.webp" alt="${esc(CARS[g].n)}">` : ''}${label}
+      <div class="rtag">${ROOM_PICS[v]}${v === 2 ? (g != null ? ' · ' + esc(CARS[g].n) : ' · пусто') : ''} · нажми, чтобы сменить</div></div>${gsel}
     ${own.length > 1 ? `<div class="row" style="margin-top:8px;gap:6px">${own.slice().sort((a, b) => a - b).map(j => `<button class="btn ${j === k ? 'here' : ''}" data-a="rsel" data-v="${j}" style="width:auto;flex:1 1 45%;text-align:center;font-size:13px;margin:0">${esc(roomOf(j).n)}</button>`).join('')}</div>` : ''}`;
 }
 const itemIcon = (H, i) => artImg(i);
@@ -865,6 +874,7 @@ function fixHero(v) {   // старые сохранения героя
   if (!v.tiers) { v.tiers = [0, 0, 0, 0, 0]; v.tiers[v.region || 0] = v.tier || 0; }
   if (!v.troph) v.troph = (v.trophies || []).map(n => ({ r: v.region || 0, n }));
   if (!v.hist) v.hist = [];
+  if (v.cars && v.cars.length && v.garage == null) v.garage = v.cars.slice().sort((a, b) => (CARS[b] ? CARS[b].a * 1e5 + CARS[b].cost : 0) - (CARS[a] ? CARS[a].a * 1e5 + CARS[a].cost : 0))[0];
   if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
   if (v.face == null) v.face = 0;
   return v;
@@ -924,7 +934,7 @@ const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
 const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
 function endTurn() {
   S.lgBonus = heroPower(S) - S.power - gameBonus(S);   // бонусы и минусы на конец своей недели — с ними играются матчи лиги (бонус на бой — отдельно)
-  S.turn++; S.actions = maxActs(S);
+  S.turn++; S.actions = S.weekMax = maxActs(S);
   S.effects = S.effects.filter(e => e.game || e.to >= S.turn);
   S.hand = drawHand();
   S.view = 'main'; S.sel = null;
@@ -2346,7 +2356,7 @@ function navBar() {
 }
 function viewMain() {
   const done = S.actions <= 0;
-  const MA = maxActs(S), ind = [...Array(Math.max(MA, S.actions)).keys()].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
+  const MA = S.weekMax || maxActs(S), ind = [...Array(Math.max(MA, S.actions)).keys()].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
   const rows = S.hand.length
     ? S.hand.map((c, i) => { const E = c.used ? { cls: 'nt', kind: 'Выполнено' } : cardExpect(c); return `<button class="arow ${c.used ? 'done' : ''}" data-a="card" data-v="${i}" ${c.used ? 'disabled' : ''}>${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${descOf(c) ? esc(descOf(c)) : TEXT}</div><div class="tag ${E.cls}">${E.kind}</div></div></button>`; }).join('')
     : '<div class="dim">Все действия этой недели выполнены.</div>';
@@ -2661,6 +2671,10 @@ const LIB_NOTES = [
   { t: "Призовой фонд ESL ONE", d: "ESL ONE — турнир, на котором организаторы разыгрывают очки рейтинга. Победитель получает щедрую долю общего фонда, а вместе с ней — внимание скаутов и корпораций. Поэтому за приглашение на ESL ONE Спектры готовы бороться не меньше, чем за сам титул." },
   { t: "Разрыв потока", d: "Иногда, не справившись со своей силой, Спектр может потерять контроль над потоком Цы. Потеря контроля делает Спектра совершенно беззащитным. Урон от двух своих атак получает тот, у кого получилось нанести три крита подряд." },
   { t: "Veltor", img: "img/car/veltor_logo.webp", d: "Veltor — самый массовый автобренд мира Спектров. Его серебряную букву V с бирюзовой вставкой видно на каждой улице. Седан Veltor S4 — первая машина почти любого молодого Спектра: удобный, экономичный и достаточно быстрый, чтобы успеть из Бюро на арену. Бирюзовые огни на бампере светятся в цвет потока Цы." },
+  { t: "Bravik", img: "img/car/bravik_logo.webp", d: "Bravik — марка из тайги, где дороги заканчиваются раньше, чем начинаются. На решётке рычит медведь, и машина ему под стать: рамный Bravik T6 с огромными колёсами проходит болота, броды и завалы после бурь. Охотники за рудой ценят его за то, что он заводится в любой мороз." },
+  { t: "Korvex", img: "img/car/korvex_logo.webp", d: "Korvex строит машины для экспедиций. Бронзовые горные пики на эмблеме — знак тех, кто первым поднимался к местам падения осколков. Korvex R9 несёт на крыше багажник, лебёдку и прожекторы и может неделями жить вдали от городов. Бюро закупает такие для разведки новых залежей руды." },
+  { t: "Alvera", img: "img/car/alvera_logo.webp", d: "Alvera — тихая роскошь. Её эмблема — переплетённая буква A из серебряных лент. Кроссовер Alvera L7 в цвете глубокого изумруда с бронзовой отделкой выбирают менеджеры корпораций и Спектры, которые хотят выглядеть солидно, а не громко. Внутри так тихо, что слышно, как течёт Цы." },
+  { t: "Raveno", img: "img/car/raveno_logo.webp", d: "Raveno — бренд молодых и дерзких. Белая хищная птица на капоте и яркие цвета кузова сразу выдают владельца. Купе Raveno S2 лёгкое и цепкое на поворотах, а его рёв узнают фанаты у стадионов. Многие Спектры покупают его после первой крупной победы." },
   { t: "Norden", img: "img/car/norden_logo.webp", d: "Norden — концерн с севера континента, выросший из мастерских, что чинили технику для экспедиций за метеоритной рудой. Его эмблема — горная вершина на щите. Внедорожник Norden X8 строят для тундры, бездорожья и ледяных трасс, а кузов усилен так, что выдерживает удар осколков руды. Спектры берут его за надёжность: X8 довезёт до арены в любую погоду." },
   { t: "Vesper", img: "img/car/vesper_logo.webp", d: "Vesper — европейское ателье, где машины собирают вручную, как часы. Золотой сокол на капоте знают на всех трассах континента. Vesper GT — гран-туризмо для долгих переездов между аренами: кожаный салон, мягкий ход и мотор, который просыпается от одного касания педали. Говорят, в каждой машине прячется крошечная вставка из руды — на удачу владельцу." },
   { t: "Astrion", img: "img/car/astrion_logo.webp", d: "Astrion — молодой бренд, который первым поставил метеоритную руду в сердце машины. Серебряная четырёхконечная звезда на носу означает падение метеорита. Гиперкар Astrion R1 питается накопителями из руды и разгоняется так, что пассажира вдавливает в кресло, как удар Спектра. Машин выпускают мало, и очередь на них расписана на годы вперёд." }
@@ -2693,7 +2707,7 @@ function viewShop() {   // магазин: только названия и це
   return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются рейтингом. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
-    <div class="card"><h3>Машины и вертолёт</h3><div class="dim">Транспорт стоит в гараже и даёт дополнительные действия в неделю: любая машина +1, вертолёт +2. Бонусы не складываются — работает лучший.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `${C2.kind ? C2.kind + ' · ' : ''}+${C2.a} ${actWord(C2.a)} в неделю`, carIcon(j))).join('')}</div>
+    <div class="card"><h3>Машины и вертолёт</h3><div class="dim">Купить можно что угодно, но бонус даёт только то, что стоит в гараже: машина +1 действие в неделю, вертолёт +2. Выбрать транспорт для гаража можно в комнате.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `${C2.kind ? C2.kind + ' · ' : ''}+${C2.a} ${actWord(C2.a)} в неделю`, carIcon(j))).join('')}</div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>` + back);
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
@@ -3207,8 +3221,10 @@ function act(a, v) {
     case 'room': S.inRoom = !S.inRoom; break;
     case 'rpic': S.roomPic = ((S.roomPic | 0) + 1) % 3; break;
     case 'rsel': S.room = +v; S.roomPic = 0; break;
-    case 'cbuy': { const j = +v; S.cars = S.cars || []; if (S.cars.includes(j) || S.rating < CARS[j].cost) return; const was = carBonus(S); S.rating -= CARS[j].cost; S.cars.push(j);
-      S.actions += carBonus(S) - was; S.roomPic = 2; logMsg(`Куплена машина: ${CARS[j].n}. Теперь ${maxActs(S)} действий в неделю.`); break; }
+    case 'cbuy': { const j = +v; S.cars = S.cars || []; if (S.cars.includes(j) || S.rating < CARS[j].cost) return; S.rating -= CARS[j].cost; S.cars.push(j);
+      if (garageOf(S) == null) { S.garage = j; S.actions += CARS[j].a; S.weekMax = maxActs(S); }   // пустой гараж — бонус сразу
+      S.roomPic = 2; logMsg(`Куплено: ${CARS[j].n}.${S.garage === j ? ' Стоит в гараже.' : ' Поставить в гараж можно в комнате.'}`); break; }
+    case 'gsel': { const j = +v; if (!(S.cars || []).includes(j) || S.garage === j) return; S.garage = j; logMsg(`В гараже теперь ${CARS[j].n}. Со следующей недели — ${maxActs(S)} ${actWord(maxActs(S))} в неделю.`); break; }
     case 'shop': S.view = 'shop'; break;
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
