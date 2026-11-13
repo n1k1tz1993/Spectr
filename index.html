@@ -1439,7 +1439,17 @@ const ABIL_LIST = [   // способности соперников: назва
   ['Пылающий шквал', 'обрушивает шквал пылающих ударов'], ['Теневой рывок', 'исчезает в тени и бьёт со спины'],
   ['Метеоритный кулак', 'врезается в противника, как метеорит'], ['Вихрь клинков', 'окружает врага вихрем клинков'],
   ['Пульс бездны', 'выпускает пульс тёмной энергии'], ['Звёздный град', 'обрушивает град звёздных осколков'],
-  ['Багровая волна', 'накрывает врага багровой волной'], ['Призрачный каскад', 'наносит каскад призрачных ударов']
+  ['Багровая волна', 'накрывает врага багровой волной'], ['Призрачный каскад', 'наносит каскад призрачных ударов'],
+  ['Небесный молот', 'обрушивает на врага сияющий молот'], ['Клык дракона', 'вонзает в противника огненный клык'],
+  ['Шёпот пустоты', 'стирает защиту врага беззвучной волной'], ['Грозовой клинок', 'рассекает воздух клинком из молний'],
+  ['Кровавая луна', 'призывает багровый свет луны'], ['Стальной смерч', 'превращается в вихрь из стали'],
+  ['Песчаная буря', 'ослепляет врага бурей песка и бьёт сквозь неё'], ['Сердце вулкана', 'выпускает поток раскалённой лавы'],
+  ['Лунный серп', 'режет пространство серебряным серпом'], ['Рёв титана', 'сбивает врага с ног оглушительным рёвом'],
+  ['Осколки зеркал', 'осыпает противника градом зеркальных осколков'], ['Цепи бездны', 'опутывает врага тёмными цепями'],
+  ['Удар кометы', 'падает на врага с неба, как комета'], ['Ядовитый туман', 'окутывает противника ядовитой дымкой'],
+  ['Шторм ветров', 'поднимает врага в воздух ураганом'], ['Неоновый разряд', 'бьёт ослепительной неоновой молнией'],
+  ['Танец тени', 'исчезает и бьёт с пяти сторон сразу'], ['Гнев феникса', 'вспыхивает огненными крыльями'],
+  ['Ледяной трон', 'вмораживает врага в ледяную глыбу'], ['Разрыв реальности', 'раскалывает пространство вокруг врага']
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
 const FACE_COUNT = 54;   // портреты: img/face/0..53.webp (выбор героя и сгенерированные бойцы)
@@ -3303,6 +3313,13 @@ function viewFlight() {
     </div>${back}`);
 }
 let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0, setupFace = 0;
+const setupRandom = () => {   // кнопка «Случайно»: ник, флаг, способность и иконка
+  const used = new Set((SETUP ? SETUP.made : []).map(H => H.nick.toLowerCase())), pool = GEN_NAMES.filter(n => !used.has(n.toLowerCase()) && n.toLowerCase() !== setupNick.toLowerCase());
+  setupNick = pool[rnd(0, pool.length - 1)];
+  const fl = Object.keys(COUNTRIES); setupFlag = fl[rnd(0, fl.length - 1)];
+  const ab = ABIL_LIST.filter(x => x[0] !== setupAName), a = ab[rnd(0, ab.length - 1)];
+  setupAName = a[0]; setupADesc = a[1]; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupErr = '';
+};
 const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupFace = rnd(0, FACE_COUNT - 1); };
 function viewMenu() {
   const solo = loadGame('solo'), coop = loadGame('coop');
@@ -3330,7 +3347,7 @@ function viewHandoff() {
 }
 function viewSetup() {
   const who = SETUP && SETUP.mode === 'coop' ? `<div class="dim">Игрок ${SETUP.made.length + 1} из ${SETUP.n}</div>` : '';
-  return `<div class="card" style="margin-top:24px">${who}<h2>Создание персонажа</h2>
+  return `<div class="card" style="margin-top:24px">${who}<div class="row" style="align-items:center;flex-wrap:nowrap;margin-bottom:10px"><h2 style="flex:1;margin:0">Создание персонажа</h2><button class="btn gold" data-a="srnd" style="width:auto;flex:0 0 auto;padding:8px 14px">🎲 Случайно</button></div>
     <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
       <div style="flex:0 0 140px;text-align:center"><button class="faceone" data-a="sface" aria-label="Сменить портрет">${faceImg(setupFace)}</button><div class="dim" style="font-size:12px;margin-top:4px">Нажми, чтобы сменить (${setupFace + 1} из ${FACE_COUNT})</div></div>
       <div style="flex:1"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}"></div>
@@ -3659,6 +3676,7 @@ function act(a, v) {
       case 'flag': setupFlag = v; setupErr = ''; break;
       case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
       case 'sface': setupFace = (setupFace + 1) % FACE_COUNT; break;       // нажатие — следующий портрет
+      case 'srnd': if (!SETUP) return; setupRandom(); break;
       case 'start': {
         if (!SETUP) return;
         const nick = setupNick.trim();
