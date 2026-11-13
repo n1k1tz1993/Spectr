@@ -249,8 +249,15 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .tcell{display:inline-flex;align-items:center;gap:6px;text-align:left;line-height:1.15}
 .tcell .dim{font-size:11px}
 .ltbl td{vertical-align:middle}
-.ltbl tr.z1 td:first-child{color:var(--gold);font-weight:700}
-.ltbl tr.z2 td:first-child{color:#7DE8FF}
+.tbl tr.z1 td{background:rgba(101,217,121,.17)}
+.tbl tr.z2 td{background:rgba(245,200,76,.14)}
+.tbl tr.z3 td{background:rgba(255,110,100,.13)}
+.tbl tr.soft td{background-color:transparent}
+.tbl tr.z1.soft td:first-child{box-shadow:inset 3px 0 0 #65D979}.tbl tr.z2.soft td:first-child{box-shadow:inset 3px 0 0 #F5C84C}.tbl tr.z3.soft td:first-child{box-shadow:inset 3px 0 0 #FF6E64}
+.tbl tr.z1 td:first-child{box-shadow:inset 3px 0 0 #65D979}.tbl tr.z2 td:first-child{box-shadow:inset 3px 0 0 #F5C84C}.tbl tr.z3 td:first-child{box-shadow:inset 3px 0 0 #FF6E64}
+.zleg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin:2px 4px 12px}
+.zleg span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.zleg .z1::before{background:#65D979}.zleg .z2::before{background:#F5C84C}.zleg .z3::before{background:#FF6E64}
 .erow{display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--nest);color:var(--txt);font-family:inherit;font-size:14px;cursor:pointer}
 .erow.on{border-color:var(--gold);background:rgba(245,197,66,.08)}
 .erow .ava{width:34px;height:34px}
@@ -427,7 +434,7 @@ html.land .fza b{font-size:14px}
 .bks span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bks b{min-width:14px;text-align:right}
 .bks.win{background:rgba(101,217,121,.14)}.bks.win b{color:var(--good)}
-.bks.lose{opacity:.5}
+.bks.lose{background:rgba(255,110,100,.13)}.bks.lose span,.bks.lose b{opacity:.65}
 .bks.me span{color:var(--gold);font-weight:800}
 .bks.tbd span{color:var(--dim)}
 .bkc.champ .bkp{border-color:var(--gold)}
@@ -711,6 +718,15 @@ html.land .fyk{grid-column:3;grid-row:1}
 html.land .fyl #fend{grid-row:2}
 html.land .fzlast{position:absolute;right:180px;bottom:8px}
 html.land .fyl .flog{max-height:110px}
+
+.fyico{position:relative;flex:0 0 auto;display:block;line-height:0}
+.fyico em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:10px;font-style:normal;font-weight:900;font-size:24px;line-height:1;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000;padding:0;border:0;min-width:0;box-shadow:none;background:transparent}
+.fyico em.cd{background:rgba(0,0,0,.55)}
+.fyico em.noqi{background:rgba(20,40,90,.55)}
+.fyico em.ok{box-shadow:0 0 0 2px #3FCF5A,0 0 14px rgba(63,207,90,.6)}
+.fyico em.act{box-shadow:0 0 0 2px var(--gold),0 0 14px rgba(245,200,76,.6)}
+.fya.cd .aic{filter:none}
+.fyico .aic{display:block}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -2256,6 +2272,15 @@ const regionNames = r => {   // уже перемешаны: в регионе �
   while (a.length || b.length) { if (a.length) out.push(a.shift()); if (b.length) out.push(b.shift()); }
   return out;
 };
+// зоны таблиц как на Liquipedia: зелёный — прошёл дальше, жёлтый — ещё борется (плей-ин/решающая серия), красный — выбыл
+const GROUP_ST = k => k === 'GS' || k.startsWith('SW') || k.startsWith('DH') || k.startsWith('TB');
+function tZone(R, id, pos, direct, upTo) {
+  const groupDone = R.stages.some(k => !GROUP_ST(k)) || R.done;
+  if (!groupDone) return pos < direct ? 'z1 soft' : pos < upTo ? 'z2 soft' : 'z3 soft';
+  const inKO = R.M.some(m => ['QF', 'SF', 'F', 'PI'].includes(m.st) && (m.a === id || m.b === id));
+  return inKO ? 'z1' : R.alive.includes(id) ? 'z2' : 'z3';
+}
+const ZONE_LEGEND = '<div class="zleg"><span class="z1">прошёл дальше</span><span class="z2">плей-ин</span><span class="z3">выбыл</span></div>';
 const KO_PLAN = { se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
 const FMT = {
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
@@ -3185,7 +3210,7 @@ function fzCard(x, id) {   // карточка бойца по макету: п�
     ${fyAb(x, id).replace(/id="(f[ab])-(ab|acd)"/g, 'data-id="$1-$2"')}
   </div>`;
 }
-const fyAb = (x, id) => { const ab = `${abilIcon(x.abil.icon)}<span class="fyat"><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i></span><em id="${id}-acd"></em>`;
+const fyAb = (x, id) => { const ab = `<span class="fyico">${abilIcon(x.abil.icon)}<em id="${id}-acd"></em></span><span class="fyat"><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i></span>`;
   return x.me ? `<button class="fya ${id}" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${ab}</button>` : `<div class="fya ${id} opp" id="${id}-ab">${ab}</div>`; };
 function viewFight() {
   if (!F) { S.view = S.trun ? 'trun' : 'main'; return S.trun ? viewTRun() : viewMain(); }
@@ -3210,8 +3235,9 @@ function fightPaint() {
     const ready = !F.done && x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct;
     const st = document.getElementById(id + '-acd');
     const active = x.abT != null && F.t - x.abT < 0.8;
-    st.textContent = active ? 'Активна' : x.rest > 0 ? 'Передышка ' + x.rest.toFixed(1) + ' с' : x.acd > 0 ? 'Перезарядка ' + Math.ceil(x.acd) + ' с' : ready ? 'Готово' : 'Недостаточно Цы';
-    st.className = active ? 'act' : ready ? 'ok' : '';
+    st.textContent = active ? '' : x.rest > 0 ? Math.ceil(x.rest) : x.acd > 0 ? Math.ceil(x.acd) : '';   // как в WoW: секунды до отката поверх иконки
+    st.className = active ? 'act' : ready ? 'ok' : x.rest > 0 || x.acd > 0 ? 'cd' : 'noqi';
+    st.title = active ? 'Активна' : x.rest > 0 ? 'Передышка' : x.acd > 0 ? 'Перезарядка' : ready ? 'Готово' : 'Недостаточно Цы';
     const sq = document.getElementById(id + '-sq');
     if (sq) { sq.classList.toggle('cd', !ready && !active); sq.classList.toggle('ready', ready); sq.classList.toggle('act', active); const t = document.getElementById(id + '-sqst'); t.textContent = st.textContent; }
     document.getElementById(id + '-ab').classList.toggle('cd', !ready);
@@ -3279,9 +3305,10 @@ function viewTRun() {
       <button class="btn" data-a="tauto" style="text-align:center">Досчитать турнир</button><div class="dim" style="margin-top:4px">Все оставшиеся бои сыграются автоматически, без твоего участия.</div></div>`;
   }
   const lead = h; h = '';
-  if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
-  if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
-  if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
+  if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr class="${tZone(R, r.id, i, 1, 3)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
+  if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr class="${tZone(R, r.id, i, 2, 2)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
+  if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr class="${tZone(R, r.id, i, 2, 6)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
+  if (h) h += ZONE_LEGEND;
   const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW') || m.st.startsWith('DH')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
   if (myGroup.length) h += `<div class="card"><h3>${hums.length > 1 ? 'Бои игроков в группе' : 'Твои бои в группе'}</h3>${myGroup.map(series).join('')}</div>`;
   const groups = h; h = '';
@@ -3379,15 +3406,15 @@ function viewLTable() {
   } else {
     if (L.fmt === 'eu40' || L.fmt === 'ru20') {
       const ru = L.fmt === 'ru20', piTo = ru ? 6 : 5;
-      h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 1 ? 'z1' : k < piTo ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('')
-        + (ru ? `<div class="card dim">Bo1 в два круга. 1-е место — сразу в полуфинал, места 2–6 играют плей-ин Bo3 (5-е с 6-м, затем 3-е с 4-м и 2-е с победителем, затем финал), из группы выходит один. Полуфинал и финал Bo5. Топ-3 — на чемпионат мира, последние 4 места групп — в первый этап Wild Card.</div>`
+      h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 1 ? 'z1' : k < piTo ? 'z2' : 'z3'}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('')
+        + ZONE_LEGEND.replace('прошёл дальше', 'сразу в плей-офф').replace('выбыл', 'сезон окончен') + (ru ? `<div class="card dim">Bo1 в два круга. 1-е место — сразу в полуфинал, места 2–6 играют плей-ин Bo3 (5-е с 6-м, затем 3-е с 4-м и 2-е с победителем, затем финал), из группы выходит один. Полуфинал и финал Bo5. Топ-3 — на чемпионат мира, последние 4 места групп — в первый этап Wild Card.</div>`
           : `<div class="card dim">Bo1 в два круга. 1-е место — сразу в плей-офф, 2–5 — плей-ин Bo3 с нижней сеткой, из него выходит один. Плей-офф и финал Bo5. Топ-3 — на чемпионат мира.</div>`);
       for (const st of ru ? ['RPA', 'RPB', 'RPC', 'SF', 'F'] : ['EPA', 'EPB', 'EPC', 'EPD', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => (m.label ? `<div class="dim" style="font-size:12px;margin-top:6px">${esc(m.label)}</div>` : '') + lgSeries(L, m)).join('')}</div>`; }
       return wrap(h);
     }
     const t = lgTable(L);
-    h += `<div class="card"><h3>Таблица</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-Н-П</td><td>О</td></tr>${t.map((x, k) => `<tr class="${k < 2 ? 'z1' : k < (L.fmt === 'kr12' ? 6 : 10) ? 'z2' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.d}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table>
-      <div class="dim" style="margin-top:6px">${L.fmt === 'kr12' ? 'Bo1 в два круга. 1–2 — сразу в полуфинал, 3–6 — плей-ин Bo3 (3-е с 6-м, 4-е с 5-м) за два места.' : '1–2 — сразу в полуфинал, 3–10 — плей-ин.'} Топ-3 по итогам — на чемпионат мира.</div></div>`;
+    h += `<div class="card"><h3>Таблица</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-Н-П</td><td>О</td></tr>${t.map((x, k) => `<tr class="${k < 2 ? 'z1' : k < (L.fmt === 'kr12' ? 6 : 10) ? 'z2' : 'z3'}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.d}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table>
+      ${ZONE_LEGEND.replace('прошёл дальше', 'сразу в плей-офф').replace('выбыл', 'сезон окончен')}<div class="dim" style="margin-top:6px">${L.fmt === 'kr12' ? 'Bo1 в два круга. 1–2 — сразу в полуфинал, 3–6 — плей-ин Bo3 (3-е с 6-м, 4-е с 5-м) за два места.' : '1–2 — сразу в полуфинал, 3–10 — плей-ин.'} Топ-3 по итогам — на чемпионат мира.</div></div>`;
     for (const st of ['KP', 'PI1', 'PI2', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   }
   return wrap(h);
