@@ -10,6 +10,21 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:Rubik,system-ui,-apple-system,sans-serif;min-height:100vh}
 #app{max-width:520px;margin:0 auto;padding:12px 16px 40px}
+/* ориентация: кнопка поворота и альбомная раскладка (две колонки, бой — поле слева, журнал справа) */
+#orient{position:fixed;right:10px;bottom:10px;z-index:50;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(20,26,44,.9);color:var(--gold);font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+html.land #app{max-width:1240px;column-count:2;column-gap:16px;padding-top:4px}
+html.land #app>*{break-inside:avoid}
+html.land #app>.card,html.land #app>.btn{display:block}
+html.land #app>.card:first-child{column-span:all}
+html.land #app[data-view=fight],html.land #app[data-view=setup],html.land #app[data-view=menu]{column-count:1}
+html.land #app[data-view=menu],html.land #app[data-view=setup]{max-width:760px}
+html.land .ffwrap{max-width:1240px;display:flex;gap:16px;align-items:flex-start}
+html.land .ffbox{flex:0 0 auto;width:min(58vw,calc(100vh - 16px))}
+html.land .ffbot{flex:1;min-width:0;padding-top:8px}
+html.rot{overflow:hidden}
+html.rot body{overflow:hidden}
+html.rot #stage{position:fixed;top:0;left:100vw;width:100vh;height:100vw;transform:rotate(90deg);transform-origin:top left;overflow:auto;background:var(--bg)}
+html.rot #orient{right:auto;left:10px;bottom:10px;transform:rotate(90deg)}
 .top{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px}
 .ava{width:44px;height:44px;border-radius:10px;background:var(--bg);overflow:hidden;flex:0 0 auto;border:1px solid var(--line)}
 .ava img{width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block}
@@ -238,11 +253,34 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .item.prestige{background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(140,60,220,.14))}
 .item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
 </style></head>
-<body><div id="app"></div>
+<body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
 'use strict';
 const SKEY = { solo: 'spektr.v2', coop: 'spektr.coop' };   // одиночная карьера и совместная игра хранятся отдельно
 const app = document.getElementById('app');
+// ---------- ориентация экрана: книжная или альбомная (для стрима на телевизор) ----------
+let ORIENT = 'port';
+try { ORIENT = localStorage.getItem('spektr.orient') || 'port'; } catch (e) {}
+const stageTop = () => { const st = document.getElementById('stage'); if (st) st.scrollTop = 0; };
+function applyOrient() {
+  const want = ORIENT === 'land', tall = window.innerHeight > window.innerWidth;
+  const html = document.documentElement;
+  html.classList.toggle('land', want);
+  html.classList.toggle('rot', want && tall);   // телефон не повернулся сам — поворачиваем картинку
+}
+async function toggleOrient() {
+  ORIENT = ORIENT === 'land' ? 'port' : 'land';
+  try { localStorage.setItem('spektr.orient', ORIENT); } catch (e) {}
+  try {   // на Android: полноэкранный режим и настоящий поворот экрана
+    if (ORIENT === 'land' && !document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+    if (screen.orientation && screen.orientation.lock) await screen.orientation.lock(ORIENT === 'land' ? 'landscape' : 'portrait');
+  } catch (e) {}
+  setTimeout(applyOrient, 300); applyOrient();
+}
+window.addEventListener('resize', applyOrient);
+window.addEventListener('orientationchange', () => setTimeout(applyOrient, 300));
+document.getElementById('orient').addEventListener('click', toggleOrient);
+applyOrient();
 let S = null;      // текущий герой (тот, чья сейчас неделя)
 let G = null;      // игра: { v: 3, mode: 'solo' | 'coop', players: [герои], cur, handoff }
 let SETUP = null;  // создание героев: { mode, n, made: [] }
@@ -2219,12 +2257,13 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
 const VIEWS = { wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
+  app.dataset.view = !G ? (SETUP ? 'setup' : 'menu') : G.lq ? (F ? 'fight' : 'lturn') : G.handoff ? 'handoff' : (S.view || 'main');
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
-  if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); } lastView = null; return; }
-  if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); lastView = null; return; }
+  if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); stageTop(); } lastView = null; return; }
+  if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); stageTop(); lastView = null; return; }
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
-  if (S.view !== lastView) { window.scrollTo(0, 0); lastView = S.view; }   // новый экран всегда с верха
+  if (S.view !== lastView) { window.scrollTo(0, 0); stageTop(); lastView = S.view; }   // новый экран всегда с верха
   fightLoop();
 }
 
