@@ -766,7 +766,8 @@ function lgPool(r) {   // все 20 бойцов региона, сильней�
   const n = proCount(r), pros = base.slice(0, n).sort((a, b) => b.p - a.p);
   return (LPOOL[r] = pros.concat(base.slice(n)));
 }
-const newSeason = (r, week, prev) => ({ r, season: prev ? prev.season + 1 : 1, phase: 'draft', draftEnd: week + DRAFT_WEEKS - 1, teams: null, M: [], sched: null, ri: 0, left: 0, champ: null, worlds: [] });
+const BREAK_WEEKS = 10;   // перерыв после чемпионата мира: драфт нового сезона открыт все эти недели
+const newSeason = (r, week, prev, brk) => ({ r, season: prev ? prev.season + 1 : 1, phase: 'draft', draftEnd: week + (brk || DRAFT_WEEKS) - 1, teams: null, M: [], sched: null, ri: 0, left: 0, champ: null, worlds: [] });
 const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues = REGIONS.map((_, r) => newSeason(r, 1)); };
 const heroIdx = H => G.players.indexOf(H);
 // бонус команды к силе бойца: от +20 у сильнейшей до +1 у слабейшей
@@ -892,6 +893,7 @@ const lgStage = (L, st) => L.M.filter(m => m.st === st);
 const lgAdd = (L, st, a, b, bo, label) => { const m = { st, a, b, bo, g: [], done: false, w: null, wk: G.week, label: label || '' }; L.M.push(m); return m; };
 function lgNextRound(L) {   // создать следующий «матч лиги» (тур или стадию плей-офф); null — сезон закончен
   if (L.wc) return wcNext(L);
+  if (L.wf) return wfNext(L);
   const win = st => lgStage(L, st).map(m => m.w);
   if (L.fmt === 'eu40' && L.phase !== 'SF' && L.phase !== 'F' && !(L.phase === 'RR' && L.ri < L.sched.length)) return lgNextEU(L);
   if (L.phase === 'RR') {
@@ -915,13 +917,14 @@ function wcCollect(L) {   // кто из лиги идёт в Wild Card
   if (L.fmt === 'eu40') L.groups.forEach((_, g) => lgGroupTable(L, g).slice(-2).forEach(x => last.add(x.i)));
   else order.slice(-2).forEach(i => last.add(i));
   const ent = i => { const T = L.teams[i]; return { h: T.h, f: T.f, bonus: T.bonus, name: T.name, logo: T.logo, r: L.r }; };
-  G.wcPool = G.wcPool || {};
-  G.wcPool[L.r] = { s1: order.filter(i => last.has(i) && !L.worlds.includes(i)).map(ent), s2: order.filter(i => !last.has(i) && !L.worlds.includes(i)).map(ent) };
+  G.wcPool = G.wcPool || {};   // null — пул собран, ждём чемпионат мира
+  G.wcPool[L.r] = { wf: L.worlds.map(ent), s1: order.filter(i => last.has(i) && !L.worlds.includes(i)).map(ent), s2: order.filter(i => !last.has(i) && !L.worlds.includes(i)).map(ent) };
   if (REGIONS.every((_, r) => G.wcPool[r])) {   // все лиги сыграли — Wild Card стартует со следующего хода лиг
     const P = REGIONS.map((_, r) => G.wcPool[r]);
     const s1 = [].concat(...P.map(x => x.s1)), s2 = [].concat(...P.map(x => x.s2));
-    G.wc = { r: -1, wc: true, fmt: 'wc', phase: 'W', stage: 1, teams: s2.concat(s1), n2: s2.length, sw: s1.map((_, k) => s2.length + k), M: [], cur: null, left: 0, wsr: 0 };
-    G.wcPool = {};
+    G.wfIn = [].concat(...P.map(x => x.wf || []));
+    G.wc = { r: -1, wc: true, title: 'Wild Card', fmt: 'wc', phase: 'W', stage: 1, teams: s2.concat(s1), n2: s2.length, sw: s1.map((_, k) => s2.length + k), M: [], cur: null, left: 0, wsr: 0 };
+    G.wcPool = null;
     G.players.forEach(H => { if (G.wc.teams.some(T => T.h === G.players.indexOf(H))) logTo(H, 'Ты в Wild Card! Турнир начнётся со следующего хода лиг.'); });
   }
 }
@@ -983,7 +986,76 @@ function wcFinish(L) {
     } else histTo(H, H.region, 'Wild Card: турнир окончен');
   });
   G.wc = null;
+  wfCreate(Object.assign({}, T, { wcChamp: true }));
 }
+
+// ---------- Чемпионат мира: 16 бойцов (по 3 из каждой лиги + победитель Wild Card) ----------
+// 4 группы по 4, Bo1 в 2 круга. Ход 1 — круг групп A и B, ход 2 — круг C и D, ход 3 и 4 — второй круг.
+// Выходят двое из группы. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю +5 к силе (один раз).
+const WF_GAIN = 5, WF_BLOCKS = ['G1', 'G1', 'G2', 'G2', 'QF', 'SF', 'F'];
+function wfCreate(wcEntry) {
+  const teams = (G.wfIn || []).concat(wcEntry ? [wcEntry] : []);
+  const L = { r: -1, wf: true, title: 'Чемпионат мира', teams, M: [], cur: null, left: 0, block: 0, rIn: 0, phase: 'RR' };
+  const ord = teams.map((_, i) => i).sort((a, b) => lgFighter(L, b).rating - lgFighter(L, a).rating);
+  L.groups = [[], [], [], []];
+  ord.forEach((i, k) => { const row = Math.floor(k / 4), col = k % 4; L.groups[row % 2 ? 3 - col : col].push(i); });
+  L.rr = L.groups.map(g => rrRounds(g));
+  G.wf = L; G.wfIn = null;
+  G.players.forEach((H, hi) => { if (teams.some(T => T.h === hi)) logTo(H, 'Ты едешь на чемпионат мира! Он начнётся со следующего хода лиг.'); });
+}
+function wfNext(L) {
+  const b = WF_BLOCKS[L.block];
+  if (!b) return null;
+  if (b === 'G1' || b === 'G2') {
+    const gs = L.block % 2 ? [2, 3] : [0, 1];
+    if (L.rIn < 3) {
+      const k = L.rIn++, out = [];
+      for (const g of gs) for (const [a, c] of L.rr[g][k]) out.push(Object.assign(lgAdd(L, 'RR', b === 'G1' ? a : c, b === 'G1' ? c : a, 1, `Группа ${GL[g]} · круг ${b === 'G1' ? 1 : 2}`), { grp: g }));
+      return out;
+    }
+    L.block++; L.rIn = 0; return [];
+  }
+  if (L.rIn) { L.block++; L.rIn = 0; return WF_BLOCKS[L.block] ? [] : null; }   // стадия плей-офф сыграна — следующая в новый ход; после финала — итоги
+  L.rIn = 1;
+  const W = m => m.w;
+  if (b === 'QF') {
+    const T = [0, 1, 2, 3].map(g => lgGroupTable(L, g).map(x => x.i));
+    L.phase = 'QF';
+    return [[0, 1], [1, 0], [2, 3], [3, 2]].map(([x, y]) => lgAdd(L, 'QF', T[x][0], T[y][1], 5, `1-е группы ${GL[x]} против 2-го группы ${GL[y]}`));
+  }
+  if (b === 'SF') { const w = lgStage(L, 'QF').map(W); L.phase = 'SF'; return [lgAdd(L, 'SF', w[0], w[2], 5), lgAdd(L, 'SF', w[1], w[3], 5)]; }
+  if (b === 'F') { const w = lgStage(L, 'SF').map(W); L.phase = 'F'; return [lgAdd(L, 'F', w[0], w[1], 5)]; }
+  return null;
+}
+function wfFinish(L) {
+  const f = lgStage(L, 'F')[0], champ = f.w, T = L.teams[champ];
+  G.wfLast = { champ: lgTeamName(L, champ), team: T.name, season: (G.leagues[0] || {}).season };
+  L.teams.forEach((T, i) => {
+    if (T.h == null) return;
+    const H = G.players[T.h];
+    if (i === champ) {
+      const first = !H.wfWon; H.wfWon = (H.wfWon || 0) + 1;
+      if (first) H.power = Math.min(POWER_MAX, H.power + WF_GAIN);
+      logTo(H, `Ты чемпион мира!${first ? ' +' + WF_GAIN + ' к силе.' : ''}`);
+      histTo(H, H.region, 'Чемпионат мира: победа');
+    } else histTo(H, H.region, 'Чемпионат мира: турнир окончен');
+  });
+  G.wf = null;
+  startNewSeason();
+}
+function startNewSeason() {   // перерыв BREAK_WEEKS недель и драфт нового сезона у всех лиг сразу
+  G.leagues.forEach((L, r) => { G.leagues[r] = Object.assign(newSeason(r, G.week + 1, L, BREAK_WEEKS), { past: L.past, prevWorlds: (L.worlds || []).map(i => lgTeamName(L, i)) }); });
+  G.wcPool = {};
+}
+const seasonNo = () => G && G.leagues ? G.leagues[0].season : 1;
+const seasonPhase = () => {
+  if (!G || !G.leagues) return '';
+  if (G.wf) return 'чемпионат мира'; if (G.wc) return 'Wild Card';
+  const L = G.leagues[0];
+  if (G.leagues.every(x => x.phase === 'draft')) return 'перерыв и драфт';
+  if (G.leagues.every(x => x.phase === 'done')) return 'итоги';
+  return 'лиги';
+};
 function lgFinish(L) {
   const f = lgStage(L, 'F')[0], champ = f.w, second = f.w === f.a ? f.b : f.a;
   const sfl = lgStage(L, 'SF').map(m => m.w === m.a ? m.b : m.a), order = lgTable(L).map(x => x.i);
@@ -1005,7 +1077,7 @@ function lgFinish(L) {
 }
 const lgSimMatch = (L, m) => { while (!m.done) tGame(m, simAB(lgFighter(L, m.a), lgFighter(L, m.b)) ? m.a : m.b); };
 const lgPending = L => L ? (L.cur || []).find(m => !m.done && (lgHum(L, m.a) || lgHum(L, m.b))) : null;
-const lgQ = k => k === 'wc' ? G.wc : G.leagues[k];
+const lgQ = k => k === 'wc' ? G.wc : k === 'wf' ? G.wf : G.leagues[k];
 function lgStartTurn() {   // ход лиг: после того как все игроки сыграли неделю
   ensureLeagues();
   for (const L of G.leagues) {
@@ -1014,6 +1086,7 @@ function lgStartTurn() {   // ход лиг: после того как все �
   }
   G.lq = G.leagues.filter(L => L.left > 0).map(L => L.r);
   if (G.wc) { G.wc.left = 99; G.wc.stopAt = wcNextStage(G.wc) + 1; G.lq.push('wc'); }
+  if (G.wf) { G.wf.left = 99; G.wf.turnBlock = G.wf.block; G.lq.push('wf'); }
   G.lann = null;
   lgProcess();
 }
@@ -1025,20 +1098,21 @@ function lgProcess() {
     if (pend) { G.lview = G.lann === L.r ? 'match' : 'ann'; return; }
     if (L.left <= 0) { G.lq.shift(); continue; }
     if (L.wc && wcNextStage(L) >= L.stopAt) { L.left = 0; continue; }   // Wild Card: один этап за ход
+    if (L.wf && L.block !== L.turnBlock) { L.left = 0; continue; }     // чемпионат мира: один блок за ход
     L.left--;
     L.cur = lgNextRound(L);
-    if (!L.cur) { if (L.wc) wcFinish(L); L.left = 0; continue; }
+    if (!L.cur) { if (L.wc) wcFinish(L); else if (L.wf) wfFinish(L); L.left = 0; continue; }
     for (const m of L.cur) if (!lgHum(L, m.a) && !lgHum(L, m.b)) lgSimMatch(L, m);
   }
-  // неделя закончилась: когда доиграли все лиги — перерыв 5 недель (драфт), новый сезон у всех лиг одновременно
-  if (G.leagues.every(L => L.phase === 'done')) G.leagues.forEach((L, r) => { G.leagues[r] = Object.assign(newSeason(r, G.week + 1, L), { past: L.past, prevWorlds: L.worlds.map(i => lgTeamName(L, i)) }); });
+  // неделя закончилась: новый сезон стартует только после чемпионата мира (wfFinish) — перерыв BREAK_WEEKS недель
+  if (G.leagues.every(L => L.phase === 'done') && !G.wc && !G.wf && !G.wcPool) startNewSeason();   // страховка для старых сохранений
   G.lq = null; G.lview = null; G.lann = null; G.week++;
 }
 function lgAfterGame(L, m) {
   const done = m.done;
   if (done) for (const i of [m.a, m.b]) if (lgHum(L, i)) {
     const H = G.players[L.teams[i].h], wa = m.g.filter(x => x === m.a).length;
-    histTo(H, L.wc ? H.region : L.r, `${L.wc ? 'Wild Card' : LSHORT[L.r]} · ${lgTeamName(L, m.a)} ${wa}:${m.g.length - wa} ${lgTeamName(L, m.b)}`);
+    histTo(H, L.title ? H.region : L.r, `${L.title || LSHORT[L.r]} · ${lgTeamName(L, m.a)} ${wa}:${m.g.length - wa} ${lgTeamName(L, m.b)}`);
   }
   if (!lgPending(L)) G.lview = 'match';
   lgProcess();
@@ -1323,7 +1397,7 @@ function viewMain() {
     : '<div class="dim">Набор на неделю пуст.</div>';
   return wrap(`
     <div class="card week">
-      <div><h2>Неделя ${S.turn}</h2><div class="inds">${ind}</div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг!</div>' : ''}</div>
+      <div><h2>Неделя ${S.turn}</h2><div class="dim" style="font-size:13px">Сезон ${seasonNo()}${seasonPhase() ? ' · ' + seasonPhase() : ''}</div><div class="inds">${ind}</div>${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг!</div>' : ''}</div>
       <div class="nextm"><div class="dim">Предстоящие матчи</div><b>${nextMatchText()}</b></div>
     </div>
     <div class="card">
@@ -1569,6 +1643,7 @@ function viewBureau() {
     </div>
     ${lgCardHtml(S.region)}
     ${wcCardHtml()}
+    ${wfCardHtml()}
     <div class="card">
       <button class="btn" data-a="tour" ${S.actions <= 0 ? 'disabled' : ''}>Участвовать в местном турнире (1 действие)</button>
       ${S.power >= ESL_MIN_POWER ? `<button class="btn" data-a="esl" ${S.actions <= 0 ? 'disabled' : ''}>ESL ONE — собрать свой турнир (1 действие)</button>` : '<button class="btn" disabled>ESL ONE — откроется, когда ты станешь сильнее</button>'}
@@ -1742,8 +1817,22 @@ function lgStatus(L) {
     ? `В лиге ${EU_PRO} про-команд и ${EU_SEMI} полупро: команды по очереди, от сильнейшей, берут бойцов по рейтингу. Свободные места занимают случайные бойцы.`
     : `В драфте 20 мест, в лигу проходят ${LG_SIZE(L.r)} лучших по рейтингу.`);
   if (L.phase === 'RR') return `Сезон ${L.season} · регулярный сезон, сыграно туров: ${L.ri} из ${L.sched.length}.`;
-  if (L.phase === 'done') return `Сезон ${L.season} окончен. Ждём, пока доиграют остальные лиги, затем перерыв ${DRAFT_WEEKS} недель и драфт нового сезона.`;
+  if (L.phase === 'done') return `Сезон ${L.season} окончен. Дальше — когда доиграют все лиги — Wild Card, чемпионат мира и перерыв ${BREAK_WEEKS} недель с драфтом нового сезона.`;
   return `Сезон ${L.season} · ${LG_STAGE[L.phase] || ''}`;
+}
+function wfCardHtml() {   // карточка чемпионата мира в бюро
+  if (!G.wf && !G.wfLast) return '';
+  const L = G.wf, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
+  return `<div class="card"><h3>Чемпионат мира</h3><div class="dim">${L ? `Идёт чемпионат мира: 16 бойцов, ${['групповой этап, 1-й круг', 'групповой этап, 1-й круг', 'групповой этап, 2-й круг', 'групповой этап, 2-й круг', 'четвертьфинал', 'полуфинал', 'финал'][L.block] || 'финал'}.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Чемпион мира сезона ${G.wfLast.season}: ${esc(G.wfLast.champ)} (${esc(G.wfLast.team)}).`}</div>
+    ${L ? `<button class="btn" data-a="wfview" style="text-align:center">Чемпионат мира</button>` : ''}</div>`;
+}
+function viewWF() {
+  const L = G.wf;
+  if (!L) return wrap(`<div class="card">Чемпионат мира сейчас не идёт.</div>${back}`);
+  let h = `<div class="card"><h2>Чемпионат мира</h2><div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю +${WF_GAIN} к силе.</div></div>`;
+  h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 2 ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('');
+  for (const st of ['QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
+  return wrap(h + back);
 }
 function wcCardHtml() {   // карточка Wild Card в бюро
   if (!G.wc && !G.wcLast) return '';
@@ -1810,22 +1899,22 @@ function viewLHist() {
 function viewLTurn() {   // ход лиг: объявление и матчи игроков
   const L = lgQ(G.lq[0]), m = lgPending(L);
   if (!m) return '';
-  if (L.wc && G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · ход лиг</div>
-    <div class="logo" style="font-size:30px;margin:18px 0 6px">Играет Wild Card!</div><div class="dim">Этап ${wcNextStage(L) > 3 ? 3 : Math.min(3, L.phase === 'W' ? 1 : wcNextStage(L))} из 3 · ${LG_STAGE[m.st] || ''}</div>
+  if ((L.wc || L.wf) && G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
+    <div class="logo" style="font-size:30px;margin:18px 0 6px">${L.wf ? 'Чемпионат мира!' : 'Играет Wild Card!'}</div><div class="dim">${L.wf ? (m.label || LG_STAGE[m.st]) : `Этап ${Math.min(3, L.phase === 'W' ? 1 : wcNextStage(L))} из 3 · ${LG_STAGE[m.st] || ''}`}</div>
     <button class="btn gold" data-a="lgo" style="margin-top:14px">Начать</button></div>`;
-  if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · ход лиг</div>
+  if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
     <img src="img/logo_${L.r}.webp" alt="" style="width:120px;height:120px;border-radius:16px;margin:14px auto;display:block">
     <div class="logo" style="font-size:30px">Играет лига ${LSHORT[L.r]}!</div><div class="dim">${esc(REGIONS[L.r].league)} · ${LG_STAGE[m.st]}</div>
     <button class="btn gold" data-a="lgo" style="margin-top:14px">Начать</button></div>`;
   const L1 = lgHum(L, m.a) ? m.a : m.b, R1 = L1 === m.a ? m.b : m.a, mine = m.g.filter(x => x === L1).length;
-  return `<div class="card" style="margin-top:16px"><div class="dim">Неделя ${G.week} · ${L.wc ? 'Wild Card' : 'лига ' + LSHORT[L.r]} · ${LG_STAGE[m.st]}${m.label && !L.wc ? ' · ' + esc(m.label) : ''}</div>
+  return `<div class="card" style="margin-top:16px"><div class="dim">Неделя ${G.week} · ${L.title || 'лига ' + LSHORT[L.r]} · ${L.wf && m.st === 'RR' ? 'Группы' : LG_STAGE[m.st]}${m.label && !L.wc ? ' · ' + esc(m.label) : ''}</div>
     <h3>Матч игрока ${esc(lgTeamName(L, L1))}</h3>
     <div class="tvs"><div>${lgTeamCell(L, L1)}<br>${rateHtml(lgRating(L, L1), 'mid')}</div><div class="tsc">${mine}:${m.g.length - mine}</div><div>${lgTeamCell(L, R1)}<br>${rateHtml(lgRating(L, R1), 'mid')}</div></div>
     <div class="dim" style="text-align:center">Bo${m.bo}${m.bo === 2 ? ' · возможна ничья' : ''} · бой ${m.g.length + 1}</div>
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
-    ${L.wc ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
+    ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
@@ -1931,6 +2020,7 @@ function act(a, v) {
     }
     case 'iequip': { const i = +v; S.equip = S.equip === i ? null : i; break; }
     case 'wcview': S.view = 'wc'; break;
+    case 'wfview': S.view = 'wf'; break;
     case 'teams': S.treg = +v; S.tsel = null; S.view = 'teams'; break;
     case 'tsel': S.tsel = v || null; break;
     case 'dossier': S.dreg = +v; S.dsel = null; S.view = 'dossier'; break;
