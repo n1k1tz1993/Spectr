@@ -414,6 +414,32 @@ html.land .fznn b{font-size:20px}
 html.land .fzt{width:36px;height:36px}
 html.land .fzlg{font-size:12px}
 html.land .fztn{font-size:13px}
+
+/* бой: крупная эмблема команды слева от полос HP и Цы, без команды — FREE AGENT */
+.fzmid{display:flex;align-items:center;gap:6px;padding:6px 6px 2px 6px}
+.fzteam{flex:0 0 auto;width:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;border-radius:10px;background:radial-gradient(circle at 50% 40%,rgba(50,213,231,.16),rgba(11,16,32,.2) 70%);border:1px solid rgba(50,213,231,.35)}
+.fzteam img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(50,213,231,.35)) drop-shadow(0 2px 3px rgba(0,0,0,.7))}
+.fzteam small{font-size:8px;line-height:1.1;color:var(--dim);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fzteam.fa{border-color:rgba(245,200,76,.4);background:radial-gradient(circle at 50% 40%,rgba(245,200,76,.14),rgba(11,16,32,.2) 70%);min-height:54px}
+.fzteam.fa b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:11px;line-height:1.05;letter-spacing:.06em;text-align:center;background:linear-gradient(180deg,#FFFFFF,#FFE7A3 55%,#F5C84C);-webkit-background-clip:text;background-clip:text;color:transparent}
+.fzwild .aic{width:40px;height:40px;border-radius:8px}
+.fzbars{flex:1;min-width:0}
+.fzbars .fzb{padding:3px 2px}
+html:not(.land) .fzmid{flex-direction:column;align-items:stretch;gap:4px}
+html:not(.land) .fzteam{width:auto;flex-direction:row;justify-content:flex-start;gap:8px;padding:4px 8px}
+html:not(.land) .fzteam img{width:34px;height:34px}
+html:not(.land) .fzteam small{font-size:12px;font-weight:600;color:var(--txt);text-align:left}
+html:not(.land) .fzteam.fa{min-height:42px;justify-content:center}
+html:not(.land) .fzteam.fa b{font-size:16px}
+html:not(.land) .fzteam.fa b br{display:none}
+html:not(.land) .fzwild .aic{width:30px;height:30px}
+html.land .fzteam{width:104px;padding:6px 4px}
+html.land .fzteam img{width:84px;height:84px}
+html.land .fzteam small{font-size:11px}
+html.land .fzteam.fa{min-height:96px}
+html.land .fzteam.fa b{font-size:20px}
+html.land .fzbars .fzb{padding:6px 4px;font-size:13px}
+html.land .fzbars .fzbar{height:12px}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -2310,13 +2336,18 @@ function fzCard(x, id) {   // карточка бойца: портрет → л
   return `<div class="fzc ${id}">
     <div class="fzp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
     <div class="fzn">
-      <div class="fzid">${x.team && x.team.logo ? `<img class="fzt" src="img/team/${x.team.logo}.webp" alt="" title="${esc(x.team.name)}">` : ''}<span class="fznn"><b>${esc(x.name)}</b>${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}</span></div>
-      ${x.team ? `<div class="fztn">${esc(x.team.name)}</div>` : ''}
+      <div class="fzid"><span class="fznn"><b>${esc(x.name)}</b>${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}</span></div>
       ${x.beast ? `<div class="fzrr"><span class="beastmark">${abilIcon(30)}</span><span class="fzlg" style="--lc:#FF8B7B">Дикий зверь</span></div>`
         : `<div class="fzrr">${rateHtml(x.rating, 'fzrt')}<span class="fzlg" style="--lc:${lg.c}">${lg.n}</span></div>`}
     </div>
-    <div class="fzb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
-    <div class="fzb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
+    <div class="fzmid">
+      <div class="fzteam ${x.team && x.team.logo ? '' : 'fa'}" title="${x.team ? esc(x.team.name) : 'Без команды'}">${x.beast ? `<span class="fzwild">${abilIcon(30)}</span>`
+        : x.team && x.team.logo ? `<img src="img/team/${x.team.logo}.webp" alt=""><small>${esc(x.team.name)}</small>` : '<b>FREE <br>AGENT</b>'}</div>
+      <div class="fzbars">
+        <div class="fzb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
+        <div class="fzb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
+      </div>
+    </div>
     ${own ? `<button class="fza" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${ab}</button>` : `<div class="fza opp" id="${id}-ab">${ab}</div>`}
   </div>`;
 }
