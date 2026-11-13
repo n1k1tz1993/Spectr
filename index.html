@@ -809,11 +809,12 @@ const ROOM_PICS = ['Интерьер', 'Вид из окна', 'Гараж'];
 // ---------- машины: стоят в гараже (третья картинка комнаты); дают дополнительные действия в неделю ----------
 const CARS = [
   { n: 'Городской седан', cost: 1500, a: 1 },
+  { n: 'Внедорожник премиум-класса', cost: 2000, a: 1 },
   { n: 'Дорогой спорткар', cost: 3000, a: 2 },
-  { n: 'Гиперкар', cost: 6000, a: 3 }
+  { n: 'Гиперкар', cost: 4500, a: 2 }
 ];
-const carLvl = H => (H.cars || []).reduce((m, j) => Math.max(m, j + 1), 0);   // 0 — гараж пуст
-const carBonus = H => { const l = carLvl(H); return l ? CARS[l - 1].a : 0; };
+const carLvl = H => (H.cars || []).reduce((m, j) => Math.max(m, j + 1), 0);   // в гараже — самая дорогая машина; 0 — гараж пуст
+const carBonus = H => (H.cars || []).reduce((m, j) => Math.max(m, CARS[j] ? CARS[j].a : 0), 0);
 const maxActs = H => 3 + carBonus(H);
 const actWord = n => n === 1 ? 'действие' : n < 5 ? 'действия' : 'действий';
 const hasRoom = (H, k) => (H.rooms || []).includes(k);
@@ -2646,7 +2647,7 @@ function viewShop() {   // магазин: только названия и це
   return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются рейтингом. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${rateHtml(S.rating, 'mid')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
-    <div class="card"><h3>Машины</h3><div class="dim">Машина стоит в гараже и даёт дополнительные действия в неделю. Работает лучшая из купленных.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `+${C2.a} ${actWord(C2.a)} в неделю`)).join('')}</div>
+    <div class="card"><h3>Машины</h3><div class="dim">Машина стоит в гараже и даёт дополнительные действия в неделю. Бонусы машин не складываются — работает лучшая.</div>${CARS.map((C2, j) => row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, `+${C2.a} ${actWord(C2.a)} в неделю`)).join('')}</div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>` + back);
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
