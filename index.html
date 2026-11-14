@@ -1329,12 +1329,12 @@ const BEAST = { gapLo: 20, gapHi: 28, coins: 250 };
 // ---------- очки лиги (ОЛ): криптовалюта для покупок. Рейтинг — только ранг и больше не тратится ----------
 const COIN_SVG = '<svg viewBox="0 0 20 20" class="coin"><circle cx="10" cy="10" r="9" fill="#2A1F05" stroke="#F5C84C" stroke-width="1.6"/><path d="M10 3.6l4.2 6.4L10 16.4 5.8 10z" fill="#32D5E7"/><path d="M10 3.6l4.2 6.4H5.8z" fill="#C9FBFF"/></svg>';
 const coinHtml = (n, cls = '') => `<span class="coins ${cls}">${COIN_SVG}<b>${(n | 0).toLocaleString('ru-RU')}</b></span>`;
-const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; if (why) logTo(H, `${why}: +${n} ОЛ.`); };
+const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; if (why) logTo(H, `${why}: +${n} крипты.`); };
 const TOUR_COINS = [50, 120, 600];
 const TOUR_PRIZE = TOUR_COINS;   // приз за победу; места: финал 40%, полуфинал 20%, четвертьфинал 10%, участие 5%
 const PRIZE_PART = { W: 1, F: 0.4, SF: 0.2 }, PRO_BONUS = 0.7, TEAM_BONUS = 0.5, SIGN_COINS = 200, SEMI_CT_WEEKS = 3, WC_GAME = 100, WF_GAME = 400;
 const prizeBase = R => R.kind === 'club' ? CLUB[R.belt].coins : R.kind === 'fest' ? FEST_COINS : R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
-const WF_PRIZE = [[1, 4000], [2, 2000], [3, 1200], [5, 700], [9, 400], [13, 250]];   // чемпионат мира: призовые всем местам (место «с» → ОЛ)
+const WF_PRIZE = [[1, 4000], [2, 2000], [3, 1200], [5, 700], [9, 400], [13, 250]];   // чемпионат мира: призовые всем местам (место «с» → крипты)
 const LG_COINS = { win: 50, champ: 2000, second: 1000, third: 600 }, WC_COINS = 1500, WF_COINS = 4000, ESL_COINS = 500, DH_COINS = 1500, LADDER_COINS = 30, ELITE_COINS = 100;
 const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'ворон', 'олень'];   // обезумевшие звери: img/beast/<i>.webp
 const DUEL_WIN = 50, CONTRACT_WIN = 250;   // дуэль — рейтинг; контракт — очки лиги
@@ -1427,9 +1427,9 @@ function cardExpect(c) {   // ожидаемый эффект до нажати�
   if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: `Прокачка завершена — +20 рейтинга; иначе ${effTxt(...COND_B)}` };
   if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе' };
   if (c.k === 'spar') return { kind: 'Бой', cls: 'rand', txt: G && G.players.length > 1 ? `Спарринг Bo3 с любым игроком · победителю +${SPAR_WIN} рейтинга, поражение без потерь` : `Лестничный бой · победа — +${SPAR_WIN} рейтинга, поражение без потерь` };
-  if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.coins} ОЛ` };
+  if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.coins} крипты` };
   if (c.k === 'duel') return { kind: 'Бой', cls: 'rand', txt: `Дуэль · победа — +${DUEL_WIN} рейтинга` };
-  if (c.k === 'contract') return { kind: 'Турнир', cls: 'rand', txt: `Турнир на 16 игроков · победа — +${CONTRACT_WIN} ОЛ` };
+  if (c.k === 'contract') return { kind: 'Турнир', cls: 'rand', txt: `Турнир на 16 игроков · победа — +${CONTRACT_WIN} крипты` };
   if (c.k === 'fans') return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(...FANS_B)) };
   return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(1, 'turn')) };
 }
@@ -1768,7 +1768,7 @@ function specialFight(kind) {   // зверь от Бюро (сила 1–25, +2
   startFight(title, opp, won => {
     const cw = kind === 'beast' ? BEAST.coins : 0;
     if (won) { S.rating += win; S.coins = (S.coins || 0) + cw; }
-    const pr = cw ? `+${cw} ОЛ` : `+${win} рейтинга`;
+    const pr = cw ? `+${cw} крипты` : `+${win} рейтинга`;
     histAdd(title + ' · ' + (won ? 'победа · ' + pr : 'поражение'));
     logMsg(title + ' против ' + opp.name + ': ' + (won ? `победа (${pr}).` : 'поражение.'));
     S.view = 'main';
@@ -1874,7 +1874,7 @@ function beltApply(T) {
     G.fame.tours.unshift(fameEntry(H ? H.nick : W.name, H ? H.face : W.face, H ? H.country : W.country, null, { r: H ? H.region : 0, season: fameSeason(), hum: !!H, t: B.n })); G.fame.tours = G.fame.tours.slice(0, 30); }
   if (W.h != null) { const H = G.players[W.h]; H.coins = (H.coins || 0) + B.coins; H.rating += BELT_RT[k];
     if (win === 'b') { H.beltsWon = H.beltsWon || [0, 0, 0]; H.beltsWon[k]++; }
-    logTo(H, `${B.n}: ${win === 'a' ? 'титул защищён' : 'пояс твой — ты новый чемпион'}! +${B.coins} ОЛ, +${BELT_RT[k]} рейтинга.`); histTo(H, H.region, B.n + ' · ' + (win === 'a' ? 'защита титула' : 'чемпион')); }
+    logTo(H, `${B.n}: ${win === 'a' ? 'титул защищён' : 'пояс твой — ты новый чемпион'}! +${B.coins} крипты, +${BELT_RT[k]} рейтинга.`); histTo(H, H.region, B.n + ' · ' + (win === 'a' ? 'защита титула' : 'чемпион')); }
   if (L.h != null) { const H = G.players[L.h]; logTo(H, `${B.n}: титульный бой проигран${win === 'b' ? ', пояс уходит к ' + beltName(W) : ''}.`); histTo(H, H.region, B.n + ' · титульный бой проигран'); }
 }
 function viewTitle() {   // титульные бои конца недели с участием игроков
@@ -1898,7 +1898,7 @@ function viewClub() {
         ${prizeRulesHtml({ kind: 'club', belt: k })}
         ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. В конце каждой недели ты защищаешь его в титульном бою.</div>' : `<button class="btn gold" data-a="clubgo" data-v="${k}" style="text-align:center" ${!can || none ? 'disabled' : ''}>Участвовать · 1 действие</button>${can ? '' : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`}</div>`; }).join('')}`);
 }
-function festStart(city) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — ОЛ, без роста силы
+function festStart(city) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — крипты, без роста силы
   const T = TIERS[Math.min(S.tiers[S.region] || 0, 2)], tk = takenSet(G.players.map(H => H.nick));
   const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
   for (let i = 0; i < 7; i++) ps.push(Object.assign(genSpectre(S.region, tk, rnd(T.lo, T.hi)), { id: i + 1, seed: Math.random() }));
@@ -1932,7 +1932,7 @@ function bureauFight(kind) {
     S.rating = Math.max(0, S.rating + d);
     if (won) S.coins = (S.coins || 0) + (kind === 'ladder' ? LADDER_COINS : ELITE_COINS);
     histAdd(title + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
-    logMsg(title + ' против ' + name + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга' + (won ? `, +${kind === 'ladder' ? LADDER_COINS : ELITE_COINS} ОЛ` : '') + ').');
+    logMsg(title + ' против ' + name + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга' + (won ? `, +${kind === 'ladder' ? LADDER_COINS : ELITE_COINS} крипты` : '') + ').');
     S.view = 'bureau';
   });
 }
@@ -2469,7 +2469,7 @@ function wcFinish(L) {
       const first = !H.wcWon; H.wcWon = (H.wcWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WC_GAIN);
       H.coins = (H.coins || 0) + WC_COINS;
-      logTo(H, `Ты выиграл Wild Card!${first ? ' Постоянный бонус к силе.' : ''} +${WC_COINS} ОЛ.`); H.vic = 'wc';
+      logTo(H, `Ты выиграл Wild Card!${first ? ' Постоянный бонус к силе.' : ''} +${WC_COINS} крипты.`); H.vic = 'wc';
       histTo(H, H.region, 'Wild Card: победа');
     } else histTo(H, H.region, 'Wild Card: турнир окончен');
   });
@@ -2481,7 +2481,7 @@ function wcFinish(L) {
 // 4 группы по 4, Bo1 в 2 круга. Ход 1 — круг групп A и B, ход 2 — круг C и D, ход 3 и 4 — второй круг.
 // Выходят двое из группы. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю +5 к силе (один раз).
 const WF_GAIN = 5, WF_BLOCKS = ['G1', 'G1', 'G2', 'G2', 'QF', 'SF', 'F'];
-const wfPrizeHtml = () => `<details class="rules"><summary>Призовые</summary><div class="prz"><b>Призовые всем местам (ОЛ)</b>${WF_PRIZE.map(([p, c]) => `<div><span>${wfPlaceTxt(p)}</span><b>${c}</b></div>`).join('')}<small>Плюс оплата за каждую выигранную серию: ${WF_GAME} ОЛ.</small></div></details>`;
+const wfPrizeHtml = () => `<details class="rules"><summary>Призовые</summary><div class="prz"><b>Призовые всем местам (крипта)</b>${WF_PRIZE.map(([p, c]) => `<div><span>${wfPlaceTxt(p)}</span><b>${c}</b></div>`).join('')}<small>Плюс оплата за каждую выигранную серию: ${WF_GAME} крипты.</small></div></details>`;
 const wfPlaceTxt = p => ({ 1: '1 место', 2: '2 место', 3: '3–4 места', 5: '5–8 места', 9: '9–12 места', 13: '13–16 места' })[p];
 function wfCreate(wcEntry) {
   const teams = (G.wfIn || []).concat(wcEntry ? [wcEntry] : []);
@@ -2533,9 +2533,9 @@ function wfFinish(L) {
     if (i === champ) {
       const first = !H.wfWon; H.wfWon = (H.wfWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WF_GAIN);
-      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''} Призовые: +${prize} ОЛ.`); H.vic = 'wf';
+      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''} Призовые: +${prize} крипты.`); H.vic = 'wf';
       histTo(H, H.region, 'Чемпионат мира: победа');
-    } else { logTo(H, `Чемпионат мира окончен: ${wfPlaceTxt(pl)}. Призовые: +${prize} ОЛ.`); histTo(H, H.region, 'Чемпионат мира: ' + wfPlaceTxt(pl)); }
+    } else { logTo(H, `Чемпионат мира окончен: ${wfPlaceTxt(pl)}. Призовые: +${prize} крипты.`); histTo(H, H.region, 'Чемпионат мира: ' + wfPlaceTxt(pl)); }
   });
   G.wf = null;
   startNewSeason();
@@ -2925,7 +2925,7 @@ const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.ou
 // приз за место; в профессиональной команде +70%, в составе любой другой команды (полупро-контракт, приглашение) +50%
 function prizeRulesHtml(R) {   // таблица призовых для правил турнира
   const b = prizeBase(R), v = k => Math.round(b * PRIZE_PART[k]);
-  return `<div class="prz"><b>Призовые (ОЛ)</b><div><span>1 место</span><b>${v('W')}</b></div><div><span>2 место</span><b>${v('F')}</b></div><div><span>3–4 места</span><b>${v('SF')}</b></div><div><span>Остальные</span><b>—</b></div>
+  return `<div class="prz"><b>Призовые (крипта)</b><div><span>1 место</span><b>${v('W')}</b></div><div><span>2 место</span><b>${v('F')}</b></div><div><span>3–4 места</span><b>${v('SF')}</b></div><div><span>Остальные</span><b>—</b></div>
     ${R.kind === 'club' ? `<div><span>Титульный бой (взять или защитить пояс)</span><b>+${prizeBase(R)} и +${BELT_RT[R.belt]} рейтинга</b></div>` : ''}<small>За любую команду призовые выше: профессиональная команда +${Math.round(PRO_BONUS * 100)}%, полупрофессиональная или контракт +${Math.round(TEAM_BONUS * 100)}%.${R.kind == null && R.tier != null && !R.intro ? ' Сила растёт только у победителя.' : ''}</small></div>`;
 }
 function payPrize(R, x, H, place) {
@@ -2934,7 +2934,7 @@ function payPrize(R, x, H, place) {
   const pro = H.league != null, team = !pro && (x.team != null || R.kind === 'contract');
   const extra = Math.round(base * (pro ? PRO_BONUS : team ? TEAM_BONUS : 0));
   H.coins = (H.coins || 0) + base + extra;
-  return `Призовые: +${base + extra} ОЛ${extra ? ` (в т.ч. +${extra} — бонус ${pro ? 'профессиональной' : ''} команды)`.replace('бонус  команды', 'бонус команды') : ''}.`;
+  return `Призовые: +${base + extra} крипты${extra ? ` (в т.ч. +${extra} — бонус ${pro ? 'профессиональной' : ''} команды)`.replace('бонус  команды', 'бонус команды') : ''}.`;
 }
 // ---------- полупрофессиональные контракты: после хорошего полупро-турнира команда предлагает контракт на 3 недели ----------
 function semiAfter(H, R, x) {
@@ -2949,7 +2949,7 @@ function semiTick(H) {   // начало недели героя: истёк л�
   if (!H.semi || H.turn <= H.semi.until) return;
   const c = H.semi; H.semi = null;
   let d = `Срок контракта с командой ${SEMI_TEAMS[c.team]} истёк, контракт расторгнут.`;
-  if (!c.worked) { const f = Math.min(H.coins || 0, SIGN_COINS); H.coins -= f; d += ` Ты не сыграл за команду полупрофессиональный турнир — бонус за подписание (${f} ОЛ) возвращён.`; }
+  if (!c.worked) { const f = Math.min(H.coins || 0, SIGN_COINS); H.coins -= f; d += ` Ты не сыграл за команду полупрофессиональный турнир — бонус за подписание (${f} крипты) возвращён.`; }
   else d += ' Команда благодарит за сотрудничество.';
   logTo(H, d); H.notice = { t: 'Контракт расторгнут', d, team: c.team };
 }
@@ -2957,7 +2957,7 @@ function proSigned(H, r, team) {   // драфт: профессиональна
   H.coins = (H.coins || 0) + SIGN_COINS;
   if (H.semi) { logTo(H, `Контракт с ${SEMI_TEAMS[H.semi.team]} расторгнут: ты перешёл в профессиональную команду.`); H.semi = null; }
   H.offer = null;
-  logTo(H, `Бонус за подписание контракта с ${team}: +${SIGN_COINS} ОЛ. Пока идёт сезон, все призовые +70%.`);
+  logTo(H, `Бонус за подписание контракта с ${team}: +${SIGN_COINS} крипты. Пока идёт сезон, все призовые +70%.`);
 }
 function viewOffer() {
   const t = S.offer;
@@ -2977,10 +2977,10 @@ const INTRO_COINS = 500;
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
   if (R.kind === 'club') { clubFinish(R); S.view = 'club'; S.trun = null; return; }
-  if (R.intro) {   // вступительный турнир: только стартовые ОЛ, без силы, кубка и открытия уровней
+  if (R.intro) {   // вступительный турнир: только стартовую крипту, без силы, кубка и открытия уровней
     const H = G.players[humOf(R, 0)];
     addCoins(H, INTRO_COINS); histTo(H, R.region, 'Вступительный турнир · победа');
-    logTo(H, `Вступительный турнир: победа! Бюро выдаёт стартовые ${INTRO_COINS} ОЛ. Твоя первая неделя начинается.`);
+    logTo(H, `Вступительный турнир: победа! Бюро выдаёт стартовую крипту: ${INTRO_COINS}. Твоя первая неделя начинается.`);
     S.view = 'main'; S.trun = null; return;
   }
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
@@ -3034,7 +3034,7 @@ const statusHtml = H => {
   const st = heroStatus(H), it = (on, cls, ico, t) => `<i class="sti ${cls} ${on ? 'on' : ''}" title="${t}">${ico}</i>`;
   return `<div class="stat">${it(st.up, 'g', ICO_UP, st.up ? 'Есть бонус' : 'Бонуса нет')}${it(st.dn, 'r', ICO_DN, st.dn ? 'Есть штраф' : 'Штрафа нет')}${it(st.jet, 'r', ICO_JET, st.jet ? 'Джетлаг' : 'Джетлага нет')}</div>`;
 };
-const topBar = () => {   // шапка по макету: портрет, ник/регион/статусы, ранг и рейтинг, баланс ОЛ, команда; снизу — рост силы
+const topBar = () => {   // шапка по макету: портрет, ник/регион/статусы, ранг и рейтинг, баланс крипты, команда; снизу — рост силы
   const lg = leagueOf(S.rating), pct = Math.max(0, Math.min(1, (S.power - GROW_FROM) / (GROW_TO - GROW_FROM))) * 100;
   const full = S.hdrFull ? REGIONS[S.region].league : LSHORT[S.region];
   const pt = heroTeam(S, heroIdx(S)), st = S.semi ? { logo: SEMI[S.semi.team][1], name: SEMI_TEAMS[S.semi.team] } : null, tm = pt || st;
@@ -3064,11 +3064,11 @@ const labelOf = c => {
   if (c.k === 'm') return '<div class="bonus minus">Эффект и бонус</div>';
   if (c.k === 'r') return '<div class="bonus rand">Случайно: бонус или эффект</div>';
   if (c.k === 'dh') return '<div class="bonus rand">Турнир для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе.</div>';
-  if (c.k === 'beast') return `<div class="bonus rand">Бой со зверем · победа — +${BEAST.coins} ОЛ</div>`;
+  if (c.k === 'beast') return `<div class="bonus rand">Бой со зверем · победа — +${BEAST.coins} крипты</div>`;
   if (c.k === 'duel') return `<div class="bonus rand">Дуэль · победа — +${DUEL_WIN} рейтинга</div>`;
   if (c.k === 'spar') return `<div class="bonus rand">Спарринг · победа — +${SPAR_WIN} рейтинга</div>`;
   if (c.k === 'fanp') return '<div class="bonus plus">Бонус до конца недели</div>';
-  if (c.k === 'contract') return `<div class="bonus rand">Турнир на 16 игроков · победа — +${CONTRACT_WIN} ОЛ</div>`;
+  if (c.k === 'contract') return `<div class="bonus rand">Турнир на 16 игроков · победа — +${CONTRACT_WIN} крипты</div>`;
   if (c.k === 'cond') return '<div class="bonus nt">Условие: сила выше 65</div>';
   return '<div class="bonus plus">Бонус!</div>';
 };
@@ -3469,7 +3469,7 @@ const LIB_NOTES = [
   { t: "Король арены", d: "Faker — сильнейший Спектр мира. Тихий и вежливый вне арены, он не повышает голос и не делает громких заявлений. Ему это не нужно: его имя на табло делает это за него." },
   { t: "Корпорация «Метеор Индастриз»", d: "Первые прииски метеоритной руды на дне Атлантики выкупила «Метеор Индастриз». Сегодня почти каждый артефакт на арене прошёл через её заводы — и почти каждый судебный иск против неё закончился мировым соглашением." },
   { t: "Концерн «Аврора Медиа»", d: "«Аврора» транслирует бои Спектров в сотню стран. Злые языки говорят, что концерн решает, кому быть звездой: камера чаще смотрит на тех, кто продаёт рекламу лучше остальных." },
-  { t: "Банк «Северный Альянс»", d: "Именно «Северный Альянс» придумал очки лиги как криптовалюту Спектров. Банк зарабатывает на каждом переводе, а его основатель, по слухам, ни разу в жизни не был на арене." },
+  { t: "Банк «Северный Альянс»", d: "Именно «Северный Альянс» выпустил крипту Спектров — цифровую монету, которой расплачиваются за всё на арене и вне её. Банк зарабатывает на каждом переводе, а его основатель, по слухам, ни разу в жизни не был на арене." },
   { t: "Бойцовский клуб", d: "Бойцовский клуб появился в подвале старого спортзала, когда Бюро отказалось регистрировать бои без правил. Сегодня его пояса стоят дороже многих кубков, а каждый чемпион обязан защищать титул перед любым, кто выиграет турнир." },
   { t: "Фестиваль Спектров", d: "Каждый год фестиваль колесит по городам на десятках автобусов. Профессионалы его недооценивают, а зря: половина нынешних звёзд впервые вышла на арену именно на фестивальной площадке." },
   { t: "Казус с газировкой", d: "На одном турнире любителей Спектр так волновался, что вместо потока Цы выпустил поток газировки. Бой он проиграл, но спонсор из сладкой промышленности подписал с ним контракт прямо у ринга." },
@@ -3503,9 +3503,9 @@ const LIB_NOTES = [
   { t: "Корпорации за эмблемами", d: "Команды Спектров — часть огромных корпораций с собственными фондами, армиями и активами по всему миру. Они предоставляют бойцам экипировку, инфраструктуру и выгодные контракты. На арену Спектр выходит один, но за его спиной стоят интересы тех, чья эмблема украшает его куртку." },
   { t: "Имя в рейтинге", d: "Ладдер — общая рейтинговая таблица, в которой Спектры сражаются за очки и признание. Высокое место привлекает внимание организаторов и корпоративных скаутов. Некоторые команды заключают контракты специально ради набора рейтинга. Для профессионала вершина таблицы — часть работы." },
   { t: "Очки лиги", d: "Очки лиги — не просто строчка в таблице. Это своего рода валюта и показатель статуса: чем больше очков у Спектра, тем выше его влияние в регионе. С ним считаются организаторы турниров, корпорации и само Бюро. Потерять очки — значит потерять голос." },
-  { t: "Борьба команд", d: "Команды сражаются за очки лиги не ради красивой таблицы. Именно ими корпорации оплачивают услуги Спектров: контракты, тренировки, переезды и экипировку. Чем больше очков у команды, тем сильнее бойцов она может себе позволить. Поэтому каждый матч сезона — это ещё и битва бюджетов." },
-  { t: "Цифровая монета", d: "Мало кто знает, что очки лиги на самом деле криптовалюта. Её выпускают пять лиг, а каждую сделку с очками записывает распределённый реестр, который проверяет Бюро. Курс очков растёт вместе со славой региона. Некоторые Спектры копят их годами, словно сбережения." },
-  { t: "Кошелёк Спектра", d: "Рейтинг показывает, кто сильнее, а очки лиги — сколько у тебя есть. Рейтинг не тратится: его нельзя купить и нельзя потерять в магазине. Очки лиги платят за победы в лестнице и боях с Элитой, за призовые места на турнирах, за звериные вызовы Бюро, контракты, матчи и места в лиге, Wild Card и чемпионат мира. Чем серьёзнее турнир, тем крупнее призовой фонд: полупрофессиональный турнир платит больше всех." },
+  { t: "Борьба команд", d: "Команды сражаются за места в таблице не ради красоты. За победы корпорации платят крипту: из неё оплачиваются контракты, тренировки, переезды и экипировка. Чем выше команда, тем щедрее спонсоры." },
+  { t: "Цифровая монета", d: "Крипта Спектров — цифровая монета. Её выпускает банк «Северный Альянс», а каждую сделку записывает распределённый реестр, который проверяет Бюро. Курс крипты растёт вместе со славой арены." },
+  { t: "Кошелёк Спектра", d: "Рейтинг и крипта — разные вещи. Рейтинг показывает, кто сильнее: он растёт и падает от побед и поражений, его нельзя купить или потратить. Крипта — это деньги: её платят за победы, призовые места и контракты, а тратят в магазине на жильё, транспорт, артефакты и снаряжение." },
   { t: "Призовой фонд ESL ONE", d: "ESL ONE — турнир, на котором организаторы разыгрывают очки рейтинга. Победитель получает щедрую долю общего фонда, а вместе с ней — внимание скаутов и корпораций. Поэтому за приглашение на ESL ONE Спектры готовы бороться не меньше, чем за сам титул." },
   { t: "Разрыв потока", d: "Иногда, не справившись со своей силой, Спектр может потерять контроль над потоком Цы. Потеря контроля делает Спектра совершенно беззащитным. Урон от двух своих атак получает тот, у кого получилось нанести три крита подряд." },
   { t: "Veltor", img: "img/car/veltor_logo.webp", d: "Veltor — самый массовый автобренд мира Спектров. Его серебряную букву V с бирюзовой вставкой видно на каждой улице. Седан Veltor S4 — первая машина почти любого молодого Спектра: удобный, экономичный и достаточно быстрый, чтобы успеть из Бюро на арену. Бирюзовые огни на бампере светятся в цвет потока Цы." },
@@ -3556,7 +3556,7 @@ function viewShop() {   // магазин: только названия и це
   const own = S.items || [], ro = S.rooms || [];
   const row = (name, cost, has, a, v, perk, ico) => `<div class="srow"><span class="${ico ? 'carrow' : ''}">${ico || ''}<span>${esc(name)}${perk ? `<div class="gold" style="font-size:12px">${esc(perk)}</div>` : ''}</span></span>${has ? '<span class="dim">✓ Куплено</span>'
     : `<button class="btn cbtn" data-a="${a}" data-v="${v}" ${(S.coins || 0) < cost ? 'disabled' : ''}>${coinHtml(cost)}</button>`}</div>`;
-  return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются очками лиги (ОЛ) — криптовалютой Спектров. Рейтинг не тратится. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
+  return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются криптой. Рейтинг на покупки не тратится. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${coinHtml(S.coins, 'big')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j)).join('')}</div>
     <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind, carIcon(j))).join('')}</div>
@@ -3868,7 +3868,7 @@ function viewTRun() {
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><img class="tendimg" src="img/win/${won ? 'twin' : 'tlose'}.webp" alt=""><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовые ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} ОЛ, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовую крипту: ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} крипты, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <div class="tendq">${esc(R.endq || (R.endq = ivPick(won ? T_WIN_Q : T_LOSE_Q)))}</div>
       <button class="btn gold" data-a="tfinish" style="text-align:center">Завершить</button></div>`;
@@ -4110,7 +4110,7 @@ function act(a, v) {
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
     case 'cupview': S.view = 'cup'; break;
-    case 'offyes': if (S.offer != null) { const t = S.offer; S.offer = null; S.semi = { team: t, from: S.turn, until: S.turn + SEMI_CT_WEEKS - 1, worked: false }; S.coins = (S.coins || 0) + SIGN_COINS; logMsg(`Подписан контракт с ${SEMI_TEAMS[t]} на ${SEMI_CT_WEEKS} недели: +${SIGN_COINS} ОЛ.`); S.view = 'main'; } break;
+    case 'offyes': if (S.offer != null) { const t = S.offer; S.offer = null; S.semi = { team: t, from: S.turn, until: S.turn + SEMI_CT_WEEKS - 1, worked: false }; S.coins = (S.coins || 0) + SIGN_COINS; logMsg(`Подписан контракт с ${SEMI_TEAMS[t]} на ${SEMI_CT_WEEKS} недели: +${SIGN_COINS} крипты.`); S.view = 'main'; } break;
     case 'offno': if (S.offer != null) { logMsg(`Ты отказался от контракта с ${SEMI_TEAMS[S.offer]}.`); S.offer = null; S.view = 'main'; } break;
     case 'noteok': S.notice = null; S.view = 'main'; break;
     case 'vicok': S.vic = null; S.view = 'main'; break;
