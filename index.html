@@ -366,6 +366,7 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .tfs{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}.tfs .ava{width:84px;height:84px;border-radius:14px;overflow:hidden;border:2px solid #3A4E73}.tfs.me .ava{border-color:var(--gold)}.tfs .ava img{width:100%;height:100%;object-fit:cover;object-position:top}
 .tfsc{font-size:34px;font-weight:900;color:var(--gold);display:flex;flex-direction:column;align-items:center}.tfsc small{font-size:12px;color:var(--dim)}
 .imgbtn.locked{cursor:default;filter:brightness(.85)}
+.imgbtn.tauto{width:84%;margin:8px auto 0}
 .lbtns{display:flex;gap:8px;margin-top:8px}.lbtns .imgbtn{flex:1;margin-top:0}
 .hdloc{all:unset;cursor:pointer;font-weight:800;font-size:4.2cqw;color:#F3E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .hdm{grid-template-columns:27cqw minmax(0,1fr) 42cqw !important}
@@ -1899,7 +1900,7 @@ function viewTitle() {   // титульные бои конца недели с
     <div class="tfrow">${side(T.a)}<div class="tfsc">${sc.a}:${sc.b}<small>Bo3</small></div>${side(T.b)}</div>
     <div class="dim">Слева — действующий чемпион, справа — претендент.</div>
     ${sc.done ? `<div class="bonus ${T[sc.done].h != null ? 'plus' : 'minus'}" style="font-size:20px">${sc.done === 'a' ? 'Титул защищён' : 'Новый чемпион'}: ${esc(beltName(T[sc.done]))}</div><button class="btn gold" data-a="tfnext">Дальше</button>`
-      : `<button class="btn gold" data-a="tfplay">В бой · бой ${T.g.length + 1}</button>`}</div>`;
+      : `<div class="dim">Бой ${T.g.length + 1}</div><button class="imgbtn" data-a="tfplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>`}</div>`;
 }
 function viewClub() {
   ensureBelts(); const none = S.actions <= 0;
@@ -3890,8 +3891,8 @@ function viewTRun() {
     h += `<div class="card"><h3>${hums.length > 1 ? 'Матч игрока ' + esc(R.ps[L].name) : 'Твой матч'} · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
       <div class="tvs"><div>${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}</div></div>
       <div class="dim" style="text-align:center">Bo${me.bo}${me.bo === 2 ? ' · возможна ничья' : ''} · бой ${me.g.length + 1}</div>
-      <button class="btn gold" data-a="tplay" style="text-align:center">В бой</button>
-      <button class="btn" data-a="tauto" style="text-align:center">Досчитать турнир</button><div class="dim" style="margin-top:4px">Все оставшиеся бои сыграются автоматически, без твоего участия.</div></div>`;
+      <button class="imgbtn" data-a="tplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>
+      <button class="imgbtn tauto" data-a="tauto" aria-label="Досчитать турнир"><img src="img/nav/tauto.webp" alt=""></button><div class="dim" style="margin-top:4px">Все оставшиеся бои сыграются автоматически, без твоего участия.</div></div>`;
   }
   const lead = h; h = '';
   if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr class="${tZone(R, r.id, i, 1, 3)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
@@ -4032,7 +4033,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <h3>Матч игрока ${esc(lgTeamName(L, L1))}</h3>
     <div class="tvs"><div>${lgTeamCell(L, L1)}<br>${rateHtml(lgRating(L, L1), 'mid')}</div><div class="tsc">${mine}:${m.g.length - mine}</div><div>${lgTeamCell(L, R1)}<br>${rateHtml(lgRating(L, R1), 'mid')}</div></div>
     <div class="dim" style="text-align:center">Bo${m.bo}${m.bo === 2 ? ' · возможна ничья' : ''} · бой ${m.g.length + 1}</div>
-    <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
+    <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
 const VIEWS = { club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
