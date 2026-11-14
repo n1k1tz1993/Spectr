@@ -1209,7 +1209,7 @@ function roomHtml() {
   const label = v === 2 && g != null && !car ? `<div class="gph"><b>${CARS[g].emo || ''}</b>${esc(CARS[g].n)}</div>` : '';
   const gsel = v === 2 && (S.cars || []).length ? `<div class="dim" style="margin-top:8px">Что поставить в гараж:</div><div class="row" style="margin-top:6px;gap:6px">${CAR_ORDER.filter(j => S.cars.includes(j)).map(j => `<button class="btn ${j === g ? 'here' : ''}" data-a="gsel" data-v="${j}" style="width:auto;flex:1 1 30%;text-align:center;font-size:13px;margin:0">${esc(CARS[j].n)}</button>`).join('')}</div>` : '';
   return `<div class="room ${v === 2 ? 'garage' : ''}" data-a="rpic"><div class="roomph">${esc(v === 3 ? REGIONS[S.region].city : v === 2 ? 'Гараж' : roomOf(k).n)}<br>${ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">${car ? `<img class="rcar" src="img/car/${car}.webp" alt="${esc(CARS[g].n)}">` : ''}${label}
-      <div class="rtag">${ROOM_PICS[v]}${v === 3 ? ' · ' + esc(REGIONS[S.region].city) : ''}${v === 2 ? (g != null ? ' · ' + esc(CARS[g].n) : ' · пусто') : ''} · нажми, чтобы сменить</div></div>${gsel}
+      <div class="rtag">${ROOM_PICS[v]}${v === 3 ? ' · ' + esc(REGIONS[S.region].city) : ''}${v === 2 ? (g != null ? ' · ' + esc(CARS[g].n) : ' · пусто') : ''}</div></div>${gsel}
     ${own.length > 1 ? `<div class="row" style="margin-top:8px;gap:6px">${own.slice().sort((a, b) => a - b).map(j => `<button class="btn ${j === k ? 'here' : ''}" data-a="rsel" data-v="${j}" style="width:auto;flex:1 1 45%;text-align:center;font-size:13px;margin:0">${esc(roomOf(j).n)}</button>`).join('')}</div>` : ''}`;
 }
 const itemIcon = (H, i) => artImg(i);
