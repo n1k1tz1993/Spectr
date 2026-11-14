@@ -2487,6 +2487,12 @@ function playTour(t) {
   }
   tStart({ tier: t, region: r }, fmt, ps);
 }
+function introTour() {   // вступительный турнир: 8 новичков без рейтинга из выбранного региона, бойцы заметно слабее героя
+  const r = S.region, tk = takenSet(G.players.map(H => H.nick));
+  const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }].concat([...Array(7)].map((_, i) =>
+    Object.assign(genSpectre(r, tk, rnd(12, 20)), { id: i + 1, rating: 0, seed: Math.random() })));
+  tStart({ tier: 0, region: r, intro: true }, 'se8', ps);
+}
 const SEMI_PICK_RATING = 1500, SEMI_PICK_CHANCE = 0.1, SEMI_PICK_BONUS = 1;
 const teamTag = x => x && x.team != null && SEMI[x.team] ? `<img class="ttag" src="img/team/${SEMI[x.team][1]}.webp" alt="" title="${esc(SEMI_TEAMS[x.team])}">` : '';
 function tStart(meta, fmt, ps) {   // сетка любого формата из готового списка участников
@@ -3392,7 +3398,7 @@ function viewIntro() {   // вступление после создания г�
     <p>За дверями Бюро гудит арена. На экранах вспыхивают имена участников, а метеоритный камень отзывается на твою Цы.</p>
     <p>Сегодня ты впервые выйдешь на поединок. Среди новичков уже ищут будущих звёзд — агенты корпораций внимательно следят за каждым боем.</p>
     <p>Сохрани спокойствие, береги Цы и покажи, на что способен. Возможно, именно с этого турнира начнётся твоя легенда.</p>
-    <div class="inbanner"><div><b>ВСТУПИТЕЛЬНЫЙ ТУРНИР</b><i>Первый шаг в большую лигу · ${esc(REGIONS[S.region].city)}</i></div></div>
+    <div class="inbanner"><div><b>ВСТУПИТЕЛЬНЫЙ ТУРНИР</b><i>Первый шаг в большую лигу · ${esc(REGIONS[S.region].city)} · 8 новичков</i></div></div>
     <button class="ingo" data-a="igo">ОТПРАВИТЬСЯ НА ТУРНИР</button></div>`;
 }
 function viewSetup() {
@@ -3751,7 +3757,7 @@ function act(a, v) {
     case 'hgo': G.handoff = false; break;
     case 'ireg': if (S.intro === 1) S.introReg = +v; break;
     case 'isign': if (S.intro === 1) { S.region = S.introReg | 0; S.intro = 2; logMsg('Документы подписаны. Карьера начинается: ' + REGIONS[S.region].name + '.'); save(); } break;
-    case 'igo': if (S.intro === 2) { S.intro = 0; S.tourPass = true; S.tourInv = []; S.view = 'tour'; playTour(0); save(); } break;
+    case 'igo': if (S.intro === 2) { S.intro = 0; S.tourPass = false; S.tourInv = []; S.view = 'tour'; introTour(); save(); } break;
     case 'hskip': S.skipNext = false; G.handoff = false; logMsg('Неделя пропущена: вторжение на турнир.'); endTurn(); break;
     case 'lgo': G.lann = G.lq[0]; G.lview = 'match'; break;
     case 'lplay': {
