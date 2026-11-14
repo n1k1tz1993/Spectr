@@ -117,10 +117,14 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .ttl{font-weight:700;font-size:15px}
 .ds{font-size:13px;color:var(--dim);margin-top:4px}
 .map{position:relative;container-type:inline-size;border-radius:10px;overflow:hidden;line-height:0;aspect-ratio:16/9}   /* как у комнаты: блок не прыгает при переключении */
-.mapin{position:absolute;left:0;right:0;top:0;transform:translateY(-5.7%)}
+.mapin{position:absolute;inset:0}
 .map img{width:100%;display:block}
-.mbox{position:absolute;display:flex;align-items:center;justify-content:center;color:#BFF6FF;font-weight:700;font-size:2.6cqw;line-height:1;cursor:pointer;letter-spacing:.02em;white-space:nowrap}
-.mbox.cur{color:var(--gold);text-shadow:0 0 6px rgba(245,197,66,.7)}
+.mbox{position:absolute;display:flex;align-items:center;gap:1.4cqw;padding:0 1.6cqw;box-sizing:border-box;color:#BFF6FF;line-height:1.05;cursor:pointer}
+.mbox img{width:7.6cqw;height:7.6cqw;border-radius:1cqw;object-fit:contain;flex:0 0 auto}
+.mbox span{display:flex;flex-direction:column;min-width:0}
+.mbox b{font-size:2.9cqw;font-weight:800;line-height:1.05}.mbox b.long{font-size:2.2cqw}
+.mbox i{font-style:normal;font-size:1.9cqw;color:#7FBFD0;margin-top:.4cqw}
+.mbox.cur b{color:var(--gold);text-shadow:0 0 6px rgba(245,197,66,.7)}
 .mpin{position:absolute;width:7cqw;height:7cqw;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer}
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:12px;z-index:10}
 .lwrap{width:min(100%,calc((100vh - 90px)*2/3))}
@@ -981,13 +985,13 @@ const GENERIC = [
   C('Экскурсия по лиге', 'n'), C('Осмотр метеоритного камня', 'n'), C('Выставка технологий', 'n'), C('Спарринг с напарником', 'spar'), C('Посещение спортзала', 'n'), C('Игра в настолки с командой', 'n')
 ];
 // карта 1254×1254: выноски (x0,y0,x1,y1), точки, короткое имя лиги
-const MAPW = 1254, MAPH = 875;   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
-const MAPSPOTS = [
-  { box: [67, 444, 262, 490], pin: [176, 339], label: 'USA' },
-  { box: [335, 167, 533, 214], pin: [634, 249], label: 'LCS' },
-  { box: [864, 133, 1066, 180], pin: [774, 232], label: 'Северная Лига', fs: 1.8 },
-  { box: [813, 395, 1006, 442], pin: [1085, 341], label: 'ASL' },
-  { box: [1023, 513, 1228, 560], pin: [1157, 376], label: 'SSS' }
+const MAPW = 1672, MAPH = 941;   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
+const MAPSPOTS = [   // выноски новой карты 1672×941: рамка (внутренняя тёмная часть) и точка на карте
+  { box: [37, 623, 362, 794], pin: [245, 367] },
+  { box: [352, 75, 675, 245], pin: [829, 257] },
+  { box: [1160, 75, 1479, 245], pin: [1020, 236] },
+  { box: [943, 623, 1260, 794], pin: [1396, 383] },
+  { box: [1321, 623, 1640, 794], pin: [1508, 403] }
 ];
 // панели лиг 1024×1536: строки «Последние матчи», края строк, центры пьедесталов, низ подписи трофея
 const TROPHY_IMG = [true, true, true, true, false];   // трофеи лиг: img/trophy/r<регион>_<0..3>.webp (новички, любители, полупро, лига)
@@ -2909,7 +2913,7 @@ const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
   return `<div class="map"><div class="mapin"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
-    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="${m.fs ? `font-size:${m.fs}cqw;` : ''}left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}">${m.label}</div>
+    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}"><img src="img/logo_${i}.webp" alt=""><span><b class="${LSHORT[i].length > 6 ? 'long' : ''}">${LSHORT[i]}</b><i>${esc(REGIONS[i].name)}</i></span></div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
   }).join('')}</div></div>`;
 }
