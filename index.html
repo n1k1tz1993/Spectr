@@ -3689,7 +3689,7 @@ function viewHandoff() {
     <div class="ava" style="width:96px;height:96px;margin:14px auto">${faceImg(S.face)}</div>
     <h2>Ход игрока ${G.cur + 1} из ${n}: ${flagOf(S.country)} ${esc(S.nick)}</h2>
     <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
-    ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div><button class="btn gold" data-a="hskip" style="margin-top:10px">Пропустить неделю</button>` : `<button class="btn gold" data-a="hgo" style="margin-top:14px">Начать неделю</button>`}</div>
+    ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div><button class="btn gold" data-a="hskip" style="margin-top:10px">Пропустить неделю</button>` : `<button class="imgbtn" data-a="hgo" style="margin-top:14px" aria-label="Начать неделю"><img src="img/nav/startweek.webp" alt=""></button>`}</div>
     <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${flagOf(H.country)} ${esc(H.nick)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
     <button class="btn" data-a="menu">Главное меню</button>`;
 }
