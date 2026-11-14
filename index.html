@@ -1050,7 +1050,7 @@ const IMGBY = {};
 REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${ri}_${i}.webp`; }));
 GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
 IMGBY['DreamHack'] = 'img/act/dh.webp';
-const picOf = c => IMGBY[c.t] || (c.k === 'fest' ? 'img/act/fest.webp' : '');
+const picOf = c => IMGBY[c.t] || '';   // фестиваль: картинка появится в img/act/fest.webp — тогда добавить IMGBY['Фестиваль Спектров']
 // большие картинки событий (4:3, комикс 1–4 панели): img/evt/<ключ>.webp — пока их нет, показывается миниатюра
 const bigOf = c => { const m = picOf(c).match(/img\/act\/(.+)\.webp$/); return m ? `img/evt/${m[1]}.webp` : ''; };
 // внутри действия — своя картинка img/evt/<key>.webp; пока её нет — заглушка (иконки действий только в меню выбора)
