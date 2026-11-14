@@ -367,6 +367,7 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .tfsc{font-size:34px;font-weight:900;color:var(--gold);display:flex;flex-direction:column;align-items:center}.tfsc small{font-size:12px;color:var(--dim)}
 .imgbtn.locked{cursor:default;filter:brightness(.85)}
 .imgbtn.tauto{width:84%;margin:8px auto 0}
+.blgb{all:unset;flex:1;aspect-ratio:1;cursor:pointer;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:.55;filter:grayscale(.4);transition:opacity .15s,transform .15s}.blgb img{width:100%;height:100%;object-fit:cover}.blgb.on{opacity:1;filter:none;box-shadow:0 0 0 2px #E9C46A,0 0 12px rgba(233,196,106,.6);transform:scale(1.06)}.blgb:active{transform:scale(.95)}
 .lbtns{display:flex;gap:8px;margin-top:8px}.lbtns .imgbtn{flex:1;margin-top:0}
 .hdloc{all:unset;cursor:pointer;font-weight:800;font-size:4.2cqw;color:#F3E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .hdm{grid-template-columns:27cqw minmax(0,1fr) 42cqw !important}
@@ -3659,7 +3660,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="ESL ONE"><img src="img/nav/esl.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="ESL ONE закрыт"><img src="img/nav/s_esl_lock.webp" alt=""></div>'}
     </div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
-    <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="btn ${i === r ? 'here' : ''}" style="flex:1;text-align:center;width:auto;padding:8px 2px;font-size:12px;margin:0" data-a="blg" data-v="${i}">${MAP_SHORT[i]}</button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}</div></div>`);
+    <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="blgb ${i === r ? 'on' : ''}" data-a="blg" data-v="${i}" aria-label="${LSHORT[i]}" title="${LSHORT[i]}"><img src="img/logo_${i}.webp" alt=""></button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
 function viewFame() {
   ensureFame(); const F2 = G.fame;
