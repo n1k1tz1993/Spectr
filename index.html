@@ -99,7 +99,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .week .nextwk{flex:0 0 100%;margin-top:0}
 .week .inds{margin-top:8px}
 .nextm{text-align:right;font-size:14px}
-.loc{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:14px;text-align:right}
+.loc{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin-top:8px;font-size:14px;text-align:left}
 .mapsw{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
 .mapsw .nvb{all:unset;cursor:pointer;display:block;line-height:0;width:calc(50% - 9px);transition:transform .12s,filter .15s;filter:brightness(.8) saturate(.9)}
 .mapsw .nvb img{width:100%;height:auto;display:block;aspect-ratio:720/162;object-fit:fill}   /* обе плашки одной высоты: «Карта» чуть сплюснута до высоты «Комнаты» */.mapsw .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}.mapsw .nvb:active{transform:scale(.97)}
@@ -2950,10 +2950,10 @@ function viewMain() {
       <h2>${S.inRoom ? 'Моя комната' : 'Карта мира'}</h2>
       ${S.inRoom ? roomHtml() : mapHtml()}
       <div class="mapsw"><button class="nvb nv-room ${S.inRoom ? 'on' : ''}" data-a="nav" data-v="room" aria-label="Комната"><img src="img/nav/room.webp" alt=""></button><i class="nvsep"></i><button class="nvb nv-map ${S.inRoom ? '' : 'on'}" data-a="nav" data-v="map" aria-label="Карта"><img src="img/nav/map.webp" alt=""></button></div>
-      <div class="loc"><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span><img src="img/logo_${S.region}.webp" alt=""></div>
+      <div class="loc"><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span></div>
     </div>`;
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
-  const daily = `<div class="card"><h2>Повседневные действия</h2>
+  const daily = `<div class="card"><h2>Повседневные действия <span class="dim" style="font-size:.6em;font-weight:500;white-space:nowrap">(Тратит 1 действие)</span></h2>
       <button class="imgbtn" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''} aria-label="Бюро">${freeBureau(S) ? '<small class="ibfree">бесплатно</small>' : ''}<img src="img/nav/bureau.webp" alt=""></button>
       <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
       <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
