@@ -794,6 +794,32 @@ html.land .fyk{grid-column:3;grid-row:1}
 html.land .fyl #fend{grid-row:2}
 html.land .fzlast{position:absolute;right:180px;bottom:8px}
 html.land .fyl .flog{max-height:110px}
+@media (max-height:600px){   /* телефон в альбомном: всё на одном экране — портрет, ник, рейтинг/ранг, способность, бары и чат */
+  html.land #app[data-view=fight]{padding-top:4px;padding-bottom:4px}
+  html.land .fy{gap:6px}
+  html.land .fyh{padding:2px 0 6px;margin:0}
+  html.land .fyh .fzlogo{font-size:18px}html.land .fyh b{font-size:14px}html.land .fyh .fzst{font-size:12px}html.land .fzback{width:30px;height:30px}
+  html.land .fyf{grid-template-columns:1fr 44px 1fr;gap:0}
+  html.land .fyvs{font-size:30px}
+  html.land .fyc,html.land .fyc.fb{grid-template-columns:min(118px,calc(100vh - 270px)) 1fr;grid-template-areas:"p i" "p b" "a a";gap:4px 10px;padding:8px 10px;border-radius:12px}
+  html.land .fyc.fb{grid-template-columns:1fr min(118px,calc(100vh - 270px));grid-template-areas:"i p" "b p" "a a"}
+  html.land .fyp{width:100%;align-self:start}
+  html.land .fyi{gap:2px}
+  html.land .fyn{font-size:16px}html.land .fyr img{width:24px;height:24px}html.land .fyrt{font-size:18px}
+  html.land .fyteam{display:none}
+  html.land .fybars{padding-top:4px;border-top:0;gap:3px}
+  html.land .fyb span,html.land .fyb em{font-size:11px}
+  html.land .fyc .fya{padding:4px 8px;gap:8px}
+  html.land .fyc .fya .aic{width:34px;height:34px}html.land .fyc .fya .fyico em{font-size:15px}
+  html.land .fyc .fya .fyat{padding-left:8px}
+  html.land .fyc .fya .fyat small,html.land .fyc .fya .fyat i{display:none !important}html.land .fyc .fya .fyat{min-width:0;overflow:hidden}
+  html.land .fyc .fya .fyat b{font-size:14px}
+  html.land .fyl{gap:8px;padding:6px 10px}
+  html.land .fylh h3{font-size:15px;max-width:80px;padding-left:8px}
+  html.land .fyl .flog{max-height:calc(100vh - 312px);min-height:40px;font-size:12px}
+  html.land .fyk{gap:4px}html.land .fysp{padding:4px 10px}html.land .fyall2{padding:3px 8px;font-size:12px}html.land .fyskip{font-size:12px}
+  html.land .fyit button{width:22px;height:22px;min-width:22px;min-height:22px}
+}
 
 .fyico{position:relative;flex:0 0 auto;display:block;line-height:0}
 .fyico em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:10px;font-style:normal;font-weight:900;font-size:24px;line-height:1;color:#fff;text-shadow:0 0 3px #000,0 0 6px #000;padding:0;border:0;min-width:0;box-shadow:none;background:transparent}
