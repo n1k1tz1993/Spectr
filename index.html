@@ -116,7 +116,8 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .arow .tx{flex:1;min-width:0}
 .ttl{font-weight:700;font-size:15px}
 .ds{font-size:13px;color:var(--dim);margin-top:4px}
-.map{position:relative;container-type:inline-size;border-radius:10px;overflow:hidden;line-height:0}
+.map{position:relative;container-type:inline-size;border-radius:10px;overflow:hidden;line-height:0;aspect-ratio:16/9}   /* как у комнаты: блок не прыгает при переключении */
+.mapin{position:absolute;left:0;right:0;top:0;transform:translateY(-5.7%)}
 .map img{width:100%;display:block}
 .mbox{position:absolute;display:flex;align-items:center;justify-content:center;color:#BFF6FF;font-weight:700;font-size:2.6cqw;line-height:1;cursor:pointer;letter-spacing:.02em;white-space:nowrap}
 .mbox.cur{color:var(--gold);text-shadow:0 0 6px rgba(245,197,66,.7)}
@@ -1155,7 +1156,7 @@ const ROOMS = [
   { n: 'Роскошная вилла', cost: 4000, perk: 'Поход в бюро не тратит действие' },
   { n: 'Собственный остров', cost: 5000, perk: 'Бюро без траты действия и перелёты без джетлага' }
 ];
-const ROOM_PICS = ['Интерьер', 'Вид из окна', 'Гараж'];
+const ROOM_PICS = ['Интерьер', 'Вид из окна', 'Гараж', 'Панорама города'];
 // ---------- машины: стоят в гараже (третья картинка комнаты); дают дополнительные действия в неделю ----------
 const CARS = [
   { n: 'Veltor S4', cost: 1500, a: 1, img: 'veltor', kind: 'Городской седан' },
@@ -1188,12 +1189,12 @@ const roomOf = k => k < 0 ? BASE_ROOM : ROOMS[k];
 const roomImg = (k, v) => `img/room/${k < 0 ? 'base' : k}_${v}.webp`;
 function roomHtml() {
   const own = [-1, ...(S.rooms || [])];
-  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = (S.roomPic | 0) % 3, g = garageOf(S);
-  const src = v === 2 ? 'img/room/garage.webp' : roomImg(k, v), car = v === 2 && g != null && CARS[g].img;
+  const k = own.includes(S.room) ? S.room : own[own.length - 1], v = (S.roomPic | 0) % 4, g = garageOf(S);
+  const src = v === 3 ? `img/city/${S.region}.webp` : v === 2 ? 'img/room/garage.webp' : roomImg(k, v), car = v === 2 && g != null && CARS[g].img;
   const label = v === 2 && g != null && !car ? `<div class="gph"><b>${CARS[g].emo || ''}</b>${esc(CARS[g].n)}</div>` : '';
   const gsel = v === 2 && (S.cars || []).length ? `<div class="dim" style="margin-top:8px">Что поставить в гараж:</div><div class="row" style="margin-top:6px;gap:6px">${CAR_ORDER.filter(j => S.cars.includes(j)).map(j => `<button class="btn ${j === g ? 'here' : ''}" data-a="gsel" data-v="${j}" style="width:auto;flex:1 1 30%;text-align:center;font-size:13px;margin:0">${esc(CARS[j].n)}</button>`).join('')}</div>` : '';
-  return `<div class="room ${v === 2 ? 'garage' : ''}" data-a="rpic"><div class="roomph">${esc(v === 2 ? 'Гараж' : roomOf(k).n)}<br>${ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">${car ? `<img class="rcar" src="img/car/${car}.webp" alt="${esc(CARS[g].n)}">` : ''}${label}
-      <div class="rtag">${ROOM_PICS[v]}${v === 2 ? (g != null ? ' · ' + esc(CARS[g].n) : ' · пусто') : ''} · нажми, чтобы сменить</div></div>${gsel}
+  return `<div class="room ${v === 2 ? 'garage' : ''}" data-a="rpic"><div class="roomph">${esc(v === 3 ? REGIONS[S.region].city : v === 2 ? 'Гараж' : roomOf(k).n)}<br>${ROOM_PICS[v]}</div><img src="${src}" alt="" onerror="this.remove()">${car ? `<img class="rcar" src="img/car/${car}.webp" alt="${esc(CARS[g].n)}">` : ''}${label}
+      <div class="rtag">${ROOM_PICS[v]}${v === 3 ? ' · ' + esc(REGIONS[S.region].city) : ''}${v === 2 ? (g != null ? ' · ' + esc(CARS[g].n) : ' · пусто') : ''} · нажми, чтобы сменить</div></div>${gsel}
     ${own.length > 1 ? `<div class="row" style="margin-top:8px;gap:6px">${own.slice().sort((a, b) => a - b).map(j => `<button class="btn ${j === k ? 'here' : ''}" data-a="rsel" data-v="${j}" style="width:auto;flex:1 1 45%;text-align:center;font-size:13px;margin:0">${esc(roomOf(j).n)}</button>`).join('')}</div>` : ''}`;
 }
 const itemIcon = (H, i) => artImg(i);
@@ -2906,11 +2907,11 @@ const nextMatchText = () => {
 };
 const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
-  return `<div class="map"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
+  return `<div class="map"><div class="mapin"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
     return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="${m.fs ? `font-size:${m.fs}cqw;` : ''}left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}">${m.label}</div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
-  }).join('')}</div>`;
+  }).join('')}</div></div>`;
 }
 function viewLeague() {
   const r = S.sel, P = PANELS[r];
@@ -3931,7 +3932,7 @@ function act(a, v) {
     case 'iren': { const i = +v, el = document.getElementById('iname'), t = el ? el.value.trim() : ''; S.iname = S.iname || {}; if (t) S.iname[i] = t; else delete S.iname[i]; S.renaming = null; break; }
     case 'rbuy': { const j = +v; S.rooms = S.rooms || []; if (S.rooms.includes(j) || (S.coins || 0) < ROOMS[j].cost) return; S.coins -= ROOMS[j].cost; S.rooms.push(j); S.room = j; S.roomPic = 0; logMsg('Куплено жильё: ' + ROOMS[j].n + '.'); break; }
     case 'room': S.inRoom = !S.inRoom; break;
-    case 'rpic': S.roomPic = ((S.roomPic | 0) + 1) % 3; break;
+    case 'rpic': S.roomPic = ((S.roomPic | 0) + 1) % 4; break;
     case 'rsel': S.room = +v; S.roomPic = 0; break;
     case 'cbuy': { const j = +v; S.cars = S.cars || []; if (S.cars.includes(j) || (S.coins || 0) < CARS[j].cost) return; S.coins -= CARS[j].cost; S.cars.push(j);
       if (garageOf(S) == null) { S.garage = j; S.actions += CARS[j].a; S.weekMax = maxActs(S); }   // пустой гараж — бонус сразу
