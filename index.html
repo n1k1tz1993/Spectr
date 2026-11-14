@@ -108,8 +108,8 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .loc img{width:30px;height:30px;border-radius:6px;object-fit:contain;background:#000;flex:0 0 auto}
 .week h2{margin:0}
 .inds{display:flex;gap:6px}
-.ind{width:34px;height:12px;border-radius:3px;background:#3A7BFF;display:inline-block}
-.ind.off{background:#2A3350;opacity:.7}
+.ind{width:24px;height:30px;display:inline-block;background:url(img/nav/act_on.webp) center/contain no-repeat;filter:drop-shadow(0 0 4px rgba(95,227,240,.55))}
+.ind.off{background-image:url(img/nav/act_off.webp);filter:none;opacity:.85}
 .mapph{height:180px;background:#fff;color:#111;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:8px}
 .arow{display:flex;gap:12px;align-items:stretch;background:var(--nest);border-radius:12px;padding:8px;margin-top:8px;cursor:pointer}
 .pic{width:84px;height:116px;background:#fff;color:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:12px;padding:4px;flex:0 0 84px}
@@ -420,7 +420,7 @@ html.land .fza b{font-size:14px}
 .nav .nvb{all:unset;position:relative;cursor:pointer;display:block;line-height:0;transition:transform .12s,filter .15s;filter:brightness(.82) saturate(.9)}
 .nav .nvb img{width:100%;height:auto;display:block}
 .nav .nv-room,.nav .nv-map{width:calc(50% - 9px)}
-.nav .nv-more{width:calc(50% - 4px)}.nav .nv-shop{width:calc(50% - 4px);--nvh:clamp(36px,10.6vw,52px)}.nav .nv-shop .nvtx{font-size:clamp(14px,4vw,18px)}
+.nav .nv-more{width:calc(50% - 4px)}.nav .nv-shop{width:calc(50% - 4px)}.nav .nv-shop .nvtx{font-size:clamp(14px,4vw,18px)}
 .nav .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}
 .nav .nvb:active{transform:scale(.97)}
 .nav .nvb:disabled{filter:grayscale(1) brightness(.55);cursor:default}
@@ -2868,7 +2868,7 @@ function viewLeague() {
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
   const cur = S.view === 'shop' ? 'shop' : ['more', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
-  const nb = (id, a, v, label, extra, dis) => `<button class="nvb nv-${id} ${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''} aria-label="${label}">${id === 'shop' ? `<span class="nvtx">${label}<i>›</i></span>` : `<img src="img/nav/${id}.webp" alt="">`}${extra ? `<small>${extra}</small>` : ''}</button>`;
+  const nb = (id, a, v, label, extra, dis) => `<button class="nvb nv-${id} ${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''} aria-label="${label}"><img src="img/nav/${id}.webp" alt="">${extra ? `<small>${extra}</small>` : ''}</button>`;
   // кнопки-плашки: 1-й ряд — Комната | Карта (крупные), 2-й — Бюро слева, Магазин, Ещё справа
   return `<nav class="nav"><div class="nvr2">${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</div></nav>`;   // Комната/Карта — под картинкой, Бюро — в повседневных действиях
 }
