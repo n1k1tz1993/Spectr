@@ -365,6 +365,7 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .tfbelt{width:min(320px,90%);border-radius:12px;margin:10px auto;display:block}.tfrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0}
 .tfs{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}.tfs .ava{width:84px;height:84px;border-radius:14px;overflow:hidden;border:2px solid #3A4E73}.tfs.me .ava{border-color:var(--gold)}.tfs .ava img{width:100%;height:100%;object-fit:cover;object-position:top}
 .tfsc{font-size:34px;font-weight:900;color:var(--gold);display:flex;flex-direction:column;align-items:center}.tfsc small{font-size:12px;color:var(--dim)}
+.imgbtn.locked{cursor:default;filter:brightness(.85)}
 .lbtns{display:flex;gap:8px;margin-top:8px}.lbtns .imgbtn{flex:1;margin-top:0}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
@@ -3632,10 +3633,8 @@ function viewBureau() {   // слева — бюро и услуги, справ
     <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров">
       <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
     <div class="card"><h2>Услуги бюро</h2>
-      ${svc('tour', '', 'Местный турнир', 'Еженедельный турнир региона: новички, любители, полупрофессионалы.', none, 'Действия на неделю закончились.')}
-      ${svc('fight', 'ladder', 'Лестничный матч', 'Соперник по твоему рейтингу (±200). Первые 10 матчей ±150, дальше рейтинг меняется по силе соперника: за слабых почти ничего. Победа: +30 ОЛ.', none, 'Действия на неделю закончились.')}
-      ${svc('fight', 'pro', 'Бой с Элитным Спектром', 'Случайный Элитный Спектр региона. Чем выше его рейтинг, тем больше даёт победа и меньше отнимает поражение. Победа: +100 ОЛ.', none, 'Действия на неделю закончились.')}
-      <button class="imgbtn" data-a="esl" ${none || !esl ? 'disabled' : ''} aria-label="ESL ONE"><img src="img/nav/esl.webp" alt=""></button>${none || !esl ? `<div class="dim" style="margin-top:4px;font-size:13px">${!esl ? 'Откроется, когда твоя сила станет достаточной для Элиты.' : 'Действия на неделю закончились.'}</div>` : ''}
+      ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}${none ? '<div class="dim" style="margin-top:4px;font-size:13px">Действия на неделю закончились.</div>' : ''}
+      ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="ESL ONE"><img src="img/nav/esl.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="ESL ONE закрыт"><img src="img/nav/s_esl_lock.webp" alt=""></div>'}
     </div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
     <div class="bright">${lgCardHtml(S.region)}${wcCardHtml()}${wfCardHtml()}</div></div>`);
