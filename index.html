@@ -530,8 +530,7 @@ html.land .fza b{font-size:14px}
 .imgbtn.over{margin-top:calc(4.2% + 2px);width:calc(100% * 904 / 900)}.imgbtn.over img{margin-top:-4.2%}   /* у Бюро голова выходит за рамку */
 .imgbtn:active{transform:scale(.985)}
 .imgbtn:disabled{filter:grayscale(1) brightness(.55);cursor:default}
-.imgbtn.nextwk small{position:absolute;left:31%;bottom:16%;line-height:1;font-size:clamp(10px,2.8vw,13px);font-weight:600;color:#AFC0DA}
-html.land .imgbtn.nextwk small{font-size:12px}
+.imgbtn.nextwk{container-type:inline-size}.imgbtn.nextwk small{position:absolute;left:31%;bottom:13%;line-height:1;font-size:3.3cqw;font-weight:600;color:#AFC0DA}
 .imgbtn.nextwk.ready{animation:wkglow 1.8s ease-in-out infinite}
 @keyframes wkglow{50%{filter:drop-shadow(0 0 10px rgba(255,200,90,.8)) brightness(1.1)}}
 .nextwk.btn{margin-top:10px;text-align:center;font-weight:800;font-size:17px;padding:12px}
@@ -543,11 +542,12 @@ html.land .imgbtn.nextwk small{font-size:12px}
 .quote p{margin:0;font-style:italic;line-height:1.45}
 .evtgo{text-align:center;margin-top:6px}
 html.land #app[data-view=main],html.land #app[data-view=card],html.land #app[data-view=cardres],html.land #app[data-view=more],html.land #app[data-view=coll]{column-count:1}
-html.land #app[data-view=main],html.land #app[data-view=more],html.land #app[data-view=coll],html.land #app:has(>.nav){padding-left:226px;padding-bottom:40px}
-html.land .nav{top:0;bottom:0;right:auto;width:210px;max-width:none;justify-content:center;border-top:0;border-right:1px solid var(--line);padding:12px 10px}
-html.land .nav .nvr1,html.land .nav .nvr2{flex-direction:column;gap:6px;align-items:stretch}
-html.land .nav{--nvh:38px}html.land .nav .nvtx{font-size:15px}html.land .nav .nvsep{display:none}html.land .nav .nvb{width:100%!important}
-html.land .mgrid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);column-gap:16px;align-items:start}
+html.land #app[data-view=main],html.land #app[data-view=more],html.land #app[data-view=coll],html.land #app:has(>.nav){padding-left:0;padding-bottom:40px}
+html.land .nav{position:static;width:auto;max-width:none;margin:10px 0 0;border:0;background:none;padding:0;column-span:all}
+html.land .nav .nvr2{flex-direction:row;gap:12px;max-width:720px;margin:0 auto}
+html.land .nav{--nvh:38px}html.land .nav .nvtx{font-size:15px}html.land .nav .nvsep{display:none}html.land .nav .nvb{width:calc(50% - 6px)!important}
+html.land .mgrid.land2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}html.land .mcol>.card{margin-top:12px}
+html.land .mgrid:not(.land2){display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);column-gap:16px;align-items:start}
 html.land .mgrid>.card{grid-column:2;margin-top:12px}
 html.land .mgrid>.mapcard{grid-column:1;grid-row:1 / span 6;margin-top:12px}
 html.land #app>.card.evt{display:flex;flex-direction:row;align-items:flex-start}
@@ -3171,7 +3171,7 @@ function viewMain() {
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
     </div>`;
   const news = S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div></div>` : '';
-  return wrap(`<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
+  return wrap(ORIENT === 'land' ? `<div class="mgrid land2"><div class="mcol">${map}${events}</div><div class="mcol">${week}${daily}${news}</div></div>` : `<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
 }
 function viewMore() {   // «Ещё»: библиотека, магазин, инвентарь, коллекция, история, настройки
   const it = (a, t, d, dis) => `<button class="btn morei" data-a="${a}" ${dis ? 'disabled' : ''}><b>${t}</b><span class="dim">${d}</span></button>`;
@@ -4051,6 +4051,7 @@ function render() {
   else if (S.offer != null && !F && (S.view === 'main' || S.view === 'tour' || S.view === 'bureau' || !S.view)) S.view = 'offer';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
+  if (ORIENT === 'land') { const nv = app.querySelector('.nav'), hd = app.querySelector('.hdr'); if (nv && hd) hd.after(nv); }   // альбомный: меню сразу под шапкой игрока
   const bkt = app.querySelector('.bkt');   // сетка: прокрутить к текущему раунду
   if (bkt) { const cols = [...bkt.querySelectorAll('.bkc')], cur = cols.find(c => c.querySelector('.bkp.now')) || cols.slice().reverse().find(c => c.querySelector('.bks.win')) || cols[0]; if (cur) bkt.scrollLeft = Math.max(0, cur.offsetLeft - bkt.offsetLeft - 20); }
   if (S.view !== lastView) { window.scrollTo(0, 0); stageTop(); lastView = S.view; }   // новый экран всегда с верха
