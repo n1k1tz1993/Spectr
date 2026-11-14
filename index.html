@@ -2418,8 +2418,8 @@ const REGION_NAMES = {
 const NAMES = [...GEN_NAMES, ...Object.values(REGION_NAMES).flat()];
 const NAME_FLAGS = { 3: ['CN', 'TW', 'SG'], 4: ['KR', 'KP', 'SG', 'TW'] };   // REGION_NAMES[3] — китайские, [4] — корейские
 // сгенерированный боец: флаг из флагов региона (r = null — любой), ник подходит к флагу
-function genSpectre(r, taken, p) {
-  const flags = r != null && REGION_FLAGS[r] ? REGION_FLAGS[r] : ALL_FLAGS, c = flags[rnd(0, flags.length - 1)];
+function genSpectre(r, taken, p, own) {
+  const flags = own || (r != null && REGION_FLAGS[r] ? REGION_FLAGS[r] : ALL_FLAGS), c = flags[rnd(0, flags.length - 1)];
   const asian = shuffle(Object.keys(NAME_FLAGS).filter(k => NAME_FLAGS[k].includes(c)).flatMap(k => REGION_NAMES[k]));
   const local = r === 2 ? shuffle(REGION_NAMES[2]) : [], gen = shuffle(GEN_NAMES), loc = asian.concat(local);
   const order = []; while (loc.length || gen.length) { if (loc.length) order.push(loc.shift()); if (gen.length) order.push(gen.shift()); }
@@ -2487,10 +2487,11 @@ function playTour(t) {
   }
   tStart({ tier: t, region: r }, fmt, ps);
 }
+const INTRO_FLAGS = [['US', 'CA', 'MX', 'AR'], ['FR', 'GB', 'DE', 'SE', 'NL', 'PL', 'DK', 'IT', 'ES'], ['RU', 'BY', 'KZ', 'AM', 'GE'], ['CN'], ['KR']];   // вступительный: только «домашние» флаги региона
 function introTour() {   // вступительный турнир: 8 новичков без рейтинга из выбранного региона, бойцы заметно слабее героя
   const r = S.region, tk = takenSet(G.players.map(H => H.nick));
   const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }].concat([...Array(7)].map((_, i) =>
-    Object.assign(genSpectre(r, tk, rnd(12, 20)), { id: i + 1, rating: 0, seed: Math.random() })));
+    Object.assign(genSpectre(r, tk, 1, INTRO_FLAGS[r]), { id: i + 1, rating: 0, seed: Math.random() })));   // сила 1: в живом бою не проиграть
   tStart({ tier: 0, region: r, intro: true }, 'se8', ps);
 }
 const SEMI_PICK_RATING = 1500, SEMI_PICK_CHANCE = 0.1, SEMI_PICK_BONUS = 1;
@@ -2546,7 +2547,7 @@ function simAB(fa, fb) {   // бой без показа — тем же дви�
   useGame(F.a); useGame(F.b);
   const w = F.won; F = keep; return w;
 }
-function tSimGame(R, a, b) { return simAB(tFighter(R, a), tFighter(R, b)) ? a : b; }
+function tSimGame(R, a, b) { if (R.intro) { if (isHum(R, a)) return a; if (isHum(R, b)) return b; } return simAB(tFighter(R, a), tFighter(R, b)) ? a : b; }   // вступительный: игрок не проигрывает
 function tTable(R, ids, k) {   // таблица группы: Bo2 — очки 3/1/0, Bo1 — очко за победу
   const t = {}; ids.forEach(id => { t[id] = { id, pts: 0, w: 0, d: 0, l: 0, gw: 0, gl: 0 }; });
   for (const m of tStage(R, k)) {
@@ -2699,8 +2700,15 @@ function viewNotice() {
   return wrap(`<div class="card offer">${N.team != null ? `<img class="offlogo" src="img/team/${SEMI[N.team][1]}.webp" alt="">` : ''}<h2>${esc(N.t)}</h2><p style="text-align:left">${esc(N.d)}</p>
     <button class="btn gold" data-a="noteok" style="text-align:center">Понятно</button></div>`);
 }
+const INTRO_COINS = 500;
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
+  if (R.intro) {   // вступительный турнир: только стартовые ОЛ, без силы, кубка и открытия уровней
+    const H = G.players[humOf(R, 0)];
+    addCoins(H, INTRO_COINS); histTo(H, R.region, 'Вступительный турнир · победа');
+    logTo(H, `Вступительный турнир: победа! Бюро выдаёт стартовые ${INTRO_COINS} ОЛ. Твоя первая неделя начинается.`);
+    S.view = 'main'; S.trun = null; return;
+  }
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
     const team = x.team != null && SEMI[x.team] ? { name: SEMI[x.team][0], logo: SEMI[x.team][1] } : R.kind === 'contract' && H ? { name: SEMI[R.team][0], logo: SEMI[R.team][1] } : null;
     const nm = R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'DreamHack' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
@@ -3546,7 +3554,7 @@ function viewTRun() {
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><img class="tendimg" src="img/win/${won ? 'twin' : 'tlose'}.webp" alt=""><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} ОЛ, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.intro ? `Бюро выдаёт стартовые ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} ОЛ, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <div class="tendq">${esc(R.endq || (R.endq = ivPick(won ? T_WIN_Q : T_LOSE_Q)))}</div>
       <button class="btn gold" data-a="tfinish" style="text-align:center">Завершить</button></div>`;
@@ -3795,7 +3803,7 @@ function act(a, v) {
     case 'tplay': {   // живой бой: игрок слева; если встретились два игрока — оба живые
       const R = S.trun, m = R && tMine(R); if (!m) return;
       const L = isHum(R, m.a) ? m.a : m.b, Rr = L === m.a ? m.b : m.a;
-      startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, tFighter(R, L), tFighter(R, Rr), won => { tGame(m, won ? L : Rr); tRun(R, false); S.view = 'trun'; });
+      startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, tFighter(R, L), tFighter(R, Rr), won => { tGame(m, won || R.intro ? L : Rr); tRun(R, false); S.view = 'trun'; });
       break;
     }
     case 'tinvade': { const h = +v, a2 = S.tourInvade = S.tourInvade || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else a2.push(h); break; }
