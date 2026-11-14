@@ -384,6 +384,12 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .hdfa{font-size:max(14px,4.2cqw) !important}
 .mlogo{margin:20px auto 8px;max-width:520px;padding:0 8px}.mlogo img{width:100%;display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
 .mcard .mimg{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;margin-bottom:10px}
+.contbtn{all:unset;box-sizing:border-box;position:relative;display:block;width:100%;margin-top:8px;cursor:pointer;line-height:0;container-type:inline-size}.contbtn img{width:100%;display:block}.contbtn:active{transform:scale(.985)}
+.contbtn .cbox{position:absolute;left:5%;right:5%;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:.6cqw 3cqw;line-height:1.15;text-align:center}
+.contbtn.solo .cbox{top:53%;bottom:10%}.contbtn.coop .cbox{top:40%;bottom:9%}
+.contbtn .cbox b{font-size:4.6cqw;font-weight:800;color:#F7EBD0;white-space:nowrap}.contbtn.coop .cbox b{font-size:4cqw}
+.contbtn .cbox i{flex-basis:100%;font-style:normal;font-size:3cqw;color:#9FB3D9}
+.nrow{display:flex;gap:2%;margin-top:6px}.nrow .imgbtn{flex:1;margin-top:0}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -3689,14 +3695,14 @@ function viewMenu() {
   const solo = loadGame('solo'), coop = loadGame('coop');
   return `<div class="mlogo"><img src="img/logo_main.webp" alt="SPECTRE"></div>
     <div class="card mcard"><img class="mimg" src="img/menu_solo.webp" alt=""><h2>Одиночная карьера</h2>
-      ${solo ? `<button class="btn gold" data-a="mcont" data-v="solo">Продолжить: ${esc(solo.players[0].nick)} · неделя ${solo.players[0].turn}</button>` : ''}
-      <button class="btn" data-a="mnew" data-v="solo">Новая карьера</button>
+      ${solo ? `<button class="contbtn solo" data-a="mcont" data-v="solo" aria-label="Продолжить"><img src="img/nav/cont_solo.webp" alt=""><span class="cbox"><b>${flagOf(solo.players[0].country)} ${esc(solo.players[0].nick)}</b><i>Неделя ${solo.players[0].turn}</i></span></button>` : ''}
+      <button class="imgbtn" data-a="mnew" data-v="solo" aria-label="Новая карьера"><img src="img/nav/newcar.webp" alt=""></button>
       ${solo ? '<div class="dim" style="margin-top:6px">Новая карьера заменит сохранённую.</div>' : ''}</div>
     <div class="card mcard"><img class="mimg" src="img/menu_coop.webp" alt=""><h2>Совместная карьера</h2>
       <div class="dim">До 6 игроков на одном телефоне. Недели идут по очереди: сыграл свою — передай телефон. В турнир можно позвать всех игроков из своего региона за 1 действие.</div>
-      ${coop ? `<button class="btn gold" data-a="mcont" data-v="coop">Продолжить: ${coop.players.map(H => esc(H.nick)).join(', ')}</button>` : ''}
+      ${coop ? `<button class="contbtn coop" data-a="mcont" data-v="coop" aria-label="Продолжить"><img src="img/nav/cont_coop.webp" alt=""><span class="cbox">${coop.players.map(H => `<b>${flagOf(H.country)} ${esc(H.nick)}</b>`).join('')}<i>Неделя ${(coop.players[0] || {}).turn || 1}</i></span></button>` : ''}
       <div class="dim" style="margin-top:10px">Новая игра — сколько игроков?</div>
-      <div class="row" style="margin-top:6px">${[2, 3, 4, 5, 6].map(n => `<button class="btn" style="flex:1;text-align:center;width:auto" data-a="mnew" data-v="coop${n}">${n}</button>`).join('')}</div>
+      <div class="nrow">${[2, 3, 4, 5, 6].map(n => `<button class="imgbtn" data-a="mnew" data-v="coop${n}" aria-label="${n} игроков"><img src="img/nav/n${n}.webp" alt=""></button>`).join('')}</div>
       ${coop ? '<div class="dim" style="margin-top:6px">Новая совместная игра заменит сохранённую.</div>' : ''}</div>`;
 }
 function viewHandoff() {
