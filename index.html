@@ -985,7 +985,8 @@ const GENERIC = [
   C('Экскурсия по лиге', 'n'), C('Осмотр метеоритного камня', 'n'), C('Выставка технологий', 'n'), C('Спарринг с напарником', 'spar'), C('Посещение спортзала', 'n'), C('Игра в настолки с командой', 'n')
 ];
 // карта 1254×1254: выноски (x0,y0,x1,y1), точки, короткое имя лиги
-const MAPW = 1672, MAPH = 941;   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
+const MAPW = 1672, MAPH = 941;
+const MAP_SHORT = ['USA', 'LCS', 'CSL', 'ASL', 'SSS'];   // короткие названия лиг в выносках карты (CSL — Континентальная лига Спектров)   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
 const MAPSPOTS = [   // выноски новой карты 1672×941: рамка (внутренняя тёмная часть) и точка на карте
   { box: [37, 623, 362, 794], pin: [245, 367] },
   { box: [352, 75, 675, 245], pin: [829, 257] },
@@ -2913,7 +2914,7 @@ const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
   return `<div class="map"><div class="mapin"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
-    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}"><img src="img/logo_${i}.webp" alt=""><span><b class="${LSHORT[i].length > 6 ? 'long' : ''}">${LSHORT[i]}</b><i>${esc(REGIONS[i].name)}</i></span></div>
+    return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}"><img src="img/logo_${i}.webp" alt=""><span><b>${MAP_SHORT[i]}</b><i>${esc(REGIONS[i].name)}</i></span></div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
   }).join('')}</div></div>`;
 }
