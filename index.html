@@ -319,7 +319,7 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .room img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .roomph{display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4;height:100%;border-radius:10px;background:linear-gradient(135deg,#2a1f4a,#12182a);color:var(--dim,#aab);padding:12px;box-sizing:border-box}
 .room img.rcar{inset:auto;left:20%;bottom:12%;width:66%;height:auto;max-height:62%;object-fit:contain;filter:drop-shadow(0 12px 14px rgba(0,0,0,.6))}
-.caricon{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;background:var(--nest);font-size:24px}
+.caricon{width:48px;height:48px;border-radius:0;object-fit:cover;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;background:var(--nest);font-size:24px}
 .carrow{display:flex;gap:10px;align-items:center}
 .intro{max-width:520px;margin:8px auto 24px;padding:14px 16px 18px;border-radius:18px;border:1px solid #2E5E86;background:linear-gradient(#0E1730,#0A1124);box-shadow:0 0 0 1px rgba(201,162,74,.25),0 0 22px rgba(50,213,231,.15)}
 .intro .inbrand{text-align:center;font-weight:900;font-style:italic;letter-spacing:.12em;font-size:22px;color:#E9C46A;text-shadow:0 0 10px rgba(233,196,106,.5);margin-bottom:8px}
@@ -348,12 +348,12 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .fwn{font-size:22px;display:flex;justify-content:center;align-items:center;gap:8px}
 .fwr{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 14px}.fwr img{width:34px;height:34px}.fwr b{color:#F3D98A;font-size:20px}
 .fyit{position:absolute;right:3%;bottom:3%;display:flex;gap:3px;z-index:4}
-.fyit button{all:unset;position:relative;width:13cqw;height:13cqw;min-width:26px;min-height:26px;max-width:42px;max-height:42px;border-radius:4px;overflow:visible;cursor:pointer;filter:drop-shadow(0 0 4px rgba(233,196,106,.6))}
-.fyit button img{width:100%;height:100%;object-fit:contain;display:block}
+.fyit button{all:unset;position:relative;width:13cqw;height:13cqw;min-width:26px;min-height:26px;max-width:42px;max-height:42px;border-radius:0;overflow:hidden;cursor:pointer;border:1.5px solid #E9C46A;box-shadow:0 0 5px rgba(233,196,106,.5)}
+.fyit button img{width:100%;height:100%;object-fit:cover;display:block}
 .fyit button b{position:absolute;right:1px;bottom:0;font-size:10px;line-height:1.1;padding:0 3px;border-radius:4px;background:rgba(0,0,0,.75);color:#fff}
 .fyit button.off{filter:grayscale(1) brightness(.5);cursor:default}
 .fyit button:not(.off):active{transform:scale(.92)}
-.consrow .consico{width:56px;height:56px;flex:0 0 auto;object-fit:contain}
+.consrow .consico{width:56px;height:56px;flex:0 0 auto;object-fit:cover;border-radius:0;border:1.5px solid #C9A24A}
 .prz{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(233,196,106,.06);border:1px solid rgba(233,196,106,.3)}.prz>b{display:block;color:var(--gold);margin-bottom:4px}.prz div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}.prz div b{color:#F3D98A}.prz small{display:block;margin-top:6px;color:var(--dim);font-size:12px}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
@@ -446,6 +446,9 @@ html.land .fza b{font-size:14px}
 .inds{flex-wrap:wrap}
 .inds .dim{margin-left:6px;font-size:13px;white-space:nowrap}
 .arow.done{opacity:.4;filter:grayscale(1);cursor:default}
+.arow{align-items:center;padding:14px 14px}.arow .ttl{font-size:17px;font-weight:700}.arow .arch{margin-left:auto;font-style:normal;font-size:24px;color:var(--gold);line-height:1}
+.evtwho{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}.evtwho span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;width:62px;text-align:center}
+.evtwho .ava{width:52px;height:52px;border-radius:12px;overflow:hidden;border:2px solid #2ECC71;box-shadow:0 0 8px rgba(46,204,113,.5)}.evtwho .ava img{width:100%;height:100%;object-fit:cover;object-position:top}
 .arow{width:100%;border:1px solid var(--line);font-family:inherit;color:var(--txt);text-align:left;background:var(--nest)}
 .arow .ds{color:var(--dim);font-size:13px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
@@ -1117,7 +1120,7 @@ const EVT_DESC = {
 REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { if (EVT_DESC['r' + ri + '_' + i]) c.desc = EVT_DESC['r' + ri + '_' + i]; }));
 GENERIC.forEach((c, i) => { if (EVT_DESC['g_' + i]) c.desc = EVT_DESC['g_' + i]; });
 const DESC_BY_T = {}; [...REGIONS.flatMap(R => R.cards), ...GENERIC].forEach(c => { if (c.desc) DESC_BY_T[c.t] = c.desc; });
-const descOf = c => c.desc || DESC_BY_T[c.t] || '';
+const descOf = c => c.k === 'fest' ? `Этот фестиваль проводится в разных городах, и сегодня ты на автобусе с друзьями отправляешься в путешествие, чтобы побороться за кубок на лучшей арене. В этот раз фестиваль принимает ${c.city || FEST_CITIES[(S && S.region) | 0][0]}.` : c.desc || DESC_BY_T[c.t] || '';
 // ---------- инвентарь: 20 артефактов, открываются за рейтинг (тратится один раз), надет один; дают +1…+20 к силе сверх потолка ----------
 // Иконка артефакта i — img/art/i.webp. Самый престижный — часы AUREON «Абсолют» (+20).
 const ITEMS = [
@@ -1258,7 +1261,16 @@ function newHero(nick, country, ability, face) {
 // ---------- механика ----------
 const DH_CARD = { t: 'DreamHack', k: 'dh' }, DH_CHANCE = 0.12;
 // особые действия — выпадают среди трёх случайных вместе с общими и региональными
+const FEST_CITIES = [
+  ['Чикаго', 'Лос-Анджелес', 'Майами', 'Лас-Вегас', 'Сиэтл', 'Бостон'],
+  ['Париж', 'Мадрид', 'Рим', 'Амстердам', 'Варшава', 'Прага'],
+  ['Самара', 'Тамбов', 'Казань', 'Екатеринбург', 'Новосибирск', 'Санкт-Петербург'],
+  ['Шанхай', 'Гуанчжоу', 'Шэньчжэнь', 'Чэнду', 'Ухань', 'Ханчжоу'],
+  ['Пусан', 'Инчхон', 'Тэгу', 'Кванджу', 'Тэджон', 'Сувон']
+];
+const FEST_COINS = 150;
 const SPECIAL = [
+  { t: 'Фестиваль Спектров', k: 'fest' },
   { t: 'Вызов от Бюро', k: 'beast', desc: 'Животные тоже становятся Спектрами, а их дикий нрав делает их крайне опасными. Бюро привлекает Спектров, чтобы разобраться с ними.' },
   { t: 'Вызов на дуэль', k: 'duel', desc: 'Вызов на дуэль — отличный способ решить все разногласия. Или положить копеечку в карман.' },
   { t: 'Письма от фанатов', k: 'fans', desc: 'Порой приятно почитать добрые слова от хрен пойми кого.' },
@@ -1275,7 +1287,7 @@ const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; 
 const TOUR_COINS = [50, 120, 600];
 const TOUR_PRIZE = TOUR_COINS;   // приз за победу; места: финал 40%, полуфинал 20%, четвертьфинал 10%, участие 5%
 const PRIZE_PART = { W: 1, F: 0.4, SF: 0.2 }, PRO_BONUS = 0.7, TEAM_BONUS = 0.5, SIGN_COINS = 200, SEMI_CT_WEEKS = 3, WC_GAME = 100, WF_GAME = 400;
-const prizeBase = R => R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
+const prizeBase = R => R.kind === 'fest' ? FEST_COINS : R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
 const WF_PRIZE = [[1, 4000], [2, 2000], [3, 1200], [5, 700], [9, 400], [13, 250]];   // чемпионат мира: призовые всем местам (место «с» → ОЛ)
 const LG_COINS = { win: 50, champ: 2000, second: 1000, third: 600 }, WC_COINS = 1500, WF_COINS = 4000, ESL_COINS = 500, DH_COINS = 1500, LADDER_COINS = 30, ELITE_COINS = 100;
 const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'ворон', 'олень'];   // обезумевшие звери: img/beast/<i>.webp
@@ -1286,7 +1298,7 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Gotham Volt', 'us_0'], ['Pacific Mirage', 'us_1'], ['Lone Star Fangs', 'us_2'], ['Neon Jackpots', 'us_3'], ['Great Lakes Forge', 'us_4'], ['Everglade Vipers', 'us_5'],
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
-const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
+const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); h.forEach(c => { if (c.k === 'fest') c.city = FEST_CITIES[H.region][rnd(0, 5)]; }); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
 // бонусы складываются, но суммарно не больше EFF_CAP; штрафы складываются без ограничения
 const EFF_CAP = 5;
 const effSum = (H, withGame) => { let pos = 0, neg = 0; for (const e of H.effects) if ((e.game ? withGame : e.from <= H.turn && H.turn <= e.to)) { if (e.v > 0) pos += e.v; else neg += e.v; } return Math.min(EFF_CAP, pos) + neg; };
@@ -1387,6 +1399,7 @@ function useCard(i, ivDone) {
   if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
   if (c.k === 'spar') { c.used = true; if (G.players.length > 1) S.view = 'spar'; else sparStart(null); save(); return; }
   if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
+  if (c.k === 'fest') { c.used = true; festStart(c.city || FEST_CITIES[S.region][0]); save(); return; }
   let R; const e0 = S.effects.length;
   if (c.k === 'm') {   // штраф и небольшой бонус
     const [b, bd] = mbOf(c); addEff(c.v, c.d); addEff(b, bd);
@@ -1414,8 +1427,8 @@ function useCard(i, ivDone) {
     for (const h of inv) { const H = G.players[h];
       for (const e of gain) if (e.game) H.effects.push({ v: e.v, game: true }); else H.effects.push({ v: e.v, from: H.turn + (e.from - S.turn), to: H.turn + (e.to - S.turn) });
       logTo(H, `${S.nick} позвал тебя с собой: «${c.t}». ${gain.length ? 'Ты получил бонус.' : ''}`); }
-    R.txt += `. С тобой: ${inv.map(h => G.players[h].nick).join(', ')} — они тоже получили бонус`;
   }
+  R.who = [G.cur, ...inv];
   S.invite = [];
   if (jet) R.txt += '. Джетлаг снят';
   if (ivDone) { R.phrase = IV_END[isPod(c) ? 'pod' : 'iv']; S.iv = null; }
@@ -1720,6 +1733,12 @@ function viewSpar() {   // выбор напарника: любой друго�
   const list = G.players.map((H, i) => i).filter(i => i !== G.cur);
   return wrap(`<div class="card"><h2>Спарринг с напарником</h2><div class="dim">Выбери любого игрока. Отказаться он не может. Матч Bo3, победителю +${SPAR_WIN} рейтинга, поражение рейтинг не снимает.</div>
     ${list.map(i => { const H = G.players[i]; return `<button class="erow" data-a="sparpick" data-v="${i}"><span class="ava">${faceImg(H.face)}</span><span style="flex:1;text-align:left"><b>${flagOf(H.country)} ${esc(H.nick)}</b><div class="dim">${REGIONS[H.region].name}</div></span>${rateHtml(H.rating)}</button>`; }).join('')}</div>`);
+}
+function festStart(city) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — ОЛ, без роста силы
+  const T = TIERS[Math.min(S.tiers[S.region] || 0, 2)], tk = takenSet(G.players.map(H => H.nick));
+  const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
+  for (let i = 0; i < 7; i++) ps.push(Object.assign(genSpectre(S.region, tk, rnd(T.lo, T.hi)), { id: i + 1, seed: Math.random() }));
+  tStart({ kind: 'fest', tier: null, region: S.region, city }, 'se8', ps);
 }
 function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
   const teams = shuffle(SEMI.map((_, i) => i)).slice(0, 4), my = teams[0];
@@ -2795,11 +2814,11 @@ function finishTour() {
   }
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
     const team = x.team != null && SEMI[x.team] ? { name: SEMI[x.team][0], logo: SEMI[x.team][1] } : R.kind === 'contract' && H ? { name: SEMI[R.team][0], logo: SEMI[R.team][1] } : null;
-    const nm = R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'DreamHack' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
+    const nm = R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'DreamHack' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
     const e = fameEntry(H ? H.nick : x.name, H ? H.face : x.face, H ? H.country : x.country, team, { r: R.region, season: fameSeason(), hum: !!H, t: nm });
     if (R.kind === 'esl') { G.fame.esl.unshift(e); G.fame.esl = G.fame.esl.slice(0, 5); }
     G.fame.tours.unshift(e); G.fame.tours = G.fame.tours.slice(0, 30); }
-  const T = R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
+  const T = R.kind === 'fest' ? { name: 'Фестиваль Спектров · ' + R.city, gain: 0 } : R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
   for (const x of R.ps) {   // награды и история — каждому живому участнику
     const h = humOf(R, x.id); if (h == null) continue;
     const H = G.players[h];
@@ -2810,7 +2829,7 @@ function finishTour() {
         if (H.power < T.cap) H.power = Math.min(T.cap, H.power + T.gain);   // каждый уровень растит силу только до своего потолка: 40 / 52 / 65
       }
       const tr = R.kind === 'esl' ? (H.eslWins = (H.eslWins || 0) + 1, H.rating += 200, 'esl')
-        : R.kind === 'contract' ? 'contract'
+        : R.kind === 'contract' || R.kind === 'fest' ? 'contract'
         : R.kind === 'dh' ? (H.dhWon ? 'dhagain' : (H.dhWon = true, H.power = Math.min(POWER_MAX, H.power + DH_GAIN), 'dh'))
         : awardTrophy(H, r, T.name);
       if (tr === 'dh') msg += ' Ты достиг вершины силы!';
@@ -2822,7 +2841,7 @@ function finishTour() {
       logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '. ' + payPrize(R, x, H, PRIZE_PART[o] ? o : 'P')); }
     if (R.kind == null && R.tier === 2) semiAfter(H, R, x);   // полупро: отработка контракта и предложения команд
   }
-  S.view = S.trun.kind === 'esl' ? 'bureau' : (S.trun.kind === 'dh' || S.trun.kind === 'contract') ? 'main' : 'tour'; S.trun = null;
+  S.view = S.trun.kind === 'esl' ? 'bureau' : (S.trun.kind === 'dh' || S.trun.kind === 'contract' || S.trun.kind === 'fest') ? 'main' : 'tour'; S.trun = null;
 }
 
 // ---------- виды ----------
@@ -2943,7 +2962,7 @@ function viewMain() {
   const done = S.actions <= 0;
   const MA = S.weekMax || maxActs(S), ind = [...Array(Math.max(MA, S.actions)).keys()].map(i => `<span class="ind ${i < S.actions ? '' : 'off'}"></span>`).join('');
   const rows = S.hand.length
-    ? S.hand.map((c, i) => { return `<button class="arow ${c.used ? 'done' : ''}" data-a="card" data-v="${i}" ${c.used ? 'disabled' : ''}>${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div><div class="ds">${descOf(c) ? esc(descOf(c)) : TEXT}</div></div></button>`; }).join('')
+    ? S.hand.map((c, i) => { return `<button class="arow ${c.used ? 'done' : ''}" data-a="card" data-v="${i}" ${c.used ? 'disabled' : ''}><div class="tx"><div class="ttl">${esc(c.t)}</div></div><i class="arch">›</i></button>`; }).join('')
     : '<div class="dim">Все действия этой недели выполнены.</div>';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2>${(([st, eta]) => `<div class="dim">Сезон ${seasonNo()} · ${esc(st)}</div><div class="sstat">${esc(eta)}</div>`)(seasonStatus())}
@@ -2983,11 +3002,9 @@ const SHARE_K = ['n', 'p', 'm'];   // на какие действия неде�
 function viewCard() {   // до выполнения: картинка, описание, ожидаемый эффект, одна жёлтая кнопка
   const c = S.hand[S.sel];
   if (!c || c.used) { S.view = 'main'; return viewMain(); }
-  const E = cardExpect(c), none = S.actions <= 0;
-  return wrap(`<div class="card evt">
-      <div class="evtpic">${evtImg(c)}</div>
-      <div class="evtinfo"><h2>${esc(c.t)}</h2><p>${descOf(c) ? esc(descOf(c)) : TEXT}</p>
-        <div class="effbox ${E.cls}"><span>${E.kind}</span><b>${E.txt}</b></div>
+  const none = S.actions <= 0;
+  return wrap(`<div class="card">
+      <div><div class="dim">Событие недели</div><h2>${esc(c.t)}</h2>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
         ${G.players.length > 1 && SHARE_K.includes(c.k) ? `<div class="invbox"><div class="dim">Позвать с собой — они получат тот же бонус, а действие потратишь только ты:</div><div class="invrow">${G.players.map((H, h) => h === G.cur ? '' : `<button class="invp ${(S.invite || []).includes(h) ? 'on' : ''}" data-a="invt" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}</button>`).join('')}</div></div>` : ''}
         <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
@@ -3047,9 +3064,9 @@ function viewCardRes() {   // после выполнения: точный ит
   if (!R) { S.view = 'main'; return viewMain(); }
   return wrap(`<div class="card evt">
       <div class="evtpic">${evtImg(R.c)}</div>
-      <div class="evtinfo"><h2>${esc(R.c.t)}</h2>
+      <div class="evtinfo"><h2>${esc(R.c.t)}</h2><p>${descOf(R.c) ? esc(descOf(R.c)) : TEXT}</p>
         <div class="effbox ${R.cls}"><span>${R.kind}</span><b>${R.txt}</b></div>
-        <div class="quote"><div class="ava">${faceImg(S.face)}</div><p>${esc(R.phrase)}</p></div>
+        <div class="dim">Бонус получили:</div><div class="evtwho">${(R.who || [G.cur]).map(h => G.players[h]).filter(Boolean).map(H => `<span><div class="ava">${faceImg(H.face)}</div>${esc(H.nick)}</span>`).join('')}</div>
         <button class="btn gold evtgo" data-a="cardback">Вернуться</button></div>
     </div>`);
 }
@@ -3645,7 +3662,7 @@ function viewTRun() {
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
-  let h = `<div class="card thead">${R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
+  let h = `<div class="card thead">${R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
@@ -3654,7 +3671,7 @@ function viewTRun() {
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><img class="tendimg" src="img/win/${won ? 'twin' : 'tlose'}.webp" alt=""><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.intro ? `Бюро выдаёт стартовые ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} ОЛ, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовые ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} ОЛ, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <div class="tendq">${esc(R.endq || (R.endq = ivPick(won ? T_WIN_Q : T_LOSE_Q)))}</div>
       <button class="btn gold" data-a="tfinish" style="text-align:center">Завершить</button></div>`;
