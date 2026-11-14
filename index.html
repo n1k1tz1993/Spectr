@@ -3894,7 +3894,7 @@ function viewTRun() {
       <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовую крипту: ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} крипты, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <div class="tendq">${esc(R.endq || (R.endq = ivPick(won ? T_WIN_Q : T_LOSE_Q)))}</div>
-      <button class="btn gold" data-a="tfinish" style="text-align:center">Завершить</button></div>`;
+      <button class="imgbtn" data-a="tfinish" aria-label="Завершить"><img src="img/nav/finish.webp" alt=""></button></div>`;
   } else if (me) {
     const L = isHum(R, me.a) ? me.a : me.b, Rr = L === me.a ? me.b : me.a, mine = me.g.filter(x => x === L).length;
     h += `<div class="card"><h3>${hums.length > 1 ? 'Матч игрока ' + esc(R.ps[L].name) : 'Твой матч'} · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
