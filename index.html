@@ -498,6 +498,7 @@ html.land .fza b{font-size:14px}
 .invp.on{border-color:var(--good);background:rgba(101,217,121,.15);box-shadow:0 0 0 1px var(--good)}
 .imgbtn{all:unset;box-sizing:border-box;display:block;width:100%;position:relative;cursor:pointer;line-height:0;margin-top:8px;transition:transform .12s,filter .15s}
 .imgbtn img{width:100%;height:auto;display:block}
+.imgbtn.over{margin-top:calc(4.2% + 2px);width:calc(100% * 904 / 900)}.imgbtn.over img{margin-top:-4.2%}   /* у Бюро голова выходит за рамку */
 .imgbtn:active{transform:scale(.985)}
 .imgbtn:disabled{filter:grayscale(1) brightness(.55);cursor:default}
 .imgbtn.nextwk small{position:absolute;left:31%;bottom:16%;line-height:1;font-size:clamp(10px,2.8vw,13px);font-weight:600;color:#AFC0DA}
@@ -2959,7 +2960,7 @@ function viewMain() {
     </div>`;
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
   const daily = `<div class="card"><h2>Повседневные действия <span class="dim" style="font-size:.6em;font-weight:500;white-space:nowrap">(Тратит 1 действие)</span></h2>
-      <button class="imgbtn" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''} aria-label="Бюро">${freeBureau(S) ? '<small class="ibfree">бесплатно</small>' : ''}<img src="img/nav/bureau.webp" alt=""></button>
+      <button class="imgbtn over" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''} aria-label="Бюро">${freeBureau(S) ? '<small class="ibfree">бесплатно</small>' : ''}<img src="img/nav/bureau.webp" alt=""></button>
       <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
       <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
