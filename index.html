@@ -355,6 +355,10 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .fyit button:not(.off):active{transform:scale(.92)}
 .consrow .consico{width:56px;height:56px;flex:0 0 auto;object-fit:cover;border-radius:0;border:1.5px solid #C9A24A}
 .prz{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(233,196,106,.06);border:1px solid rgba(233,196,106,.3)}.prz>b{display:block;color:var(--gold);margin-bottom:4px}.prz div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}.prz div b{color:#F3D98A}.prz small{display:block;margin-top:6px;color:var(--dim);font-size:12px}
+.platebtn{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;width:100%;margin-top:8px;aspect-ratio:900/198;cursor:pointer;color:#FAEFD8;font-weight:900;font-size:clamp(20px,6.4vw,30px);text-shadow:0 3px 6px #000;background:linear-gradient(#F3D98A,#9A6A1E 50%,#E6B654);clip-path:polygon(3.5% 0,96.5% 0,100% 16%,100% 84%,96.5% 100%,3.5% 100%,0 84%,0 16%)}
+.platebtn::before{content:'';position:absolute;inset:3px;background:linear-gradient(115deg,#4A1414 0 30%,#C9A24A 30% 30.6%,#141B33 30.6% 100%);clip-path:inherit}
+.platebtn b,.platebtn i{position:relative}.platebtn i{font-style:normal;color:#E9C46A;font-size:1.3em;position:absolute;right:6%}
+.club .clubh{display:flex;gap:12px;align-items:center}.beltimg{width:72px;height:72px;object-fit:contain;flex:0 0 auto}.beltph{width:72px;height:72px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border:1px dashed #6B5320;color:var(--dim);font-size:12px}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -1154,6 +1158,7 @@ const CONS = [
   { k: 'smoke', n: 'Дымовая шашка', d: 'Плотная завеса рудной пыли: соперник теряет тебя из виду и бьёт мимо.', cost: 500 }
 ];
 const DIRTY = { n: 'Грязные контракты', d: 'Связи в тени Бюро. Ты врываешься на чужие турниры, и никто не задаёт вопросов: никаких последствий для тебя.', cost: 3000 };
+const CONS_MAX = 10;
 const consOf = (H, k) => (H.cons && H.cons[k]) || 0;
 const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
 const itemName = (H, i) => (H.iname && H.iname[i]) || ITEMS[i].n;   // игрок может переименовать любой свой артефакт
@@ -1287,7 +1292,7 @@ const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; 
 const TOUR_COINS = [50, 120, 600];
 const TOUR_PRIZE = TOUR_COINS;   // приз за победу; места: финал 40%, полуфинал 20%, четвертьфинал 10%, участие 5%
 const PRIZE_PART = { W: 1, F: 0.4, SF: 0.2 }, PRO_BONUS = 0.7, TEAM_BONUS = 0.5, SIGN_COINS = 200, SEMI_CT_WEEKS = 3, WC_GAME = 100, WF_GAME = 400;
-const prizeBase = R => R.kind === 'fest' ? FEST_COINS : R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
+const prizeBase = R => R.kind === 'club' ? CLUB[R.belt].coins : R.kind === 'fest' ? FEST_COINS : R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
 const WF_PRIZE = [[1, 4000], [2, 2000], [3, 1200], [5, 700], [9, 400], [13, 250]];   // чемпионат мира: призовые всем местам (место «с» → ОЛ)
 const LG_COINS = { win: 50, champ: 2000, second: 1000, third: 600 }, WC_COINS = 1500, WF_COINS = 4000, ESL_COINS = 500, DH_COINS = 1500, LADDER_COINS = 30, ELITE_COINS = 100;
 const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'ворон', 'олень'];   // обезумевшие звери: img/beast/<i>.webp
@@ -1552,7 +1557,7 @@ const eliteTeam = (r, name) => { const L = G && G.leagues && G.leagues[r], T = L
 const withMeta = (f, country, team) => Object.assign(f, { country: country || f.country || null, team: team || f.team || null });
 function startFight(title, opp, onEnd) { startFightAB(title, heroF(S, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S)))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
-  F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1, tour: !!(S && S.trun && !S.trun.done && !(G && G.lq)) };   // tour — расходники разрешены
+  F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1, used: {} };
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;   // кто бьёт первым — случайно
   S.view = 'fight';
 }
@@ -1613,16 +1618,16 @@ function useAbility(x, y) {
 const fHero = x => x.me && G ? G.players.find(H => H.nick === x.name) : null;
 function fItemsHtml(x, id) {   // три квадратика расходников в правом нижнем углу портрета героя
   const H = fHero(x); if (!H) return '';
-  const R = F.tour ? S.trun : null, hi = heroIdx(H);
-  return `<div class="fyit" id="${id}-it">${CONS.map(c => { const n = consOf(H, c.k), used = R && R.used && R.used[hi + ':' + c.k], ok = R && n > 0 && !used && !F.done;
-    return `<button class="${ok ? '' : 'off'} ${used ? 'used' : ''}" data-a="fitem" data-v="${id}:${c.k}" ${ok ? '' : 'disabled'} title="${esc(c.n)}${!F.tour ? ' — нельзя использовать в этом бою' : used ? ' — уже использовано' : ''}"><img src="img/shop/${c.k}.webp" alt=""><b>${n}</b></button>`; }).join('')}</div>`;
+  const hi = heroIdx(H), U = F.used || {};
+  return `<div class="fyit" id="${id}-it">${CONS.map(c => { const n = consOf(H, c.k), used = U[hi + ':' + c.k], ok = n > 0 && !used && !F.done;
+    return `<button class="${ok ? '' : 'off'} ${used ? 'used' : ''}" data-a="fitem" data-v="${id}:${c.k}" ${ok ? '' : 'disabled'} title="${esc(c.n)}${used ? ' — уже использовано' : ''}"><img src="img/shop/${c.k}.webp" alt=""><b>${n}</b></button>`; }).join('')}</div>`;
 }
 function useFItem(id, k) {
-  if (!F || F.done || !F.tour) return;
-  const x = id === 'fa' ? F.a : F.b, y = x === F.a ? F.b : F.a, H = fHero(x), R = S.trun; if (!H || !R) return;
-  const hi = heroIdx(H), key = hi + ':' + k; R.used = R.used || {};
-  if (R.used[key] || consOf(H, k) <= 0) return;
-  H.cons[k]--; R.used[key] = true;
+  if (!F || F.done) return;
+  const x = id === 'fa' ? F.a : F.b, y = x === F.a ? F.b : F.a, H = fHero(x); if (!H) return;
+  const key = heroIdx(H) + ':' + k; F.used = F.used || {};   // каждый предмет — раз за матч
+  if (F.used[key] || consOf(H, k) <= 0) return;
+  H.cons[k]--; F.used[key] = true;
   const hit = (a, b) => FIGHT.dmg(a.p) * 100 / (100 + FIGHT.def(b.p));
   if (k === 'ins') { const d = Math.round(hit(x, y) * 2); y.hp = Math.max(0, y.hp - d); fev(`${x.name} пускает в ход инсайдерские данные и бьёт точно в слабое место!`, 'crit'); fxPush(y, 'Инсайд! −' + d, 'minus', 1); hpMark(y); if (y.hp <= 0) { F.done = true; F.won = x === F.a; } }
   if (k === 'stim') { const d = Math.round(hit(y, x) * 10); x.hp = Math.min(x.hpMax, x.hp + d); fev(`${x.name} вкалывает стимулятор — раны затягиваются на глазах!`, 'qi'); fxPush(x, 'Стимулятор +' + d, 'plus', 1); }
@@ -1733,6 +1738,62 @@ function viewSpar() {   // выбор напарника: любой друго�
   const list = G.players.map((H, i) => i).filter(i => i !== G.cur);
   return wrap(`<div class="card"><h2>Спарринг с напарником</h2><div class="dim">Выбери любого игрока. Отказаться он не может. Матч Bo3, победителю +${SPAR_WIN} рейтинга, поражение рейтинг не снимает.</div>
     ${list.map(i => { const H = G.players[i]; return `<button class="erow" data-a="sparpick" data-v="${i}"><span class="ava">${faceImg(H.face)}</span><span style="flex:1;text-align:left"><b>${flagOf(H.country)} ${esc(H.nick)}</b><div class="dim">${REGIONS[H.region].name}</div></span>${rateHtml(H.rating)}</button>`; }).join('')}</div>`);
+}
+// ---------- Бойцовский клуб: три пояса, у каждого действующий чемпион ----------
+const CLUB = [
+  { n: 'Бронзовый пояс', lo: 50, hi: 59.9, semi: 10, pro: 0, coins: 300, min: 1500, who: 'золото и платина' },
+  { n: 'Серебряный пояс', lo: 55, hi: 62.5, semi: 10, pro: 2, coins: 700, min: 1650, who: 'платина и неуверенный алмаз' },
+  { n: 'Золотой пояс', lo: 60, hi: 71.5, semi: 12, pro: 4, coins: 1500, min: 1800, who: 'алмаз и мастер' }
+];
+const CLUB_SEMI_TB = 1, CLUB_PRO_TB = 2;
+const clubP = B => Math.round((B.lo + Math.random() * (B.hi - B.lo)) * 10) / 10;
+function ensureBelts() {
+  if (!G || (G.belts && G.belts.length === 3)) return;
+  const tk = takenSet(G.players.map(H => H.nick));
+  G.belts = CLUB.map(B => { const r = rnd(0, REGIONS.length - 1), p = Math.round((B.hi - 1 - Math.random() * 2) * 10) / 10, g = genSpectre(r, tk, p);
+    return { name: g.name, country: g.country, face: g.face, abil: g.abil, p, rating: npcRating(p), since: 0, def: 0 }; });
+}
+const beltHolder = k => { const b = G.belts[k]; if (b.h != null && G.players[b.h]) { const H = G.players[b.h]; return { name: H.nick, country: H.country, face: H.face, rating: H.rating, hum: true }; } return b; };
+function clubStart(k) {
+  ensureBelts();
+  const B = CLUB[k], r = S.region, tk = takenSet(G.players.map(H => H.nick).concat([beltHolder(k).name]));
+  const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
+  for (let i = 0; i < 15; i++) { const p = clubP(B); ps.push(Object.assign(genSpectre(r, tk, p), { id: i + 1, rating: npcRating(p), seed: Math.random() })); }
+  const npc = shuffle(ps.slice(1)), proT = shuffle(allRegionTeams(r).slice()), semiT = shuffle(SEMI.map((_, i) => i));
+  npc.slice(0, B.pro).forEach((x, i) => { const t = proT[i % proT.length]; x.pro = { name: t[0], logo: t[1] }; x.tb = CLUB_PRO_TB; });
+  npc.slice(B.pro, B.pro + B.semi).forEach((x, i) => { x.team = semiT[i % semiT.length]; x.tb = CLUB_SEMI_TB; });
+  const b = G.belts[k];
+  ps.push(b.h != null ? { id: 16, name: G.players[b.h].nick, h: b.h, seed: Math.random() } : Object.assign({}, b, { id: 16, seed: Math.random() }));
+  tStart({ kind: 'club', belt: k, tier: null, region: r, holder: 16 }, 'se16', ps);
+  S.trun.alive = S.trun.alive.filter(x => x !== 16);
+}
+function clubFinish(R) {
+  const k = R.belt, B = CLUB[k], w = R.winner, wx = R.ps[w], wh = humOf(R, w), changed = w !== R.holder;
+  if (changed) G.belts[k] = wh != null ? { h: wh, since: G.week, def: 0 } : { name: wx.name, country: wx.country, face: wx.face, abil: wx.abil, p: wx.p, rating: wx.rating, since: G.week, def: 0 };
+  else G.belts[k].def = (G.belts[k].def || 0) + 1;
+  ensureFame(); const WH = wh != null ? G.players[wh] : null;
+  G.fame.tours.unshift(fameEntry(WH ? WH.nick : wx.name, WH ? WH.face : wx.face, WH ? WH.country : wx.country, null, { r: R.region, season: fameSeason(), hum: !!WH, t: B.n }));
+  G.fame.tours = G.fame.tours.slice(0, 30);
+  for (const x of R.ps) {
+    const h = humOf(R, x.id); if (h == null) continue; const H = G.players[h];
+    if (x.id === w) {
+      H.beltsWon = H.beltsWon || [0, 0, 0]; H.beltsWon[k]++;
+      const bonus = B.coins; H.coins = (H.coins || 0) + bonus;
+      logTo(H, x.id === R.holder ? `${B.n}: титул защищён! +${bonus} ОЛ.` : `${B.n}: ты новый чемпион Бойцовского клуба! ${payPrize(R, x, H, 'W')} За пояс: +${bonus} ОЛ.`);
+      histTo(H, R.region, B.n + ' · ' + (x.id === R.holder ? 'защита титула' : 'чемпион'));
+    } else if (x.id === R.holder) { logTo(H, `${B.n}: пояс потерян. Новый чемпион — ${wx.name}.`); histTo(H, R.region, B.n + ' · пояс потерян'); }
+    else { const o = x.id === R.challenger ? 'W' : R.outs && R.outs[x.id]; logTo(H, `${B.n}: ${placeText(R, x.id)}. ${payPrize(R, x, H, PRIZE_PART[o] ? o : 'P')}`); histTo(H, R.region, B.n + ' · ' + placeText(R, x.id)); }
+  }
+}
+function viewClub() {
+  ensureBelts(); const none = S.actions <= 0;
+  return wrap(`<div class="card"><h2>Бойцовский клуб</h2><div class="dim">Три пояса, у каждого — действующий чемпион. 16 бойцов, сетка Bo3, финал Bo5; победитель выходит на титульный бой Bo5 против чемпиона и может забрать пояс. Турнир — 1 действие.</div></div>
+    ${CLUB.map((B, k) => { const hd = beltHolder(k), mine = G.belts[k].h === G.cur, can = S.rating >= B.min;
+      return `<div class="card club"><div class="clubh"><img class="beltimg" src="img/trophy/belt_${k}.webp" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'beltph',textContent:'Пояс'}))"><div><h3>${B.n}</h3><div class="dim">Бойцы: ${B.who}. ${B.pro ? B.pro + ' из профессиональных команд, ' : ''}${B.semi} из полупрофессиональных.</div></div></div>
+        <div class="dim" style="margin-top:8px">Действующий чемпион</div>
+        <div class="fame ${hd.hum ? 'hum' : ''}"><span class="ava">${faceImg(hd.face)}</span><span class="famei"><b>${flagOf(hd.country || '')} ${esc(hd.name)}</b><small>${rateHtml(hd.rating)}${G.belts[k].def ? ' · защит: ' + G.belts[k].def : ''}</small></span></div>
+        ${prizeRulesHtml({ kind: 'club', belt: k })}
+        ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. Ты защищаешь его, когда кто-то выигрывает турнир.</div>' : `<button class="btn gold" data-a="clubgo" data-v="${k}" style="text-align:center" ${!can || none ? 'disabled' : ''}>Участвовать · 1 действие</button>${can ? '' : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`}</div>`; }).join('')}`);
 }
 function festStart(city) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — ОЛ, без роста силы
   const T = TIERS[Math.min(S.tiers[S.region] || 0, 2)], tk = takenSet(G.players.map(H => H.nick));
@@ -2540,15 +2601,16 @@ function tZone(R, id, pos, direct, upTo) {
   return inKO ? 'z1' : R.alive.includes(id) ? 'z2' : 'z3';
 }
 const ZONE_LEGEND = '<div class="zleg"><span class="z1">прошёл дальше</span><span class="z2">плей-ин</span><span class="z3">выбыл</span></div>';
-const KO_PLAN = { se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
+const KO_PLAN = { se16: [['R16', 8], ['QF', 4], ['SF', 2], ['F', 1], ['TF', 1]], se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
 const FMT = {
+  se16: { n: 16, name: 'Бойцовский клуб', desc: '16 бойцов, сетка Bo3, финал Bo5. Победитель турнира выходит на титульный бой Bo5 против держателя пояса.' },
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
   g16: { n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
   dh32: { n: 32, name: 'DreamHack', desc: '32 бойца, 8 групп по 4. В группе двойное выбывание (бои Bo1), выходит только победитель группы. Плей-офф Bo3, финал Bo5.' },
   sw20: { n: 20, name: 'Турнир на 20 бойцов', desc: 'Швейцарская система, 5 раундов Bo1. Двое лучших — сразу в полуфинал, 3–6 места играют плей-ин Bo3. Полуфинал и финал Bo5.' }
 };
-const STAGE_NAMES = { QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал', GS: 'Групповой этап', DEC: 'Серия за выход из группы', PI: 'Плей-ин' };
+const STAGE_NAMES = { R16: '1/8 финала', TF: 'Титульный бой', QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал', GS: 'Групповой этап', DEC: 'Серия за выход из группы', PI: 'Плей-ин' };
 const stageName = k => ({ DH1: 'Группы · первый бой', DH2: 'Группы · верхняя и нижняя сетка', DH3: 'Группы · финал нижней сетки', DH4: 'Группы · финал группы' })[k] || STAGE_NAMES[k] || (k.startsWith('SW') ? 'Швейцарская система · раунд ' + k.slice(2) : k.startsWith('TB') ? 'Решающие бои' : k);
 const GL = ['A', 'B', 'C', 'D'], DHG = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
@@ -2596,6 +2658,7 @@ const teamTag = x => x && x.team != null && SEMI[x.team] ? `<img class="ttag" sr
 function tStart(meta, fmt, ps) {   // сетка любого формата из готового списка участников
   const R = Object.assign({ fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, outs: {}, tbOut: {}, tbn: 0 }, meta);
   const ids = shuffle(ps.map(x => x.id));
+  if (fmt === 'se16') { const q = ids.filter(x => x !== R.holder); tBegin(R, 'R16'); for (let i = 0; i < 16; i += 2) tAdd(R, q[i], q[i + 1], 3); }
   if (fmt === 'se8') { tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, ids[i], ids[i + 1], 3); }
   if (fmt === 'g12') {
     R.groups = { A: ids.slice(0, 6), B: ids.slice(6, 12) }; tBegin(R, 'GS');
@@ -2632,7 +2695,7 @@ function tGame(m, w) {   // записать бой серии; Bo2 — всег
 function tFighter(R, id) {   // боец турнира: флаг и логотип команды (полупро-команда или команда по контракту)
   const x = R.ps[id], h = humOf(R, id);
   const semi = t => t != null && SEMI[t] ? { logo: SEMI[t][1], name: SEMI[t][0] } : null;
-  if (h == null) return withMeta(fighter(x.name, x.p, x.rating, false, x.abil, x.face), x.country, semi(x.team));
+  if (h == null) return withMeta(fighter(x.name, x.p + (R.kind === 'club' ? x.tb || 0 : 0), x.rating, false, x.abil, x.face), x.country, x.pro || semi(x.team));
   const H = G.players[h];
   return heroF(H, withMeta(fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face), H.country, semi(x.team != null ? x.team : R.kind === 'contract' ? R.team : null) || heroTeam(H, h)));
 }
@@ -2681,7 +2744,11 @@ function tAdvance(R) {
   const k = R.stage, f = R.fmt, win = st => tStage(R, st).map(m => m.w);
   const knock = st => { const lose = tStage(R, st).map(tLoser); R.alive = R.alive.filter(x => !lose.includes(x)); };
   const finalStage = () => { tBegin(R, 'F'); const w = win('SF'); tAdd(R, w[0], w[1], 5); };
-  if (k === 'F') { knock('F'); R.done = true; R.winner = tStage(R, 'F')[0].w; return; }
+  if (k === 'TF') { knock('TF'); R.done = true; R.winner = tStage(R, 'TF')[0].w; return; }
+  if (k === 'F') { knock('F');
+    if (R.holder != null) { const c = tStage(R, 'F')[0].w; R.challenger = c; R.alive = [c, R.holder]; tBegin(R, 'TF'); tAdd(R, c, R.holder, 5, 'Титульный бой'); return; }
+    R.done = true; R.winner = tStage(R, 'F')[0].w; return; }
+  if (f === 'se16' && k === 'R16') { knock('R16'); const w = win('R16'); tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, w[i], w[i + 1], 3); return; }
   if (k === 'SF') { knock('SF'); finalStage(); return; }
   if (f === 'dh32' && k.startsWith('DH')) {
     const byG = (st, g) => tStage(R, st).filter(m => m.grp === g);
@@ -2694,7 +2761,7 @@ function tAdvance(R) {
     if (k === 'DH4') { knock('DH4'); const q = DHG.map(g => byG('DH4', g)[0].w); R.alive = q.slice(); tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, q[i], q[i + 1], 3); return; }
   }
   if (f === 'dh32' && k === 'QF') { knock('QF'); const w = win('QF'); tBegin(R, 'SF'); tAdd(R, w[0], w[1], 3); tAdd(R, w[2], w[3], 3); return; }
-  if (f === 'se8' || f === 'g16') {
+  if (f === 'se8' || f === 'g16' || f === 'se16') {
     if (k === 'QF') { knock('QF'); const w = win('QF'); tBegin(R, 'SF'); tAdd(R, w[0], w[1], 3); tAdd(R, w[2], w[3], 3); return; }
   }
   if (f === 'g12') {
@@ -2747,16 +2814,16 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
     const k = R.stage;
     tAdvance(R);
     R.outs = R.outs || {};
-    for (const x of R.ps) if (isHum(R, x.id) && R.outs[x.id] == null && !R.alive.includes(x.id)) R.outs[x.id] = k;   // кто из игроков на какой стадии выбыл
+    for (const x of R.ps) if (isHum(R, x.id) && R.outs[x.id] == null && !R.alive.includes(x.id) && !(x.id === R.holder && R.challenger == null)) R.outs[x.id] = k;   // кто из игроков на какой стадии выбыл
     if (R.out == null && !R.alive.includes(0)) R.out = k;
   }
 }
-const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
+const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'TF' ? (id === R.holder ? 'пояс потерян в титульном бою' : 'победа в турнире, титульный бой проигран') : o === 'R16' ? '1/8 финала' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
 // приз за место; в профессиональной команде +70%, в составе любой другой команды (полупро-контракт, приглашение) +50%
 function prizeRulesHtml(R) {   // таблица призовых для правил турнира
   const b = prizeBase(R), v = k => Math.round(b * PRIZE_PART[k]);
   return `<div class="prz"><b>Призовые (ОЛ)</b><div><span>1 место</span><b>${v('W')}</b></div><div><span>2 место</span><b>${v('F')}</b></div><div><span>3–4 места</span><b>${v('SF')}</b></div><div><span>Остальные</span><b>—</b></div>
-    <small>За любую команду призовые выше: профессиональная команда +${Math.round(PRO_BONUS * 100)}%, полупрофессиональная или контракт +${Math.round(TEAM_BONUS * 100)}%.${R.kind == null && R.tier != null && !R.intro ? ' Сила растёт только у победителя.' : ''}</small></div>`;
+    ${R.kind === 'club' ? `<div><span>Победа в титульном бою</span><b>+${prizeBase(R)} и пояс</b></div>` : ''}<small>За любую команду призовые выше: профессиональная команда +${Math.round(PRO_BONUS * 100)}%, полупрофессиональная или контракт +${Math.round(TEAM_BONUS * 100)}%.${R.kind == null && R.tier != null && !R.intro ? ' Сила растёт только у победителя.' : ''}</small></div>`;
 }
 function payPrize(R, x, H, place) {
   if (!PRIZE_PART[place] || place === 'QF') return 'Призовые получают только 1–4 места.';
@@ -2806,6 +2873,7 @@ function viewNotice() {
 const INTRO_COINS = 500;
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
+  if (R.kind === 'club') { clubFinish(R); S.view = 'club'; S.trun = null; return; }
   if (R.intro) {   // вступительный турнир: только стартовые ОЛ, без силы, кубка и открытия уровней
     const H = G.players[humOf(R, 0)];
     addCoins(H, INTRO_COINS); histTo(H, R.region, 'Вступительный турнир · победа');
@@ -2884,7 +2952,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'more'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
@@ -2909,7 +2977,8 @@ const trophiesHtml = () => {   // коллекция: трофеи лиг кар
   const names = [...TIERS.map(t => t.name), 'Кубок лиги'], lbl = [...TIER_SHORT, 'Лига'];
   const big = [S.wfWon ? `<div class="ctro big" data-a="cupview" style="cursor:pointer">${wfCup(S)}<span>Чемпион мира${S.wfWon > 1 ? ' ×' + S.wfWon : ''}</span></div>` : '',
     S.wcWon ? `<div class="ctro big"><img src="img/trophy/wc.webp" alt=""><span>Wild Card${S.wcWon > 1 ? ' ×' + S.wcWon : ''}</span></div>` : '',
-    S.eslWins ? `<div class="ctro big"><img class="esl" src="img/esl.webp" alt=""><span>ESL ONE ×${S.eslWins}</span></div>` : ''].join('');
+    S.eslWins ? `<div class="ctro big"><img class="esl" src="img/esl.webp" alt=""><span>ESL ONE ×${S.eslWins}</span></div>` : '',
+    ...CLUB.map((B, k) => S.beltsWon && S.beltsWon[k] ? `<div class="ctro big"><img src="img/trophy/belt_${k}.webp" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'beltph',textContent:'Пояс'}))"><span>${B.n}${S.beltsWon[k] > 1 ? ' ×' + S.beltsWon[k] : ''}</span></div>` : '')].join('');
   const regs = REGIONS.map((R, r) => { const own = names.map((n, i) => S.troph.some(x => x.r === r && x.n === n) ? i : -1).filter(i => i >= 0);
     return own.length ? `<h3>${esc(R.name)} · ${LSHORT[r]}</h3><div class="ctrow">${own.map(i => `<div class="ctro">${TROPHY_IMG[r] ? `<img src="img/trophy/r${r}_${i}.webp" alt="">` : '<span class="trophy">🏆</span>'}<span>${lbl[i]}</span></div>`).join('')}</div>` : ''; }).join('');
   return big || regs ? `${big ? `<div class="ctrow">${big}</div>` : ''}${regs}` : '';
@@ -2980,6 +3049,7 @@ function viewMain() {
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
   const daily = `<div class="card"><h2>Повседневные действия <span class="dim" style="font-size:.6em;font-weight:500;white-space:nowrap">(Тратит 1 действие)</span></h2>
       <button class="imgbtn over" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''} aria-label="Бюро">${freeBureau(S) ? '<small class="ibfree">бесплатно</small>' : ''}<img src="img/nav/bureau.webp" alt=""></button>
+      <button class="platebtn" data-a="club" aria-label="Бойцовский клуб"><b>Бойцовский клуб</b><i>›</i></button>
       <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
       <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
@@ -3287,9 +3357,8 @@ function viewTeams() {   // библиотека: команды лиг по р�
 }
 // заметки библиотеки: история мира Спектров, общие для всех регионов
 const LIB_NOTES = [
-  { t: "Строгий досмотр", d: "Перед матчами лиги и чемпионата мира каждого бойца досматривают на входе: любые расходники — инсайдерские данные, стимуляторы, дымовые шашки — запрещены. На турнирах Бюро такого правила нет: там каждый пользуется тем, что принёс с собой, но каждой вещью — лишь раз за турнир." },
-  { t: "Инсайдерские данные", d: "Слитые записи тренировок соперника стоят дорого, но окупаются: в нужный момент ты бьёшь точно в слабое место. Пустить их в ход можно один раз за турнир, а в матчах лиги они под запретом." },
-  { t: "Химия на арене", d: "Стимуляторы из концентрата руды затягивают раны прямо посреди боя, а дымовые шашки из рудной пыли заставляют соперника бить вслепую. Организаторы турниров смотрят на это сквозь пальцы — но только раз за турнир на каждую вещь." },
+  { t: "Инсайдерские данные", d: "Слитые записи тренировок соперника стоят дорого, но окупаются: в нужный момент ты бьёшь точно в слабое место. Пустить их в ход можно в любом бою — но только раз за матч." },
+  { t: "Химия на арене", d: "Стимуляторы из концентрата руды затягивают раны прямо посреди боя, а дымовые шашки из рудной пыли заставляют соперника бить вслепую. Каждую вещь можно применить раз за матч, а больше десяти штук одного вида с собой не унесёшь." },
   { t: "Грязные контракты", d: "У Бюро есть теневая сторона. Тем, кто подписал грязные контракты, открыты двери любых турниров: они врываются на чужие сетки, и никто не задаёт вопросов." },
   { t: "Атлантический Инцидент", d: "Метеорит упал в Атлантический океан и изменил очертания мира. Наводнения поглотили прибрежные города, разрушенные берега превратились в архипелаги. Перед общей катастрофой человечеству пришлось объединиться. Но последствия удара не ограничились разрушениями." },
   { t: "Первые Спектры", d: "После Инцидента у некоторых людей начали проявляться необычные способности. Кто-то двигался быстрее взгляда, кто-то создавал предметы из воздуха. Их назвали Спектрами. Позднее исследователи установили связь между пробуждением дара и излучением метеорита." },
@@ -3364,7 +3433,7 @@ function viewShop() {   // магазин: только названия и це
       <div style="margin-top:8px">${coinHtml(S.coins, 'big')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
     <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind, carIcon(j))).join('')}</div>
-    <div class="card"><h3>Расходники</h3><div class="dim">Пригодятся на турнирах.</div>${CONS.map(c => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${c.k}.webp" alt=""><span><b>${esc(c.n)}</b><div class="dim" style="font-size:12px">${esc(c.d)}</div><div class="gold" style="font-size:12px">В запасе: ${consOf(S, c.k)}</div></span></span><button class="btn cbtn" data-a="consbuy" data-v="${c.k}" ${(S.coins || 0) < c.cost ? 'disabled' : ''}>${coinHtml(c.cost)}</button></div>`).join('')}</div>
+    <div class="card"><h3>Расходники</h3><div class="dim">Пригодятся в любом бою.</div>${CONS.map(c => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${c.k}.webp" alt=""><span><b>${esc(c.n)}</b><div class="dim" style="font-size:12px">${esc(c.d)}</div><div class="gold" style="font-size:12px">В запасе: ${consOf(S, c.k)} из ${CONS_MAX}</div></span></span>${consOf(S, c.k) >= CONS_MAX ? '' : `<button class="btn cbtn" data-a="consbuy" data-v="${c.k}" ${(S.coins || 0) < c.cost ? 'disabled' : ''}>${coinHtml(c.cost)}</button>`}</div>`).join('')}</div>
     <div class="card"><h3>Особое</h3><div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/dirty.webp" alt=""><span><b>${DIRTY.n}</b><div class="dim" style="font-size:12px">${DIRTY.d}</div></span></span>${S.dirty ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="dbuy" ${(S.coins || 0) < DIRTY.cost ? 'disabled' : ''}>${coinHtml(DIRTY.cost)}</button>`}</div></div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>`) + navBar();
 }
@@ -3441,7 +3510,8 @@ function viewBureau() {   // слева — бюро и услуги, справ
       ${svc('fight', 'ladder', 'Лестничный матч', 'Соперник по твоему рейтингу (±200). Первые 10 матчей ±150, дальше рейтинг меняется по силе соперника: за слабых почти ничего. Победа: +30 ОЛ.', none, 'Действия на неделю закончились.')}
       ${svc('fight', 'pro', 'Бой с Элитным Спектром', 'Случайный Элитный Спектр региона. Чем выше его рейтинг, тем больше даёт победа и меньше отнимает поражение. Победа: +100 ОЛ.', none, 'Действия на неделю закончились.')}
       ${svc('esl', '', 'ESL ONE', 'Собери свой турнир из Элиты любых регионов.', none || !esl, !esl ? 'Откроется, когда твоя сила станет достаточной для Элиты.' : 'Действия на неделю закончились.')}
-    </div></div>
+    </div>
+    <div class="card"><button class="btn" data-a="famebu" style="text-align:center">Зал славы</button></div></div>
     <div class="bright">${lgCardHtml(S.region)}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
 function viewFame() {
@@ -3453,6 +3523,7 @@ function viewFame() {
   return wrap(`<div class="fgrid">
     <div class="card"><h2>Действующие чемпионы лиг</h2>${F2.leagues.map((e, r) => `<div class="famel"><img src="img/logo_${r}.webp" alt=""><span>${LSHORT[r]}</span></div>${row(e, (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))}`).join('')}</div>
     <div class="fcol">
+    <div class="card"><h2>Пояса Бойцовского клуба</h2>${(ensureBelts(), CLUB.map((B, k) => { const hd = beltHolder(k); return `<div class="famel"><img src="img/trophy/belt_${k}.webp" alt="" onerror="this.remove()"><span>${B.n}</span></div>${row({ name: hd.name, face: hd.face, country: hd.country, hum: hd.hum }, G.belts[k].since ? 'чемпион с недели ' + G.belts[k].since + (G.belts[k].def ? ' · защит: ' + G.belts[k].def : '') : 'до начала карьеры')}`; }).join(''))}</div>
     <div class="card"><h2>Чемпионы мира</h2>${F2.worlds.map((e, i) => row(e, (i === 0 ? 'Действующий чемпион · ' : '') + (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))).join('')}</div>
     <div class="card"><h2>ESL ONE · последние 5</h2>${F2.esl.map(e => row(e, e.season > 0 ? 'Неделя ' + e.week + ' · ' + ss(e) : ss(e))).join('')}</div>
     <div class="card"><h2>Турниры сессии</h2>${F2.tours.length ? F2.tours.map(e => row(e, esc(e.t) + ' · ' + REGIONS[e.r].name + ' · неделя ' + e.week)).join('') : '<div class="dim">Пока ни одного турнира. Победители всех турниров, сыгранных в этой игре, появятся здесь.</div>'}</div>
@@ -3662,7 +3733,7 @@ function viewTRun() {
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
-  let h = `<div class="card thead">${R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
+  let h = `<div class="card thead">${R.kind === 'club' ? `<h2>Бойцовский клуб · ${CLUB[R.belt].n}</h2><div class="gold">Чемпион: ${esc(R.ps[R.holder].h != null ? G.players[R.ps[R.holder].h].nick : R.ps[R.holder].name)}</div>` : R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
@@ -3825,7 +3896,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="btn gold" data-a="lplay">В бой</button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -3881,6 +3952,10 @@ function act(a, v) {
   }
   switch (a) {
     case 'hgo': G.handoff = false; break;
+    case 'club': S.view = 'club'; break;
+    case 'clubgo': { const k = +v; ensureBelts(); if (S.rating < CLUB[k].min || G.belts[k].h === G.cur || !spend()) return; clearJet(); clubStart(k); S.view = 'trun'; break; }
+    case 'famebu': S.view = 'fame'; S.fameFrom = 'bureau'; break;
+    case 'fameback': S.view = S.fameFrom === 'bureau' ? 'bureau' : 'more'; S.fameFrom = null; break;
     case 'ireg': if (S.intro === 1) S.introReg = +v; break;
     case 'isign': if (S.intro === 1) { S.region = S.introReg | 0; S.intro = 2; logMsg('Документы подписаны. Карьера начинается: ' + REGIONS[S.region].name + '.'); save(); } break;
     case 'igo': if (S.intro === 2) { S.intro = 0; S.tourPass = false; S.tourInv = []; S.view = 'tour'; introTour(); save(); } break;
@@ -3912,7 +3987,7 @@ function act(a, v) {
     case 'ivans': if (S.iv) { if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
     case 'coll': S.view = 'coll'; break;
-    case 'fame': S.view = 'fame'; break;
+    case 'fame': S.view = 'fame'; S.fameFrom = null; break;
     case 'back': S.view = 'main'; S.sel = null; break;
     case 'lib': if (spend()) { clearJet(); addEff(...LIB_B); S.view = 'lib'; } break;
     case 'rest': if (spend()) { clearJet(); S.effects = []; logMsg('Отдых: все бонусы и штрафы сняты.'); S.view = 'rest'; } break;
@@ -3958,7 +4033,7 @@ function act(a, v) {
       S.roomPic = 2; logMsg(`Куплено: ${CARS[j].n}.${S.garage === j ? ' Стоит в гараже.' : ' Поставить в гараж можно в комнате.'}`); break; }
     case 'gsel': { const j = +v; if (!(S.cars || []).includes(j) || S.garage === j) return; S.garage = j; logMsg(`В гараже теперь ${CARS[j].n}.`); break; }
     case 'shop': S.view = 'shop'; break;
-    case 'consbuy': { const c = CONS.find(x => x.k === v); if (!c || (S.coins || 0) < c.cost) return; S.coins -= c.cost; S.cons = S.cons || {}; S.cons[c.k] = (S.cons[c.k] || 0) + 1; logMsg('Куплено: ' + c.n + '.'); break; }
+    case 'consbuy': { const c = CONS.find(x => x.k === v); if (!c || (S.coins || 0) < c.cost || consOf(S, c.k) >= CONS_MAX) return; S.coins -= c.cost; S.cons = S.cons || {}; S.cons[c.k] = (S.cons[c.k] || 0) + 1; logMsg('Куплено: ' + c.n + '.'); break; }
     case 'dbuy': { if (S.dirty || (S.coins || 0) < DIRTY.cost) return; S.coins -= DIRTY.cost; S.dirty = true; logMsg('Куплено: ' + DIRTY.n + '. Вторжения на турниры — без последствий.'); break; }
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
