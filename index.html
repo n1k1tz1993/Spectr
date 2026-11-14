@@ -358,7 +358,8 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .platebtn{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;width:100%;margin-top:8px;aspect-ratio:900/198;cursor:pointer;color:#FAEFD8;font-weight:900;font-size:clamp(20px,6.4vw,30px);text-shadow:0 3px 6px #000;background:linear-gradient(#F3D98A,#9A6A1E 50%,#E6B654);clip-path:polygon(3.5% 0,96.5% 0,100% 16%,100% 84%,96.5% 100%,3.5% 100%,0 84%,0 16%)}
 .platebtn::before{content:'';position:absolute;inset:3px;background:linear-gradient(115deg,#4A1414 0 30%,#C9A24A 30% 30.6%,#141B33 30.6% 100%);clip-path:inherit}
 .platebtn b,.platebtn i{position:relative}.platebtn i{font-style:normal;color:#E9C46A;font-size:1.3em;position:absolute;right:6%}
-.club .clubh{display:flex;gap:12px;align-items:center}.beltimg{width:72px;height:72px;object-fit:contain;flex:0 0 auto}.beltph{width:72px;height:72px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border:1px dashed #6B5320;color:var(--dim);font-size:12px}
+.club .clubh{display:flex;gap:12px;align-items:center}.beltimg{width:110px;height:auto;border-radius:8px;flex:0 0 auto}
+.famebelt{display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:700;color:var(--gold)}.famebelt img{width:120px;border-radius:8px}.beltph{width:72px;height:72px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border:1px dashed #6B5320;color:var(--dim);font-size:12px}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -1787,7 +1788,7 @@ function clubFinish(R) {
 }
 function viewClub() {
   ensureBelts(); const none = S.actions <= 0;
-  return wrap(`<div class="card"><h2>Бойцовский клуб</h2><div class="dim">Три пояса, у каждого — действующий чемпион. 16 бойцов, сетка Bo3, финал Bo5; победитель выходит на титульный бой Bo5 против чемпиона и может забрать пояс. Турнир — 1 действие.</div></div>
+  return wrap(`<div class="card"><h2>Бойцовский клуб</h2><div class="dim">Три пояса, у каждого — действующий чемпион. 16 бойцов, сетка Bo3, финал Bo5; победитель выходит на титульный бой Bo5 против чемпиона и может забрать пояс. Участие в турнире — ещё 1 действие.</div></div>
     ${CLUB.map((B, k) => { const hd = beltHolder(k), mine = G.belts[k].h === G.cur, can = S.rating >= B.min;
       return `<div class="card club"><div class="clubh"><img class="beltimg" src="img/trophy/belt_${k}.webp" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'beltph',textContent:'Пояс'}))"><div><h3>${B.n}</h3><div class="dim">Бойцы: ${B.who}. ${B.pro ? B.pro + ' из профессиональных команд, ' : ''}${B.semi} из полупрофессиональных.</div></div></div>
         <div class="dim" style="margin-top:8px">Действующий чемпион</div>
@@ -3049,7 +3050,7 @@ function viewMain() {
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
   const daily = `<div class="card"><h2>Повседневные действия <span class="dim" style="font-size:.6em;font-weight:500;white-space:nowrap">(Тратит 1 действие)</span></h2>
       <button class="imgbtn over" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''} aria-label="Бюро">${freeBureau(S) ? '<small class="ibfree">бесплатно</small>' : ''}<img src="img/nav/bureau.webp" alt=""></button>
-      <button class="platebtn" data-a="club" aria-label="Бойцовский клуб"><b>Бойцовский клуб</b><i>›</i></button>
+      <button class="imgbtn over" data-a="club" style="margin-top:calc(4.6% + 8px)" ${done ? 'disabled' : ''} aria-label="Бойцовский клуб"><img src="img/nav/club.webp" alt="" style="margin-top:-4.4%"></button>
       <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
       <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
@@ -3523,7 +3524,7 @@ function viewFame() {
   return wrap(`<div class="fgrid">
     <div class="card"><h2>Действующие чемпионы лиг</h2>${F2.leagues.map((e, r) => `<div class="famel"><img src="img/logo_${r}.webp" alt=""><span>${LSHORT[r]}</span></div>${row(e, (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))}`).join('')}</div>
     <div class="fcol">
-    <div class="card"><h2>Пояса Бойцовского клуба</h2>${(ensureBelts(), CLUB.map((B, k) => { const hd = beltHolder(k); return `<div class="famel"><img src="img/trophy/belt_${k}.webp" alt="" onerror="this.remove()"><span>${B.n}</span></div>${row({ name: hd.name, face: hd.face, country: hd.country, hum: hd.hum }, G.belts[k].since ? 'чемпион с недели ' + G.belts[k].since + (G.belts[k].def ? ' · защит: ' + G.belts[k].def : '') : 'до начала карьеры')}`; }).join(''))}</div>
+    <div class="card"><h2>Пояса Бойцовского клуба</h2>${(ensureBelts(), CLUB.map((B, k) => { const hd = beltHolder(k); return `<div class="famebelt"><img src="img/trophy/belt_${k}.webp" alt=""><span>${B.n}</span></div>${row({ name: hd.name, face: hd.face, country: hd.country, hum: hd.hum }, G.belts[k].since ? 'чемпион с недели ' + G.belts[k].since + (G.belts[k].def ? ' · защит: ' + G.belts[k].def : '') : 'до начала карьеры')}`; }).join(''))}</div>
     <div class="card"><h2>Чемпионы мира</h2>${F2.worlds.map((e, i) => row(e, (i === 0 ? 'Действующий чемпион · ' : '') + (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))).join('')}</div>
     <div class="card"><h2>ESL ONE · последние 5</h2>${F2.esl.map(e => row(e, e.season > 0 ? 'Неделя ' + e.week + ' · ' + ss(e) : ss(e))).join('')}</div>
     <div class="card"><h2>Турниры сессии</h2>${F2.tours.length ? F2.tours.map(e => row(e, esc(e.t) + ' · ' + REGIONS[e.r].name + ' · неделя ' + e.week)).join('') : '<div class="dim">Пока ни одного турнира. Победители всех турниров, сыгранных в этой игре, появятся здесь.</div>'}</div>
@@ -3952,7 +3953,7 @@ function act(a, v) {
   }
   switch (a) {
     case 'hgo': G.handoff = false; break;
-    case 'club': S.view = 'club'; break;
+    case 'club': if (spend()) { clearJet(); S.view = 'club'; } break;   // приход в клуб — 1 действие, как бюро
     case 'clubgo': { const k = +v; ensureBelts(); if (S.rating < CLUB[k].min || G.belts[k].h === G.cur || !spend()) return; clearJet(); clubStart(k); S.view = 'trun'; break; }
     case 'famebu': S.view = 'fame'; S.fameFrom = 'bureau'; break;
     case 'fameback': S.view = S.fameFrom === 'bureau' ? 'bureau' : 'more'; S.fameFrom = null; break;
