@@ -367,6 +367,7 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .tfsc{font-size:34px;font-weight:900;color:var(--gold);display:flex;flex-direction:column;align-items:center}.tfsc small{font-size:12px;color:var(--dim)}
 .imgbtn.locked{cursor:default;filter:brightness(.85)}
 .lbtns{display:flex;gap:8px;margin-top:8px}.lbtns .imgbtn{flex:1;margin-top:0}
+.hdloc{all:unset;cursor:pointer;font-weight:800;font-size:4.2cqw;color:#F3E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -857,7 +858,7 @@ html.land .fyl .flog{max-height:110px}
 /* ===== шапка по макету: пропорции картинки 1683×935, всё в долях ширины (cqw) — на любом экране выглядит одинаково ===== */
 .top.hd{display:block;padding:0;margin:0 -8px;border:0;background:none;box-shadow:none;container-type:inline-size;overflow:visible}
 .hdin{position:relative;padding:0 2.4cqw 2.4cqw;border:max(1.5px,.12cqw) solid #27B8E8;border-radius:2.6cqw;background:linear-gradient(180deg,#0F1A33,#0A1226);box-shadow:0 0 2cqw rgba(39,184,232,.3),inset 0 0 2.4cqw rgba(39,184,232,.06)}
-.hdtop{display:flex;justify-content:flex-end;padding:1.3cqw 0 1cqw;border-bottom:1px solid rgba(39,184,232,.35);margin-bottom:1.8cqw}
+.hdtop{display:flex;justify-content:space-between;align-items:center;gap:2cqw;padding:1.3cqw 0 1cqw;border-bottom:1px solid rgba(39,184,232,.35);margin-bottom:1.8cqw}
 .hd .topor{position:static;width:5.4cqw;height:4.2cqw;min-width:28px;min-height:24px;border-radius:.9cqw;border:1px solid #2A5A80;background:#10203A;color:var(--cyan);font-size:max(14px,2.6cqw);display:flex;align-items:center;justify-content:center;padding:0}
 .hdm{display:grid;grid-template-columns:23.4cqw minmax(0,1fr) 40.8cqw;grid-template-areas:"a i r";gap:0;align-items:stretch}
 .hdava{grid-area:a;width:23.4cqw !important;height:24.4cqw !important;border-radius:2.2cqw !important;border:max(1.5px,.15cqw) solid #27B8E8;box-shadow:0 0 1.4cqw rgba(39,184,232,.45);overflow:hidden;align-self:center}
@@ -3041,10 +3042,10 @@ const topBar = () => {   // шапка по макету: портрет, ник
   const team = tm ? `<img src="img/team/${tm.logo}.webp" alt=""><span class="hdtn">${esc(tm.name)}${st && !pt ? '<small>контракт</small>' : ''}</span>` : '<span class="hdfa">FREE <em>AGENT</em></span>';
   const k = TIERS.findIndex(t => S.power < t.cap);
   return `<div class="top hd"><div class="hdin">
-    <div class="hdtop"><button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button></div>
+    <div class="hdtop"><button class="hdloc" data-a="hdrfull" title="Полное название лиги">${REGIONS[S.region].name} · ${full}</button><button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button></div>
     <div class="hdm">
       <div class="ava hdava">${faceImg(S.face)}</div>
-      <div class="hdid"><button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${flagOf(S.country)} ${esc(S.nick)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400;font-size:.6em">${G.cur + 1}/${G.players.length}</span>` : ''}</span><span class="sub">${REGIONS[S.region].name} · ${full}</span></button>${statusHtml(S)}</div>
+      <div class="hdid"><button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${flagOf(S.country)} ${esc(S.nick)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400;font-size:.6em">${G.cur + 1}/${G.players.length}</span>` : ''}</span></button>${statusHtml(S)}</div>
       <div class="hdr"><div class="hdrt" title="${lg.n}"><img src="img/rank_${lg.id}.webp" alt="${lg.n}"><b>${S.rating.toLocaleString('ru-RU')}</b></div>
         <div class="hdbal"><span>Баланс</span>${coinHtml(S.coins)}</div>
         <div class="hdteam">${team}</div></div>
