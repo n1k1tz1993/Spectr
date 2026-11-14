@@ -368,6 +368,19 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .imgbtn.locked{cursor:default;filter:brightness(.85)}
 .lbtns{display:flex;gap:8px;margin-top:8px}.lbtns .imgbtn{flex:1;margin-top:0}
 .hdloc{all:unset;cursor:pointer;font-weight:800;font-size:4.2cqw;color:#F3E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.hdm{grid-template-columns:27cqw minmax(0,1fr) 42cqw !important}
+.hdac{grid-area:a;display:flex;flex-direction:column;align-items:center;gap:1.2cqw;min-width:0}
+.hdac .hdava{width:24cqw !important;height:24cqw !important}
+.hdnick{width:100%;text-align:center;line-height:1.15;white-space:nowrap}.hdnick b{font-weight:800}.hdnick .dim{display:block;font-size:max(9px,2.2cqw);margin-top:.4cqw}
+.hdid{align-items:center !important;justify-content:center;gap:2.2cqw !important;padding:0 1.6cqw !important}
+.hdid .hdrt{flex-direction:column;gap:.8cqw;padding:0;border:0}
+.hdid .hdrt img{width:15cqw;height:15cqw}
+.hd .stat{justify-content:center}
+.hdr .hdbal{padding-top:0}
+.hdteam{min-height:15cqw !important;padding:1.2cqw 1.6cqw !important}
+.hdteam img{width:11cqw !important;height:11cqw !important}
+.hdtn{font-size:max(11px,3.1cqw) !important;white-space:normal;overflow-wrap:anywhere}
+.hdfa{font-size:max(14px,4.2cqw) !important}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -3044,10 +3057,9 @@ const topBar = () => {   // шапка по макету: портрет, ник
   return `<div class="top hd"><div class="hdin">
     <div class="hdtop"><button class="hdloc" data-a="hdrfull" title="Полное название лиги">${REGIONS[S.region].name} · ${full}</button><button class="topor" data-a="orient" aria-label="Повернуть экран" title="Повернуть экран">⟳</button></div>
     <div class="hdm">
-      <div class="ava hdava">${faceImg(S.face)}</div>
-      <div class="hdid"><button class="topid" data-a="hdrfull" aria-label="Полное название лиги"><span class="nick">${flagOf(S.country)} ${esc(S.nick)}${G && G.mode === 'coop' ? ` <span class="dim" style="font-weight:400;font-size:.6em">${G.cur + 1}/${G.players.length}</span>` : ''}</span></button>${statusHtml(S)}</div>
-      <div class="hdr"><div class="hdrt" title="${lg.n}"><img src="img/rank_${lg.id}.webp" alt="${lg.n}"><b>${S.rating.toLocaleString('ru-RU')}</b></div>
-        <div class="hdbal"><span>Баланс</span>${coinHtml(S.coins)}</div>
+      <div class="hdac"><div class="ava hdava">${faceImg(S.face)}</div><div class="hdnick" style="font-size:max(10px,${Math.min(3.8, 44 / (S.nick.length + 2.5)).toFixed(2)}cqw)">${flagOf(S.country)} <b>${esc(S.nick)}</b>${G && G.mode === 'coop' ? `<span class="dim">Игрок ${G.cur + 1}/${G.players.length}</span>` : ''}</div></div>
+      <div class="hdid"><div class="hdrt" title="${lg.n}"><img src="img/rank_${lg.id}.webp" alt="${lg.n}"><b>${S.rating.toLocaleString('ru-RU')}</b></div>${statusHtml(S)}</div>
+      <div class="hdr"><div class="hdbal"><span>Баланс</span>${coinHtml(S.coins)}</div>
         <div class="hdteam">${team}</div></div>
     </div>
     <div class="hdgrow ${pct >= 100 ? 'done' : ''}"><div class="hdgl"><span>${pct >= 100 ? 'Рост силы завершён' : 'Рост силы'}</span><div class="tbar"><i style="width:${pct.toFixed(1)}%"></i>${TIERS.slice(0, 2).map(t => `<em class="tmark ${S.power >= t.cap ? 'past' : ''}" style="left:${((t.cap - GROW_FROM) / (GROW_TO - GROW_FROM) * 100).toFixed(1)}%" title="Потолок: ${t.name}"></em>`).join('')}</div><b>${Math.round(pct)}%</b></div>
