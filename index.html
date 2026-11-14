@@ -3143,7 +3143,7 @@ function viewLeague() {
   return viewMain() + `<div class="ovl" data-a="back"><div class="lwrap" data-a="noop"><div class="lpanel" style="background-image:url(img/league_${r}.webp)">${rows}${peds}<button class="lclose" data-a="back" aria-label="Закрыть"></button></div>
     <div class="lside"><div class="lttl"><img src="img/logo_${r}.webp" alt=""><b>${esc(REGIONS[r].league)}</b></div>
       <div class="dim">Трофеи региона: ${won.filter(Boolean).length} из 4</div>
-      <div class="lbtns"><button class="imgbtn" data-a="ltable" data-v="${r}" aria-label="Таблица"><img src="img/nav/ltab.webp" alt=""></button><button class="imgbtn" data-a="lhist" data-v="${r}" aria-label="История"><img src="img/nav/lhist.webp" alt=""></button></div></div></div></div>`;
+      </div></div></div>`;
 }
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
@@ -3659,7 +3659,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="ESL ONE"><img src="img/nav/esl.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="ESL ONE закрыт"><img src="img/nav/s_esl_lock.webp" alt=""></div>'}
     </div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
-    <div class="bright">${lgCardHtml(S.region)}${wcCardHtml()}${wfCardHtml()}</div></div>`);
+    <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="btn ${i === r ? 'here' : ''}" style="flex:1;text-align:center;width:auto;padding:8px 2px;font-size:12px;margin:0" data-a="blg" data-v="${i}">${MAP_SHORT[i]}</button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
 function viewFame() {
   ensureFame(); const F2 = G.fame;
@@ -4105,6 +4105,7 @@ function act(a, v) {
     case 'tfplay': { const T = G.tq && G.tq[0]; if (!T || beltScore(T).done) return;
       startFightAB(`Титульный бой · ${CLUB[T.k].n} · бой ${T.g.length + 1}`, beltFighter(T.a), beltFighter(T.b), won => { T.g.push(won ? 'a' : 'b'); if (beltScore(T).done) beltApply(T); S.view = 'main'; save(); }); break; }
     case 'tfnext': if (G.tq) { G.tq.shift(); if (!G.tq.length) G.tq = null; save(); } break;
+    case 'blg': S.blg = +v; break;
     case 'club': if (spend()) { clearJet(); S.view = 'club'; } break;   // приход в клуб — 1 действие, как бюро
     case 'clubgo': { const k = +v; ensureBelts(); if (S.rating < CLUB[k].min || G.belts[k].h === G.cur || !spend()) return; clearJet(); clubStart(k); S.view = 'trun'; break; }
     case 'famebu': S.view = 'fame'; S.fameFrom = 'bureau'; break;
