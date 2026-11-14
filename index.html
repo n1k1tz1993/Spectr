@@ -2913,7 +2913,7 @@ const nextMatchText = () => {
 };
 const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
-  return `<div class="map"><div class="mapin"><img src="img/map.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
+  return `<div class="map"><div class="mapin"><img src="img/map_v2.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
     return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}"><img src="img/logo_${i}.webp" alt=""><span><b>${MAP_SHORT[i]}</b><i>${esc(REGIONS[i].name)}</i></span></div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
