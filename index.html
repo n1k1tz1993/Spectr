@@ -99,7 +99,12 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .week .nextwk{flex:0 0 100%;margin-top:0}
 .week .inds{margin-top:8px}
 .nextm{text-align:right;font-size:14px}
-.loc{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px}
+.loc{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:14px;text-align:right}
+.mapsw{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.mapsw .nvb{all:unset;cursor:pointer;display:block;line-height:0;width:calc(50% - 9px);transition:transform .12s,filter .15s;filter:brightness(.8) saturate(.9)}
+.mapsw .nvb img{width:100%;height:auto;display:block}.mapsw .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}.mapsw .nvb:active{transform:scale(.97)}
+.mapsw .nvsep{flex:0 0 2px;align-self:stretch;margin:6px 0;background:linear-gradient(transparent,#C9A24A,transparent);border-radius:2px}
+.imgbtn .ibfree{position:absolute;right:12%;top:-4px;line-height:1;font-size:11px;font-weight:700;padding:3px 7px;border-radius:8px;background:#2ECC71;color:#062;z-index:1}
 .loc img{width:30px;height:30px;border-radius:6px;object-fit:contain;background:#000;flex:0 0 auto}
 .week h2{margin:0}
 .inds{display:flex;gap:6px}
@@ -325,6 +330,18 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .intro .ingo:active{transform:scale(.98)}
 .intro .inbanner{margin-top:14px;padding:16px;border:1px solid #32D5E7;border-radius:10px;background:linear-gradient(90deg,#0D1630 55%,rgba(13,22,48,.2) 80%,rgba(13,22,48,0)),url(img/intro_meteor.webp) right center/auto 100% no-repeat,#0D1630;box-shadow:0 0 14px rgba(50,213,231,.25)}
 .intro .inbanner div{border-left:3px solid #32D5E7;padding-left:12px}.intro .inbanner b{display:block;color:#5FE3F0;font-size:18px;letter-spacing:.04em}.intro .inbanner i{color:#C9D2E4;font-size:14px}
+.fyc.lost{filter:grayscale(.85) brightness(.55);box-shadow:inset 0 0 0 2px #B3262B;position:relative;transition:filter .6s}
+.fyc.lost .fyp::before{content:'ПОВЕРЖЕН';position:absolute;inset:auto 0 40% 0;z-index:3;text-align:center;font-weight:900;letter-spacing:.12em;font-size:clamp(14px,5cqw,22px);color:#fff;background:rgba(179,38,43,.85);padding:4px 0;transform:rotate(-8deg)}
+.fyc.won{box-shadow:0 0 0 2px #E9C46A,0 0 18px rgba(233,196,106,.5)}
+.fwin{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,18,.72);animation:fwin .35s ease-out}
+@keyframes fwin{from{opacity:0}}
+.fwbox{width:min(360px,100%);text-align:center;padding:18px 16px;border-radius:18px;border:2px solid #E9C46A;background:linear-gradient(#141E3A,#0B1226);box-shadow:0 0 30px rgba(233,196,106,.35);animation:fwbox .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes fwbox{from{transform:scale(.8);opacity:0}}
+.fwt{font-weight:900;letter-spacing:.2em;color:#E9C46A;font-size:15px;margin-bottom:10px}
+.fwres{font-size:24px;font-weight:900;margin-bottom:6px}.fwres.plus{color:#2ECC71}.fwres.minus{color:#FF4D4F}
+.fwpic{width:160px;height:160px;margin:0 auto 10px;border-radius:16px;overflow:hidden;border:2px solid #E9C46A;background:#0E1A30}.fwpic img{width:100%;height:100%;object-fit:cover;object-position:top}
+.fwn{font-size:22px;display:flex;justify-content:center;align-items:center;gap:8px}
+.fwr{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 14px}.fwr img{width:34px;height:34px}.fwr b{color:#F3D98A;font-size:20px}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -396,14 +413,14 @@ html.land .fzl .flog{max-height:none}
 html.land .fzn b{font-size:18px}
 html.land .fza b{font-size:14px}
 /* ---------- главный экран, нижнее меню, экран действия ---------- */
-#app[data-view=main],#app[data-view=more],#app[data-view=coll],#app:has(>.nav){padding-bottom:calc(132px + env(safe-area-inset-bottom))}
+#app[data-view=main],#app[data-view=more],#app[data-view=coll],#app:has(>.nav){padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 .nav .nvr1{display:flex;align-items:center;justify-content:center;gap:8px}
 .nav .nvr2{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .nav .nvsep{flex:0 0 2px;align-self:stretch;margin:6px 0;background:linear-gradient(transparent,#C9A24A,transparent);border-radius:2px}
 .nav .nvb{all:unset;position:relative;cursor:pointer;display:block;line-height:0;transition:transform .12s,filter .15s;filter:brightness(.82) saturate(.9)}
 .nav .nvb img{width:100%;height:auto;display:block}
 .nav .nv-room,.nav .nv-map{width:calc(50% - 9px)}
-.nav .nv-bureau{width:38%}.nav .nv-more{width:31%}.nav .nv-shop{flex:1}
+.nav .nv-more{width:calc(50% - 4px)}.nav .nv-shop{width:calc(50% - 4px);--nvh:clamp(36px,10.6vw,52px)}.nav .nv-shop .nvtx{font-size:clamp(14px,4vw,18px)}
 .nav .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}
 .nav .nvb:active{transform:scale(.97)}
 .nav .nvb:disabled{filter:grayscale(1) brightness(.55);cursor:default}
@@ -2852,8 +2869,8 @@ function viewLeague() {
 function navBar() {
   const cur = S.view === 'shop' ? 'shop' : ['more', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
   const nb = (id, a, v, label, extra, dis) => `<button class="nvb nv-${id} ${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''} aria-label="${label}">${id === 'shop' ? `<span class="nvtx">${label}<i>›</i></span>` : `<img src="img/nav/${id}.webp" alt="">`}${extra ? `<small>${extra}</small>` : ''}</button>`;
-  const freeB = freeBureau(S);   // кнопки-плашки: 1-й ряд — Комната | Карта (крупные), 2-й — Бюро слева, Магазин, Ещё справа
-  return `<nav class="nav"><div class="nvr1">${nb('room', 'nav', 'room', 'Комната')}<i class="nvsep"></i>${nb('map', 'nav', 'map', 'Карта')}</div><div class="nvr2">${nb('bureau', 'bureau', '', 'Бюро', freeB ? 'бесплатно' : '', S.actions <= 0 && !freeB)}${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</div></nav>`;
+  // кнопки-плашки: 1-й ряд — Комната | Карта (крупные), 2-й — Бюро слева, Магазин, Ещё справа
+  return `<nav class="nav"><div class="nvr2">${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</div></nav>`;   // Комната/Карта — под картинкой, Бюро — в повседневных действиях
 }
 function viewMain() {
   const done = S.actions <= 0;
@@ -2871,10 +2888,12 @@ function viewMain() {
   const map = `<div class="card mapcard">
       <h2>${S.inRoom ? 'Моя комната' : 'Карта мира'}</h2>
       ${S.inRoom ? roomHtml() : mapHtml()}
-      <div class="loc"><img src="img/logo_${S.region}.webp" alt=""><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span></div>
+      <div class="mapsw"><button class="nvb nv-room ${S.inRoom ? 'on' : ''}" data-a="nav" data-v="room" aria-label="Комната"><img src="img/nav/room.webp" alt=""></button><i class="nvsep"></i><button class="nvb nv-map ${S.inRoom ? '' : 'on'}" data-a="nav" data-v="map" aria-label="Карта"><img src="img/nav/map.webp" alt=""></button></div>
+      <div class="loc"><span>Местонахождение: <b>${REGIONS[S.region].city}</b></span><img src="img/logo_${S.region}.webp" alt=""></div>
     </div>`;
   const events = `<div class="card"><h2>События недели</h2>${rows}</div>`;
   const daily = `<div class="card"><h2>Повседневные действия</h2>
+      <button class="imgbtn" data-a="bureau" ${done && !freeBureau(S) ? 'disabled' : ''} aria-label="Бюро">${freeBureau(S) ? '<small class="ibfree">бесплатно</small>' : ''}<img src="img/nav/bureau.webp" alt=""></button>
       <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
       <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
@@ -3454,6 +3473,7 @@ function fside(x, id) {
 const fabRow = (x, id) => `<button class="ff-ab" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">
   ${abilIcon(x.abil.icon)}<span class="ff-abt"><em>${esc(x.name)}</em><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><span id="${id}-acd"></span></span></button>`;
 // экран боя по макету: шапка SPECTRE / ПОЕДИНОК, две карточки бойцов, журнал и скорость; в альбомном — журнал справа
+const fCountry = x => x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '';
 function fzCard(x, id) {   // карточка бойца по макету: портрет с рамкой стороны, ник+флаг, ранг|рейтинг|лига, команда, HP, Цы; способность — отдельно
   const lg = leagueOf(x.rating), cc = x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '';
   const team = x.beast ? `<span class="fyteam wild">${abilIcon(30)}<b>Дикий зверь</b></span>`
@@ -3522,6 +3542,16 @@ function fightPaint() {
     const fl = document.getElementById('flast'); if (fl) fl.hidden = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 24;
   }
   if (F.done && !document.getElementById('fend').innerHTML) {
+    const W = F.won ? F.a : F.b, Lz = F.won ? 'fb' : 'fa';
+    document.querySelectorAll('.fyc.' + Lz).forEach(c => c.classList.add('lost')); document.querySelectorAll('.fyc.' + (Lz === 'fa' ? 'fb' : 'fa')).forEach(c => c.classList.add('won'));
+    const wc = fCountry(W), lg = leagueOf(W.rating), mine = F.a.me && F.b.me ? '' : F.won ? '<div class="fwres plus">Победа!</div>' : '<div class="fwres minus">Поражение</div>';
+    const ov = document.createElement('div'); ov.className = 'fwin'; ov.innerHTML = `<div class="fwbox">${mine}<div class="fwt">ПОБЕДИТЕЛЬ</div>
+      <div class="fwpic">${faceImg(W.face)}</div>
+      <div class="fwn">${wc ? `<span class="fzfl">${flagOf(wc)}</span>` : ''}<b>${esc(W.name)}</b></div>
+      ${wc ? `<div class="dim">${esc(COUNTRIES[wc] || '')}</div>` : ''}
+      ${W.beast ? '<div class="dim">Дикий зверь</div>' : `<div class="fwr"><img src="img/rank_${lg.id}.webp" alt=""><span>${lg.n}</span><b>${W.rating}</b></div>`}
+      <button class="btn gold" data-a="fend">Продолжить</button></div>`;
+    setTimeout(() => { if (F && F.done && !document.querySelector('.fwin')) document.body.appendChild(ov); }, 900);
     document.getElementById('fend').innerHTML = `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
     document.getElementById('fctl').style.display = 'none'; document.getElementById('flog').style.display = 'none'; document.getElementById('flast').hidden = true;
   }
@@ -3711,6 +3741,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
 const VIEWS = { offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
+  if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
   document.documentElement.classList.toggle('ingame', !!G);
   app.dataset.view = !G ? (SETUP ? 'setup' : 'menu') : G.lq ? (F ? 'fight' : 'lturn') : G.handoff ? 'handoff' : (S.view || 'main');
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
