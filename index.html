@@ -102,7 +102,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--l
 .loc{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:14px;text-align:right}
 .mapsw{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
 .mapsw .nvb{all:unset;cursor:pointer;display:block;line-height:0;width:calc(50% - 9px);transition:transform .12s,filter .15s;filter:brightness(.8) saturate(.9)}
-.mapsw .nvb img{width:100%;height:auto;display:block}.mapsw .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}.mapsw .nvb:active{transform:scale(.97)}
+.mapsw .nvb img{width:100%;height:auto;display:block;aspect-ratio:720/162;object-fit:fill}   /* обе плашки одной высоты: «Карта» чуть сплюснута до высоты «Комнаты» */.mapsw .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}.mapsw .nvb:active{transform:scale(.97)}
 .mapsw .nvsep{flex:0 0 2px;align-self:stretch;margin:6px 0;background:linear-gradient(transparent,#C9A24A,transparent);border-radius:2px}
 .imgbtn .ibfree{position:absolute;right:12%;top:-4px;line-height:1;font-size:11px;font-weight:700;padding:3px 7px;border-radius:8px;background:#2ECC71;color:#062;z-index:1}
 .loc img{width:30px;height:30px;border-radius:6px;object-fit:contain;background:#000;flex:0 0 auto}
