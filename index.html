@@ -342,6 +342,14 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .fwpic{width:160px;height:160px;margin:0 auto 10px;border-radius:16px;overflow:hidden;border:2px solid #E9C46A;background:#0E1A30}.fwpic img{width:100%;height:100%;object-fit:cover;object-position:top}
 .fwn{font-size:22px;display:flex;justify-content:center;align-items:center;gap:8px}
 .fwr{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 14px}.fwr img{width:34px;height:34px}.fwr b{color:#F3D98A;font-size:20px}
+.fyit{position:absolute;right:3%;bottom:3%;display:flex;gap:3px;z-index:4}
+.fyit button{all:unset;position:relative;width:13cqw;height:13cqw;min-width:26px;min-height:26px;max-width:42px;max-height:42px;border-radius:6px;overflow:hidden;cursor:pointer;border:1.5px solid #E9C46A;box-shadow:0 0 6px rgba(233,196,106,.5);background:#0E1730}
+.fyit button img{width:100%;height:100%;object-fit:cover;display:block}
+.fyit button b{position:absolute;right:1px;bottom:0;font-size:10px;line-height:1.1;padding:0 3px;border-radius:4px;background:rgba(0,0,0,.75);color:#fff}
+.fyit button.off{filter:grayscale(1) brightness(.5);border-color:#4A5574;box-shadow:none;cursor:default}
+.fyit button:not(.off):active{transform:scale(.92)}
+.consrow .consico{width:52px;height:52px;border-radius:10px;flex:0 0 auto;object-fit:cover;border:1px solid #6B5320}
+.prz{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(233,196,106,.06);border:1px solid rgba(233,196,106,.3)}.prz>b{display:block;color:var(--gold);margin-bottom:4px}.prz div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}.prz div b{color:#F3D98A}.prz small{display:block;margin-top:6px;color:var(--dim);font-size:12px}
 .libhero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin:0 0 10px;box-shadow:0 0 0 1px rgba(201,162,74,.35),0 6px 24px rgba(120,80,220,.25)}
 .libimg{width:160px;height:auto;border-radius:14px;display:block;margin:0 auto 8px}
 .gph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;font-size:20px;font-weight:700;color:#fff;text-shadow:0 2px 8px #000}
@@ -1106,29 +1114,37 @@ const descOf = c => c.desc || DESC_BY_T[c.t] || '';
 // ---------- инвентарь: 20 артефактов, открываются за рейтинг (тратится один раз), надет один; дают +1…+20 к силе сверх потолка ----------
 // Иконка артефакта i — img/art/i.webp. Самый престижный — часы AUREON «Абсолют» (+20).
 const ITEMS = [
-  { n: 'Кольцо «Трещина»', d: 'Грубое кольцо с трещиной, сквозь которую сочится свет руды. С него начинают все.', b: 1, cost: 100 },
-  { n: 'Кулон «Осколок»', d: 'Осколок метеорита на простом шнурке. Слабый, но послушный.', b: 2, cost: 150 },
-  { n: 'Браслет «Первый импульс»', d: 'Кожаный браслет, который впервые учит чувствовать ток Цы.', b: 3, cost: 200 },
-  { n: 'Серьга «Искра»', d: 'Крошечная искра у самого уха — помогает услышать собственную Цы.', b: 4, cost: 300 },
-  { n: 'Булавка «Зацеп»', d: 'Самодельная булавка с куском руды. Держится крепко, как и её хозяин.', b: 5, cost: 400 },
-  { n: 'Кольцо «Фокус»', d: 'Огранённый камень собирает Цы в одну точку.', b: 6, cost: 500 },
-  { n: 'Браслет «Связь»', d: 'Плетёный браслет, связывающий дыхание и удар.', b: 7, cost: 600 },
-  { n: 'Подвеска «Призма»', d: 'Треугольная призма раскладывает поток Цы на чистые лучи.', b: 8, cost: 700 },
-  { n: 'Запонка «Дипломат»', d: 'Строгая запонка для тех, кто побеждает спокойно.', b: 9, cost: 800 },
-  { n: 'Зажим «Контроль»', d: 'Зажим, который не даёт Цы вырваться раньше времени.', b: 10, cost: 900 },
-  { n: 'Перстень «Монолит»', d: 'Тяжёлый перстень — сила, высеченная из цельного камня.', b: 11, cost: 1000 },
-  { n: 'Часы «Пульсар»', d: 'Кристаллы на безеле пульсируют в ритме боя.', b: 12, cost: 1100 },
-  { n: 'Кафф «Шёпот»', d: 'Кристаллы на ухе шепчут о следующем движении соперника.', b: 13, cost: 1200 },
-  { n: 'Брошь «Сияние»', d: 'Сияющая брошь, которую носят на больших сценах.', b: 14, cost: 1350 },
-  { n: 'Пряжка «Ядро»', d: 'В пряжке спрятано плотное ядро метеоритной руды.', b: 15, cost: 1500 },
-  { n: 'Кулон «Слеза Атлантики»', d: 'Камень в бриллиантовой оправе. Говорят, его подняли со дна океана.', b: 16, cost: 1650 },
-  { n: 'Браслет «Созвездие»', d: 'Звенья с кристаллами, как звёзды на ночном небе.', b: 17, cost: 1800 },
-  { n: 'Перстень «Суверен»', d: 'Золото и руда — знак того, кто правит своим регионом.', b: 18, cost: 2000 },
-  { n: 'Карманные часы «Вечность»', d: 'Старинный механизм, в котором время будто застыло.', b: 19, cost: 2200 },
-  { n: 'Часы AUREON «Абсолют»', d: 'Вершина мастерства вымышленного бренда AUREON. Роскошь отражает качество исполнения артефакта; эффективность в бою по-прежнему зависит от контроля Цы.', b: 20, cost: 2500 }
+  { n: 'Кольцо «Трещина»', d: 'Грубое кольцо с трещиной, сквозь которую сочится свет руды. С него начинают все.', b: 1, cost: 150 },
+  { n: 'Кулон «Осколок»', d: 'Осколок метеорита на простом шнурке. Слабый, но послушный.', b: 2, cost: 500 },
+  { n: 'Браслет «Первый импульс»', d: 'Кожаный браслет, который впервые учит чувствовать ток Цы.', b: 3, cost: 950 },
+  { n: 'Серьга «Искра»', d: 'Крошечная искра у самого уха — помогает услышать собственную Цы.', b: 4, cost: 1600 },
+  { n: 'Булавка «Зацеп»', d: 'Самодельная булавка с куском руды. Держится крепко, как и её хозяин.', b: 5, cost: 2300 },
+  { n: 'Кольцо «Фокус»', d: 'Огранённый камень собирает Цы в одну точку.', b: 6, cost: 3150 },
+  { n: 'Браслет «Связь»', d: 'Плетёный браслет, связывающий дыхание и удар.', b: 7, cost: 4100 },
+  { n: 'Подвеска «Призма»', d: 'Треугольная призма раскладывает поток Цы на чистые лучи.', b: 8, cost: 5150 },
+  { n: 'Запонка «Дипломат»', d: 'Строгая запонка для тех, кто побеждает спокойно.', b: 9, cost: 6300 },
+  { n: 'Зажим «Контроль»', d: 'Зажим, который не даёт Цы вырваться раньше времени.', b: 10, cost: 7500 },
+  { n: 'Перстень «Монолит»', d: 'Тяжёлый перстень — сила, высеченная из цельного камня.', b: 11, cost: 8850 },
+  { n: 'Часы «Пульсар»', d: 'Кристаллы на безеле пульсируют в ритме боя.', b: 12, cost: 10250 },
+  { n: 'Кафф «Шёпот»', d: 'Кристаллы на ухе шепчут о следующем движении соперника.', b: 13, cost: 11750 },
+  { n: 'Брошь «Сияние»', d: 'Сияющая брошь, которую носят на больших сценах.', b: 14, cost: 13300 },
+  { n: 'Пряжка «Ядро»', d: 'В пряжке спрятано плотное ядро метеоритной руды.', b: 15, cost: 15000 },
+  { n: 'Кулон «Слеза Атлантики»', d: 'Камень в бриллиантовой оправе. Говорят, его подняли со дна океана.', b: 16, cost: 16700 },
+  { n: 'Браслет «Созвездие»', d: 'Звенья с кристаллами, как звёзды на ночном небе.', b: 17, cost: 18550 },
+  { n: 'Перстень «Суверен»', d: 'Золото и руда — знак того, кто правит своим регионом.', b: 18, cost: 20400 },
+  { n: 'Карманные часы «Вечность»', d: 'Старинный механизм, в котором время будто застыло.', b: 19, cost: 22400 },
+  { n: 'Часы AUREON «Абсолют»', d: 'Вершина мастерства вымышленного бренда AUREON. Роскошь отражает качество исполнения артефакта; эффективность в бою по-прежнему зависит от контроля Цы.', b: 20, cost: 24450 }
 ];
 const ART_ICONS = 20;
 const artImg = i => `<img class="aic" src="img/art/${(i | 0) % ART_ICONS}.webp" alt="">`;
+// расходники для турниров (в матчах лиги запрещены, каждый — раз за турнир; подробности только в заметках библиотеки)
+const CONS = [
+  { k: 'ins', n: 'Инсайдерские данные', d: 'Слитые записи тренировок соперника. Знаешь, куда бить, — и бьёшь первым.', cost: 300 },
+  { k: 'stim', n: 'Стимулятор', d: 'Ампула с концентратом метеоритной руды. Затягивает раны прямо посреди боя.', cost: 900 },
+  { k: 'smoke', n: 'Дымовая шашка', d: 'Плотная завеса рудной пыли: соперник теряет тебя из виду и бьёт мимо.', cost: 500 }
+];
+const DIRTY = { n: 'Грязные контракты', d: 'Связи в тени Бюро. Ты врываешься на чужие турниры, и никто не задаёт вопросов: никаких последствий для тебя.', cost: 3000 };
+const consOf = (H, k) => (H.cons && H.cons[k]) || 0;
 const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
 const itemName = (H, i) => (H.iname && H.iname[i]) || ITEMS[i].n;   // игрок может переименовать любой свой артефакт
 // ---------- жильё: картинка комнаты; любое купленное — бесплатное бюро, остров — ещё и без джетлага ----------
@@ -1251,8 +1267,9 @@ const coinHtml = (n, cls = '') => `<span class="coins ${cls}">${COIN_SVG}<b>${(n
 const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; if (why) logTo(H, `${why}: +${n} ОЛ.`); };
 const TOUR_COINS = [50, 120, 600];
 const TOUR_PRIZE = TOUR_COINS;   // приз за победу; места: финал 40%, полуфинал 20%, четвертьфинал 10%, участие 5%
-const PRIZE_PART = { W: 1, F: 0.4, SF: 0.2, QF: 0.1 }, PRO_BONUS = 0.7, TEAM_BONUS = 0.5, SIGN_COINS = 200, SEMI_CT_WEEKS = 3, WC_GAME = 100, WF_GAME = 400;
+const PRIZE_PART = { W: 1, F: 0.4, SF: 0.2 }, PRO_BONUS = 0.7, TEAM_BONUS = 0.5, SIGN_COINS = 200, SEMI_CT_WEEKS = 3, WC_GAME = 100, WF_GAME = 400;
 const prizeBase = R => R.kind === 'esl' ? ESL_COINS : R.kind === 'dh' ? DH_COINS : R.kind === 'contract' ? CONTRACT_WIN : TOUR_COINS[R.tier] || 0;   // приз за победу на турнире новичков / любительском / полупрофессиональном; финал — 40%, полуфинал — 20%
+const WF_PRIZE = [[1, 4000], [2, 2000], [3, 1200], [5, 700], [9, 400], [13, 250]];   // чемпионат мира: призовые всем местам (место «с» → ОЛ)
 const LG_COINS = { win: 50, champ: 2000, second: 1000, third: 600 }, WC_COINS = 1500, WF_COINS = 4000, ESL_COINS = 500, DH_COINS = 1500, LADDER_COINS = 30, ELITE_COINS = 100;
 const BEASTS = ['волк', 'медведь', 'рысь', 'кабан', 'ворон', 'олень'];   // обезумевшие звери: img/beast/<i>.webp
 const DUEL_WIN = 50, CONTRACT_WIN = 250;   // дуэль — рейтинг; контракт — очки лиги
@@ -1280,7 +1297,7 @@ const histAdd = t => { S.hist.unshift({ r: S.region, t }); S.hist = S.hist.slice
 const histTo = (H, r, t) => { H.hist.unshift({ r, t }); H.hist = H.hist.slice(0, 40); };
 const logTo = (H, m) => { H.log.unshift(m); H.log = H.log.slice(0, 40); };
 const winProb = (mine, theirs) => 1 / (1 + Math.pow(10, (theirs - mine) / 20));
-const npcRating = p => p * 30;                 // у соперников рейтинг основан на силе
+const npcRating = p => Math.round(p * 30);                 // у соперников рейтинг основан на силе
 function endTurn() {
   S.lgBonus = heroPower(S) - S.power - gameBonus(S);   // бонусы и минусы на конец своей недели — с ними играются матчи лиги (бонус на бой — отдельно)
   S.turn++; S.actions = S.weekMax = maxActs(S);
@@ -1515,7 +1532,7 @@ const eliteTeam = (r, name) => { const L = G && G.leagues && G.leagues[r], T = L
 const withMeta = (f, country, team) => Object.assign(f, { country: country || f.country || null, team: team || f.team || null });
 function startFight(title, opp, onEnd) { startFightAB(title, heroF(S, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S)))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
-  F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
+  F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1, tour: !!(S && S.trun && !S.trun.done && !(G && G.lq)) };   // tour — расходники разрешены
   F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;   // кто бьёт первым — случайно
   S.view = 'fight';
 }
@@ -1523,6 +1540,7 @@ function rollHit(x, y) {
   // d20: 19–20 крит (10%), 1–3 уклон (15%), 4 парирование (5%), 5–6 блок (10%), остальное — удар
   const roll = rnd(1, 20), r = roll + Math.round((x.p - y.p) / FIGHT.diceDiv);
   const base = FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p));
+  if (x.blind > 0) { x.blind--; return { kind: 'dodge', dmg: 0, base }; }   // дымовая шашка: атакующий бьёт мимо
   if (roll === 20 || r >= 19) return { kind: 'crit', dmg: Math.round(base * 2), base };
   if (y.exposed > 0) return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)), base };   // после «Разрыва потока» — без уклонов, блоков и парирований
   if (roll === 1 || r <= 3) return { kind: 'dodge', dmg: 0, base };
@@ -1571,6 +1589,26 @@ function useAbility(x, y) {
   x.abT = F.t; hpMark(y);
   fxPush(y, `${x.abil.name}${mult > 1 ? ' ×' + mult.toFixed(1) : ''}! −${dmg}`, 'rand', 1);
   if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
+}
+const fHero = x => x.me && G ? G.players.find(H => H.nick === x.name) : null;
+function fItemsHtml(x, id) {   // три квадратика расходников в правом нижнем углу портрета героя
+  const H = fHero(x); if (!H) return '';
+  const R = F.tour ? S.trun : null, hi = heroIdx(H);
+  return `<div class="fyit" id="${id}-it">${CONS.map(c => { const n = consOf(H, c.k), used = R && R.used && R.used[hi + ':' + c.k], ok = R && n > 0 && !used && !F.done;
+    return `<button class="${ok ? '' : 'off'} ${used ? 'used' : ''}" data-a="fitem" data-v="${id}:${c.k}" ${ok ? '' : 'disabled'} title="${esc(c.n)}${!F.tour ? ' — нельзя использовать в этом бою' : used ? ' — уже использовано' : ''}"><img src="img/shop/${c.k}.webp" alt=""><b>${n}</b></button>`; }).join('')}</div>`;
+}
+function useFItem(id, k) {
+  if (!F || F.done || !F.tour) return;
+  const x = id === 'fa' ? F.a : F.b, y = x === F.a ? F.b : F.a, H = fHero(x), R = S.trun; if (!H || !R) return;
+  const hi = heroIdx(H), key = hi + ':' + k; R.used = R.used || {};
+  if (R.used[key] || consOf(H, k) <= 0) return;
+  H.cons[k]--; R.used[key] = true;
+  const hit = (a, b) => FIGHT.dmg(a.p) * 100 / (100 + FIGHT.def(b.p));
+  if (k === 'ins') { const d = Math.round(hit(x, y) * 2); y.hp = Math.max(0, y.hp - d); fev(`${x.name} пускает в ход инсайдерские данные и бьёт точно в слабое место!`, 'crit'); fxPush(y, 'Инсайд! −' + d, 'minus', 1); hpMark(y); if (y.hp <= 0) { F.done = true; F.won = x === F.a; } }
+  if (k === 'stim') { const d = Math.round(hit(y, x) * 10); x.hp = Math.min(x.hpMax, x.hp + d); fev(`${x.name} вкалывает стимулятор — раны затягиваются на глазах!`, 'qi'); fxPush(x, 'Стимулятор +' + d, 'plus', 1); }
+  if (k === 'smoke') { y.blind = 6; fev(`${x.name} бросает дымовую шашку — ${y.name} теряет его из виду!`, 'nt'); fxPush(y, 'Дым!', 'rand', 2); }
+  const el = document.getElementById(id + '-it'); if (el) el.outerHTML = fItemsHtml(x, id);
+  fightPaint();
 }
 function fightStep(dt) {
   for (const [x, y] of [[F.a, F.b], [F.b, F.a]]) {
@@ -1697,8 +1735,9 @@ function bureauFight(kind) {
     name = f.name; opp = withMeta(fighter(f.name, f.p, f.rating, false, f.abil, f.face), f.country, eliteTeam(S.region, f.name));
   }
   startFight(title, opp, won => {
-    const big = (S.ladderGames || 0) < 10;   // первые 10 лестничных матчей — по 150: десять побед подряд дают золото
-    const d = kind === 'ladder' ? (won ? (big ? 150 : 75) : (big ? -150 : -75)) : (won ? 100 : -100);
+    const big = (S.ladderGames || 0) < 10;   // первые 10 лестничных матчей — по 150 (калибровка); дальше — как в Эло: против слабых почти ничего, против сильных — много
+    const E = 1 / (1 + Math.pow(10, (opp.rating - S.rating) / 400)), K = kind === 'ladder' ? LADDER_K : ELITE_K;
+    const d = kind === 'ladder' && big ? (won ? 150 : -150) : Math.round(K * ((won ? 1 : 0) - E)) || (won ? 1 : -1);
     if (kind === 'ladder') S.ladderGames = (S.ladderGames || 0) + 1;
     S.rating = Math.max(0, S.rating + d);
     if (won) S.coins = (S.coins || 0) + (kind === 'ladder' ? LADDER_COINS : ELITE_COINS);
@@ -1739,7 +1778,7 @@ function viewEsl() {
   const E = S.esl, n = eslCount(), full = n === E.size, over = n > E.size;
   const here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
   let h = `<div class="card"><img class="esllogo" src="img/esl.webp" alt="ESL ONE"><h2>ESL ONE</h2>
-    <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}.</div></div>
+    <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}. Победитель получает медаль ESL ONE и +200 рейтинга.</div>${prizeRulesHtml({ kind: 'esl' })}</div>
     <div class="card"><h3>Размер турнира</h3><div class="row" style="flex-wrap:nowrap">${Object.keys(ESL_SIZES).map(k => `<button class="btn ${+k === E.size ? 'here' : ''}" style="text-align:center;margin-top:0" data-a="eslsize" data-v="${k}">${k}</button>`).join('')}</div>
       <div style="margin-top:8px">Участников: <b class="${over ? 'minus' : full ? 'plus' : ''}">${n} из ${E.size}</b>${over ? ' — убери лишних' : ''}</div>
       <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="eslfill" style="text-align:center" ${n >= E.size ? 'disabled' : ''}>Дозаполнить</button><button class="btn gold" data-a="eslgo" style="text-align:center" ${full ? '' : 'disabled'}>Начать турнир</button></div>
@@ -1772,7 +1811,7 @@ function dhStart() {
 // Полуфинал и финал Bo5, каждая серия — один матч лиги. Топ-3 лиги едут на чемпионат мира.
 const LDB = {"teams":[[0,"Team Liquid","usl_0",12],[0,"Cloud9","usl_1",11],[0,"Evil Genesis","usl_2",10],[0,"Sovereign Mid","usl_3",9],[0,"Envy Dominion","usl_4",8],[0,"Counter Logic","usl_5",7],[0,"Dignity Labs","usl_6",6],[0,"Immortal Pact","usl_7",5],[0,"Phoenix Protocol","usl_8",4],[0,"Complexity Core","usl_9",3],[0,"Optic Horizon","usl_10",2],[0,"Echo Union","usl_11",1],[1,"Fanatiq","eut_1",25],[1,"G2 Sovereign","eut_2",24],[1,"Vitalis","eut_3",23],[1,"Astralis Prime","eut_4",22],[1,"Origin Guard","eut_5",21],[1,"Secret Order","eut_6",20],[1,"Alliance Nexus","eut_7",19],[1,"Ninja Protocol","eut_8",18],[1,"Mouz Vector","eut_9",17],[1,"Karmine Crown","eut_10",16],[1,"Heroic Bastion","eut_11",15],[1,"Iron Legion","eut_12",14],[1,"SK Syndicate","eut_13",13],[1,"BDS Equity","eut_14",12],[1,"ENCE Polar","eut_15",11],[1,"BIG Forge","eut_16",10],[1,"Rouge Mirage","eut_17",9],[1,"Iberian Pride","eut_18",8],[1,"SAW Industries","eut_19",7],[1,"Nine Ascent","eut_20",6],[1,"Tundra Vault","eut_21",5],[1,"Gaimin Grid","eut_22",4],[1,"Reason Dynamics","eut_23",3],[1,"Wolven Capital","eut_24",2],[1,"Sprout Genesis","eut_25",1],[2,"Spirit Dominion","rut_1",20],[2,"Virtus Prime","rut_2",19],[2,"Natus Apex","rut_3",18],[2,"CSKA Legion","rut_4",17],[2,"Spartak Nexus","rut_5",16],[2,"Zenit Energy","rut_6",15],[2,"Gambit Vector","rut_7",14],[2,"forZe Industries","rut_8",13],[2,"Aurora Systems","rut_9",12],[2,"Nemiga Core","rut_10",11],[2,"Empire Crown","rut_11",10],[2,"Dynamo Pulse","rut_12",9],[2,"Loko Transit","rut_13",8],[2,"Rubin Matrix","rut_14",7],[2,"Krasnodar Titan","rut_15",6],[2,"Winstrike Orbit","rut_16",5],[2,"Hellraiser Forge","rut_17",4],[2,"K23 Nomad","rut_18",3],[2,"Vega Array","rut_19",2],[2,"Hard Legion","rut_20",1],[3,"LGD Dynasty","cnt_1",12],[3,"Invictus Orbit","cnt_2",11],[3,"Royal Nexus","cnt_3",10],[3,"Eden Guard","cnt_4",9],[3,"Jade Dominion","cnt_5",8],[3,"Top Ascend","cnt_6",7],[3,"Bili Vision","cnt_7",6],[3,"World Elite Union","cnt_8",5],[3,"Vici Matrix","cnt_9",4],[3,"EDward Ascent","cnt_10",3],[3,"Tyloong Forge","cnt_11",2],[3,"Newbee Hive","cnt_12",1],[4,"T1 Sovereign","krt_1",12],[4,"Galaxy Crown","krt_2",11],[4,"Genesis Gold","krt_3",10],[4,"Damwon Apex","krt_4",9],[4,"Entus Nexus","krt_5",8],[4,"Rolster Velocity","krt_6",7],[4,"Longzhu Imperial","krt_7",6],[4,"Najin Ember","krt_8",5],[4,"Aero Command","krt_9",4],[4,"MagicNs Arcana","krt_10",3],[4,"Jade Wings","krt_11",2],[4,"Hanwha Vanguard","krt_12",1]],"players":[[0,"IdRa",65,"US","Молниеносный рывок"],[0,"Meteos",61,"US","Яростный щит"],[0,"Oddie",57,"AR","Неистовый клинок"],[0,"Sneaky",61,"US","Молниеносный взрыв"],[0,"Bjergsen",61,"DK","Яростный клинок"],[0,"Hai",69,"US","Яростный взрыв"],[0,"Miracle-",65,"US","Теневой взрыв"],[0,"Revolta",57,"BR","Призрачный выпад"],[0,"Svenskeren",61,"DK","Ледяной вихрь"],[0,"jockster",55,"BR","Огненный шар"],[0,"Dyrus",62,"CA","Огненный щит"],[0,"NieN",62,"US","Ледяной щит"],[0,"fNb",52,"BR","Огненный залп"],[0,"WildTurtle",58,"US","Стальной залп"],[0,"MaCaO",54,"AR","Мощный удар"],[0,"DoubleLift",70,"US","Ледяной взрыв"],[0,"Tyler",68,"US","Мощный выпад"],[0,"Voyboy",65,"CA","Громовой взрыв"],[0,"Scarra",62,"US","Стальной удар"],[0,"BrTT",60,"BR","Ледяной клинок"],[1,"Froggen",70,"DK","Молниеносный щит"],[1,"MadFroG",62,"DE","Неистовый щит"],[1,"ZveN",68,"DK","Громовой клинок"],[1,"Reckless",72,"DK","Неистовый шар"],[1,"Kev1N",62,"DE","Теневой удар"],[1,"MickyX",55,"SK","Призрачный шар"],[1,"Shock",58,"SE","Стальной прыжок"],[1,"Araneae",55,"ES","Мощный взрыв"],[1,"YellowStar",60,"FR","Неистовый вихрь"],[1,"EdoBoy",52,"DE","Мощный прыжок"],[1,"xLord",70,"DE","Теневой клинок"],[1,"xPeke",67,"ES","Огненный удар"],[1,"Hjarnan",57,"SE","Яростный прыжок"],[1,"ForellenLord",63,"DE","Огненный прыжок"],[1,"Snoopeh",66,"GB","Молниеносный вихрь"],[1,"Nukeduck",68,"NL","Молниеносный клинок"],[1,"Jankos",61,"PL","Стальной выпад"],[1,"Wh1teL0tuS",56,"TR","Ледяной прыжок"],[1,"HollyPhoenix",52,"TR","Громовой залп"],[1,"k0u",59,"NO","Теневой прыжок"],[2,"Dendi",65,"UA","Огненный рывок"],[2,"Dread",60,"BY","Призрачный залп"],[2,"RamzessZ",61,"RU","Мощный рывок"],[2,"Save",57,"MD","Теневой шар"],[2,"TORONTOTOKYO",62,"KZ","Громовой прыжок"],[2,"KreoX",65,"RU","Теневой щит"],[2,"Happy",71,"RU","Яростный удар"],[2,"Solo",65,"RU","Громовой вихрь"],[2,"Dise",62,"RU","Молниеносный шар"],[2,"ZaKCanFly",58,"RU","Стальной рывок"],[2,"Hawk",60,"RU","Стальной вихрь"],[2,"Max",53,"BY","Теневой рывок"],[2,"Cash",67,"RU","Неистовый рывок"],[2,"Smurf",56,"RU","Ледяной рывок"],[2,"Inspired",52,"UZ","Неистовый прыжок"],[2,"Darien",65,"RU","Призрачный вихрь"],[2,"AlexIch",70,"RU","Громовой выпад"],[2,"FlashInTheNight",56,"RU","Огненный выпад"],[2,"Edward",65,"AM","Мощный щит"],[2,"TiTaN",57,"RU","Громовой щит"],[3,"ClearLove",72,"CN","Неистовый взрыв"],[3,"HaRleLuYaR",51,"SG","Мощный клинок"],[3,"Toyz",66,"TW","Стальной взрыв"],[3,"Misaya",72,"CN","Громовой рывок"],[3,"Doinb",67,"KR","Яростный выпад"],[3,"eer0",72,"CN","Призрачный клинок"],[3,"Fortitude",67,"CN","Яростный шар"],[3,"SwordArt",70,"TW","Теневой залп"],[3,"Dendy",70,"KR","Призрачный рывок"],[3,"infi",75,"CN","Призрачный удар"],[3,"Sky",72,"CN","Ледяной удар"],[3,"ColourFull",70,"CN","Неистовый залп"],[3,"TH000",70,"CN","Призрачный прыжок"],[3,"Life",58,"CN","Огненный вихрь"],[3,"Maple",59,"TW","Ледяной шар"],[3,"MiSTaKe",58,"TW","Молниеносный прыжок"],[3,"Ceros",68,"JP","Призрачный взрыв"],[3,"PawN",70,"KR","Стальной клинок"],[3,"kid",58,"TW","Молниеносный удар"],[3,"Sok",68,"KR","Неистовый выпад"],[4,"Faker",75,"KR","Молниеносный выпад"],[4,"Watch",66,"KR","Неистовый удар"],[4,"Reach",68,"KR","Мощный вихрь"],[4,"MC",65,"KR","Яростный вихрь"],[4,"Peanut",68,"KR","Ледяной выпад"],[4,"Moon",72,"KR","Яростный рывок"],[4,"Deft",67,"KR","Громовой удар"],[4,"KaKaO",65,"KR","Громовой шар"],[4,"inSec",65,"KR","Огненный клинок"],[4,"Flash",70,"KR","Огненный взрыв"],[4,"Lyn",72,"KR","Стальной щит"],[4,"Lawliet",66,"KR","Ледяной залп"],[4,"FoCuS",62,"KR","Молниеносный залп"],[4,"Flame",61,"KR","Призрачный щит"],[4,"Jaedong",75,"KR","Мощный шар"],[4,"Crown",68,"KR","Теневой выпад"],[4,"Ambition",70,"KR","Стальной шар"],[4,"MadLife",66,"KR","Мощный залп"],[4,"LustBoy",62,"KR","Яростный залп"],[4,"Imp",70,"KR","Теневой вихрь"]]};
 const LG_SIZE = r => grpCfg(r) ? grpCfg(r).size : 12;
-const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55;
+const PRO_COUNT = 12, LADDER_MIN = 10, LADDER_MAX = 55, LADDER_K = 60, ELITE_K = 90;
 const ONLY_ELITE = { 0: true, 1: true, 2: true, 3: true, 4: true };   // в Европе только расписанные вручную Элитные Спектры, старая база убрана
 const proCount = r => ONLY_ELITE[r] ? Object.keys(ELITE_DATA[r] || {}).length : PRO_COUNT;   // Элитных Спектров в регионе
 const DRAFT_WEEKS = 5, LG_PER_WEEK = 3, LG_EXTRA = [];
@@ -1845,7 +1884,7 @@ const ELITE_DATA = {
     9: { n: "Attacker", c: 'CN', p: 63, img: 'img/elite/cn_9.webp', a: "Штурм", d: "Врывается в бой огненным метеором и сметает соперника!", icon: 99,
          bio: "Боец штурмового стиля, пришедший с полей командных сражений. Не умеет ждать — только атаковать." },
     10: { n: "DrunkenDragon", c: 'CN', p: 55, img: 'img/elite/cn_10.webp', a: "Пьяный кулак дракона", d: "Шатаясь и посмеиваясь, проводит каскад непредсказуемых ударов и прыжков в стиле старого кунг-фу!", icon: 108,
-         bio: "Никто в мире не контролирует Цы лучше него. Но кроме посредственного кунг-фу он мало что умеет." },
+         bio: "Дед. Никто в мире не контролирует Цы лучше него, но кроме этого он мало что умеет. В высшей лиге побеждает редко, зато полупрофессионалов разбирает почти всегда." },
     11: { n: "Liooon", c: 'CN', p: 62, img: 'img/elite/cn_11.webp', a: "Козырь из рукава", d: "Раскрывает веер клинков и бьёт в тот момент, когда соперник уверен в победе.", icon: 137,
          bio: "Первая чемпионка мира среди девушек. Хладнокровна, обаятельна и всегда держит козырь в рукаве." }
   },
@@ -1941,6 +1980,15 @@ const ELITE_DATA = {
   }
 };
 const LPOOL = {};
+// сила профи с десятыми: рейтинг выходит «живым» (×30). Фейкер — сильнейший; лидер Китая — между Фейкером и вторым номером Кореи
+const PRO_P = {
+  Faker: 79.6, FlaSh: 76.8, BoxeR: 76.3, MooN: 75.1, Ruler: 72.7, Watch: 71.4, Bisu: 70.6, Lyn: 69.3, Deft: 68.2, Kerri: 66.9, Rookie: 65.4, TossGirl: 63.8,
+  Sky: 77.9, ClearLove: 76.1, Infi: 75.6, Uzi: 74.2, TheShy: 73.7, Knight: 72.9, TH000: 71.3, 120: 68.6, Ame: 66.2, Liooon: 64.9, Attacker: 63.5, DrunkenDragon: 58.7,
+  iDrA: 74.6, DoubleLift: 74.0, Fear: 73.6, Shuri: 70.4, Tyler: 68.7, Diana: 67.3, Scarlett: 65.6, Messiah: 63.9, iShowSpeed: 61.8, Reginald: 59.2, Valkyria: 57.6, Poki: 56.3,
+  EmperoR: 73.1, Velikaya: 72.4, KoLLaps: 71.6, M0nESY: 70.9, Ea9le: 70.2, KrusheR: 68.1, H0bb1t: 66.4, Arynka: 64.7, FnGod: 63.2, N1X: 61.5, Rybka: 59.8, Aron1an: 59.6,
+  Akke: 75.2, Caps: 74.3, BlaZe: 73.6, Shock: 72.8, MaDFroG: 72.1, Jankos: 71.4, JaN: 70.7, Kev1N: 70.1, Swift: 68.4, EarthQuake: 67.2, sumaiL: 66.5, Ocelote: 65.3,
+  CandyPanda: 64.6, ZoR0Zer0: 63.7, Snoopeh: 62.4, StorM: 61.6, koNNoR: 60.8, NukeDuck: 60.3
+};
 const ELITE_RANK = (() => { const all = []; for (let r = 0; r < 5; r++) LDB.players.map((x, i) => ({ x, i })).filter(o => o.x[0] === r).sort((a, b) => b.x[2] - a.x[2] || a.i - b.i).slice(0, proCount(r)).forEach(o => all.push(o)); all.sort((a, b) => b.x[2] - a.x[2] || a.i - b.i); const m = {}; all.forEach((o, k) => { m[o.i] = Math.floor(77 - k * 27 / (all.length - 1)); }); return m; })();
 const proPower = (k, i, r) => k < proCount(r) ? ELITE_RANK[i] : 48 - (k - proCount(r)) * 2;
 function lgPool(r) {   // все 20 бойцов региона, сильнейшие сверху
@@ -1952,7 +2000,8 @@ function lgPool(r) {   // все 20 бойцов региона, сильней�
   if (ONLY_ELITE[r]) base.length = 0;
   for (const [k, e] of Object.entries(ELITE_DATA[r] || {})) {
     const same = base.findIndex(b => !b.real && b.name.toLowerCase() === e.n.toLowerCase());   // однофамилец из старой базы — заменяем его, без дублей
-    base[same >= 0 ? same : +k] = { name: e.n, p: e.p, rating: npcRating(e.p), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon }, bio: e.bio, real: true };
+    const ep = PRO_P[e.n] != null ? PRO_P[e.n] : e.p;
+    base[same >= 0 ? same : +k] = { name: e.n, p: ep, rating: npcRating(ep), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon }, bio: e.bio, real: true };
   }
   const n = proCount(r), pros = base.slice(0, n).sort((a, b) => b.p - a.p);
   return (LPOOL[r] = pros.concat(base.slice(n)));
@@ -2242,6 +2291,8 @@ function wcFinish(L) {
 // 4 группы по 4, Bo1 в 2 круга. Ход 1 — круг групп A и B, ход 2 — круг C и D, ход 3 и 4 — второй круг.
 // Выходят двое из группы. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю +5 к силе (один раз).
 const WF_GAIN = 5, WF_BLOCKS = ['G1', 'G1', 'G2', 'G2', 'QF', 'SF', 'F'];
+const wfPrizeHtml = () => `<details class="rules"><summary>Призовые</summary><div class="prz"><b>Призовые всем местам (ОЛ)</b>${WF_PRIZE.map(([p, c]) => `<div><span>${wfPlaceTxt(p)}</span><b>${c}</b></div>`).join('')}<small>Плюс оплата за каждую выигранную серию: ${WF_GAME} ОЛ.</small></div></details>`;
+const wfPlaceTxt = p => ({ 1: '1 место', 2: '2 место', 3: '3–4 места', 5: '5–8 места', 9: '9–12 места', 13: '13–16 места' })[p];
 function wfCreate(wcEntry) {
   const teams = (G.wfIn || []).concat(wcEntry ? [wcEntry] : []);
   const L = { r: -1, wf: true, title: 'Чемпионат мира', teams, M: [], cur: null, left: 0, block: 0, rIn: 0, phase: 'RR' };
@@ -2282,16 +2333,19 @@ function wfFinish(L) {
   { const H = T.h != null ? G.players[T.h] : null; ensureFame();
     G.fame.worlds.unshift(fameEntry(lgTeamName(L, champ), H ? H.face : T.f.face, H ? H.country : T.f.country, T.logo ? { name: T.name, logo: T.logo } : null, { r: T.r, season: fameSeason(), hum: !!H }));
     G.fame.worlds = G.fame.worlds.slice(0, 3); }
+  const placeOf = i => { if (i === champ) return 1; if (lgStage(L, 'F')[0].a === i || lgStage(L, 'F')[0].b === i) return 2;
+    if (lgStage(L, 'SF').some(m => m.a === i || m.b === i)) return 3; if (lgStage(L, 'QF').some(m => m.a === i || m.b === i)) return 5;
+    const g = L.groups.findIndex(gr => gr.includes(i)), k = lgGroupTable(L, g).findIndex(x => x.i === i); return k === 2 ? 9 : 13; };
   L.teams.forEach((T, i) => {
     if (T.h == null) return;
-    const H = G.players[T.h];
+    const H = G.players[T.h], pl = placeOf(i), prize = WF_PRIZE.find(x => x[0] === pl)[1];
+    H.coins = (H.coins || 0) + prize;
     if (i === champ) {
       const first = !H.wfWon; H.wfWon = (H.wfWon || 0) + 1;
       if (first) H.power = Math.min(POWER_MAX, H.power + WF_GAIN);
-      H.coins = (H.coins || 0) + WF_COINS;
-      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''} +${WF_COINS} ОЛ.`); H.vic = 'wf';
+      logTo(H, `Ты чемпион мира!${first ? ' Постоянный бонус к силе.' : ''} Призовые: +${prize} ОЛ.`); H.vic = 'wf';
       histTo(H, H.region, 'Чемпионат мира: победа');
-    } else histTo(H, H.region, 'Чемпионат мира: турнир окончен');
+    } else { logTo(H, `Чемпионат мира окончен: ${wfPlaceTxt(pl)}. Призовые: +${prize} ОЛ.`); histTo(H, H.region, 'Чемпионат мира: ' + wfPlaceTxt(pl)); }
   });
   G.wf = null;
   startNewSeason();
@@ -2482,7 +2536,7 @@ function playTour(t) {
   const semiT = t === 2;   // полупрофессиональный турнир: все полупро-команды выставляют по бойцу, формат на 32
   const fmt = semiT ? 'dh32' : ['se8', 'g12', 'g16', 'sw20'][rnd(0, 3)], n = FMT[fmt].n;
   const invd = (S.tourInvade || []).filter(h => h !== G.cur && G.players[h] && !inv.includes(h));
-  invd.forEach(h => { G.players[h].skipNext = true; logTo(G.players[h], 'Ты вторгся на турнир игрока ' + S.nick + ' и пропустишь свою неделю.'); });
+  invd.forEach(h => { const P = G.players[h]; if (P.dirty) { logTo(P, 'Ты вторгся на турнир игрока ' + S.nick + ' по грязным контрактам — без последствий.'); return; } P.skipNext = true; logTo(P, 'Ты вторгся на турнир игрока ' + S.nick + ' и пропустишь свою неделю.'); });
   S.tourInvade = [];
   const hums = [G.cur, ...inv, ...invd];   // живые игроки: тот, чья неделя, приглашённые и вторгшиеся
   const taken = G.players.map(H => H.nick);
@@ -2673,8 +2727,14 @@ function tRun(R, auto) {   // доиграть всё, что можно без 
 }
 const placeText = (R, id = 0) => { const o = R.outs && R.outs[id] != null ? R.outs[id] : R.out; return R.winner === id ? 'победа' : o === 'F' ? 'финал, 2-е место' : o === 'SF' ? 'полуфинал' : o === 'QF' ? 'четвертьфинал' : o === 'DEC' || o === 'PI' ? stageName(o).toLowerCase() : 'групповой этап'; };
 // приз за место; в профессиональной команде +70%, в составе любой другой команды (полупро-контракт, приглашение) +50%
+function prizeRulesHtml(R) {   // таблица призовых для правил турнира
+  const b = prizeBase(R), v = k => Math.round(b * PRIZE_PART[k]);
+  return `<div class="prz"><b>Призовые (ОЛ)</b><div><span>1 место</span><b>${v('W')}</b></div><div><span>2 место</span><b>${v('F')}</b></div><div><span>3–4 места</span><b>${v('SF')}</b></div><div><span>Остальные</span><b>—</b></div>
+    <small>За любую команду призовые выше: профессиональная команда +${Math.round(PRO_BONUS * 100)}%, полупрофессиональная или контракт +${Math.round(TEAM_BONUS * 100)}%.${R.kind == null && R.tier != null && !R.intro ? ' Сила растёт только у победителя.' : ''}</small></div>`;
+}
 function payPrize(R, x, H, place) {
-  const base = Math.max(5, Math.round(prizeBase(R) * (PRIZE_PART[place] || 0.05)));
+  if (!PRIZE_PART[place] || place === 'QF') return 'Призовые получают только 1–4 места.';
+  const base = Math.max(5, Math.round(prizeBase(R) * PRIZE_PART[place]));
   const pro = H.league != null, team = !pro && (x.team != null || R.kind === 'contract');
   const extra = Math.round(base * (pro ? PRO_BONUS : team ? TEAM_BONUS : 0));
   H.coins = (H.coins || 0) + base + extra;
@@ -3207,6 +3267,10 @@ function viewTeams() {   // библиотека: команды лиг по р�
 }
 // заметки библиотеки: история мира Спектров, общие для всех регионов
 const LIB_NOTES = [
+  { t: "Строгий досмотр", d: "Перед матчами лиги и чемпионата мира каждого бойца досматривают на входе: любые расходники — инсайдерские данные, стимуляторы, дымовые шашки — запрещены. На турнирах Бюро такого правила нет: там каждый пользуется тем, что принёс с собой, но каждой вещью — лишь раз за турнир." },
+  { t: "Инсайдерские данные", d: "Слитые записи тренировок соперника стоят дорого, но окупаются: в нужный момент ты бьёшь точно в слабое место. Пустить их в ход можно один раз за турнир, а в матчах лиги они под запретом." },
+  { t: "Химия на арене", d: "Стимуляторы из концентрата руды затягивают раны прямо посреди боя, а дымовые шашки из рудной пыли заставляют соперника бить вслепую. Организаторы турниров смотрят на это сквозь пальцы — но только раз за турнир на каждую вещь." },
+  { t: "Грязные контракты", d: "У Бюро есть теневая сторона. Тем, кто подписал грязные контракты, открыты двери любых турниров: они врываются на чужие сетки, и никто не задаёт вопросов." },
   { t: "Атлантический Инцидент", d: "Метеорит упал в Атлантический океан и изменил очертания мира. Наводнения поглотили прибрежные города, разрушенные берега превратились в архипелаги. Перед общей катастрофой человечеству пришлось объединиться. Но последствия удара не ограничились разрушениями." },
   { t: "Первые Спектры", d: "После Инцидента у некоторых людей начали проявляться необычные способности. Кто-то двигался быстрее взгляда, кто-то создавал предметы из воздуха. Их назвали Спектрами. Позднее исследователи установили связь между пробуждением дара и излучением метеорита." },
   { t: "Камень рядом с кожей", d: "Метеоритную руду научились встраивать в привычные вещи: кольца, часы, браслеты. Для одного Спектра такие часы становятся источником невероятной скорости, для другого кольцо позволяет создать клинок. Камень усиливает дар, но не заменяет умение им пользоваться." },
@@ -3252,12 +3316,13 @@ const LIB_NOTES = [
 ];
 function viewLib() {
   const r = REGIONS[S.region];
-  const seen = S.read[S.region] || [];
+  G.read = G.read || {}; const RD = G.read;   // прогресс заметок общий на всю сессию
+  const seen = RD[S.region] || [];
   const N = LIB_NOTES.length;
   let idx = [...Array(N).keys()].filter(i => !seen.includes(i));
-  if (!idx.length) { S.read[S.region] = []; idx = [...Array(N).keys()]; }
+  if (!idx.length) { RD[S.region] = []; idx = [...Array(N).keys()]; }
   const i = idx[rnd(0, idx.length - 1)];
-  S.read[S.region] = [...(S.read[S.region] || []), i];
+  RD[S.region] = [...(RD[S.region] || []), i];
   save();
   const ni = LIB_NOTES[i].img;
   return wrap(`<div class="card" style="text-align:center">${ni ? `<img class="libimg" src="${ni}" alt="">` : '<img class="libhero" src="img/library.webp" alt="">'}
@@ -3279,6 +3344,8 @@ function viewShop() {   // магазин: только названия и це
       <div style="margin-top:8px">${coinHtml(S.coins, 'big')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j, R.perk)).join('')}</div>
     <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind, carIcon(j))).join('')}</div>
+    <div class="card"><h3>Расходники</h3><div class="dim">Пригодятся на турнирах.</div>${CONS.map(c => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${c.k}.webp" alt=""><span><b>${esc(c.n)}</b><div class="dim" style="font-size:12px">${esc(c.d)}</div><div class="gold" style="font-size:12px">В запасе: ${consOf(S, c.k)}</div></span></span><button class="btn cbtn" data-a="consbuy" data-v="${c.k}" ${(S.coins || 0) < c.cost ? 'disabled' : ''}>${coinHtml(c.cost)}</button></div>`).join('')}</div>
+    <div class="card"><h3>Особое</h3><div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/dirty.webp" alt=""><span><b>${DIRTY.n}</b><div class="dim" style="font-size:12px">${DIRTY.d}</div></span></span>${S.dirty ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="dbuy" ${(S.coins || 0) < DIRTY.cost ? 'disabled' : ''}>${coinHtml(DIRTY.cost)}</button>`}</div></div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>`) + navBar();
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
@@ -3315,7 +3382,7 @@ function invadeHtml() {   // вторжение: любой другой игр�
   const inv = S.tourInv || [], ivd = S.tourInvade || [], list = G.players.map((H, i) => i).filter(i => i !== G.cur && !inv.includes(i) && !G.players[i].skipNext);
   if (!list.length) return '';
   return `<div class="card"><h3>Вторжение на турнир</h3><div class="dim">Тебя не позвали? Можно вторгнуться из любого региона, но цена — пропуск своей следующей недели.</div>
-    <div class="row" style="margin-top:6px">${list.map(i => `<button class="btn ${ivd.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinvade" data-v="${i}">${ivd.includes(i) ? '⚔ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div></div>`;
+    <div class="row" style="margin-top:6px">${list.map(i => `<button class="btn ${ivd.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinvade" data-v="${i}">${ivd.includes(i) ? '⚔ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}${G.players[i].dirty ? ' <small class="gold">· без штрафа</small>' : ''}</button>`).join('')}</div></div>`;
 }
 function inviteHtml() {   // совместная игра: позвать игроков из этого же региона — одно действие на всех
   const inv = S.tourInv || [], here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
@@ -3351,8 +3418,8 @@ function viewBureau() {   // слева — бюро и услуги, справ
       <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
     <div class="card"><h2>Услуги бюро</h2>
       ${svc('tour', '', 'Местный турнир', 'Еженедельный турнир региона: новички, любители, полупрофессионалы.', none, 'Действия на неделю закончились.')}
-      ${svc('fight', 'ladder', 'Лестничный матч', 'Соперник по твоему рейтингу (±200). Первые 10 матчей ±150, дальше ±75. Победа: +30 ОЛ.', none, 'Действия на неделю закончились.')}
-      ${svc('fight', 'pro', 'Бой с Элитным Спектром', 'Случайный Элитный Спектр региона. Победа +100, поражение −100.', none, 'Действия на неделю закончились.')}
+      ${svc('fight', 'ladder', 'Лестничный матч', 'Соперник по твоему рейтингу (±200). Первые 10 матчей ±150, дальше рейтинг меняется по силе соперника: за слабых почти ничего. Победа: +30 ОЛ.', none, 'Действия на неделю закончились.')}
+      ${svc('fight', 'pro', 'Бой с Элитным Спектром', 'Случайный Элитный Спектр региона. Чем выше его рейтинг, тем больше даёт победа и меньше отнимает поражение. Победа: +100 ОЛ.', none, 'Действия на неделю закончились.')}
       ${svc('esl', '', 'ESL ONE', 'Собери свой турнир из Элиты любых регионов.', none || !esl, !esl ? 'Откроется, когда твоя сила станет достаточной для Элиты.' : 'Действия на неделю закончились.')}
     </div></div>
     <div class="bright">${lgCardHtml(S.region)}${wcCardHtml()}${wfCardHtml()}</div></div>`);
@@ -3479,7 +3546,7 @@ function fzCard(x, id) {   // карточка бойца по макету: п�
   const team = x.beast ? `<span class="fyteam wild">${abilIcon(30)}<b>Дикий зверь</b></span>`
     : x.team && x.team.logo ? `<span class="fyteam"><img src="img/team/${x.team.logo}.webp" alt=""><b>${esc(x.team.name)}</b></span>` : '<span class="fyteam fa"><b>FREE AGENT</b></span>';
   return `<div class="fyc ${id}">
-    <div class="fyp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
+    <div class="fyp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div>${fItemsHtml(x, id)}</div>
     <div class="fyi">
       <div class="fyn">${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}<b>${esc(x.name)}</b></div>
       <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div>
@@ -3579,7 +3646,7 @@ function viewTRun() {
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
-    <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: 5–10 полупрофессиональных команд и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div></details></div>`;
+    <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: 5–10 полупрофессиональных команд и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div>${R.intro ? '' : prizeRulesHtml(R)}</details></div>`;
   let side = '';
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
@@ -3649,7 +3716,7 @@ function wfCardHtml() {   // карточка чемпионата мира в �
 function viewWF() {
   const L = G.wf;
   if (!L) return wrap(`<div class="card">Чемпионат мира сейчас не идёт.</div>${back}`);
-  let h = `<div class="card"><h2>Чемпионат мира</h2><div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю — постоянный бонус к силе.</div></div>`;
+  let h = `<div class="card"><h2>Чемпионат мира</h2><div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю — постоянный бонус к силе.</div>${wfPrizeHtml()}</div>`;
   h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 2 ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('');
   for (const st of ['QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   return wrap(h + back);
@@ -3854,6 +3921,7 @@ function act(a, v) {
       if (x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct) { useAbility(x, y); fightPaint(); }
       return;
     }
+    case 'fitem': { const [id, k] = v.split(':'); useFItem(id, k); return; }
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; useGame(F.a); useGame(F.b); F = null; cb(won); break; }
     case 'bureau': if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // своё жильё: бюро рядом, действие не тратится
     case 'toBureau': S.view = 'bureau'; break;
@@ -3870,6 +3938,8 @@ function act(a, v) {
       S.roomPic = 2; logMsg(`Куплено: ${CARS[j].n}.${S.garage === j ? ' Стоит в гараже.' : ' Поставить в гараж можно в комнате.'}`); break; }
     case 'gsel': { const j = +v; if (!(S.cars || []).includes(j) || S.garage === j) return; S.garage = j; logMsg(`В гараже теперь ${CARS[j].n}.`); break; }
     case 'shop': S.view = 'shop'; break;
+    case 'consbuy': { const c = CONS.find(x => x.k === v); if (!c || (S.coins || 0) < c.cost) return; S.coins -= c.cost; S.cons = S.cons || {}; S.cons[c.k] = (S.cons[c.k] || 0) + 1; logMsg('Куплено: ' + c.n + '.'); break; }
+    case 'dbuy': { if (S.dirty || (S.coins || 0) < DIRTY.cost) return; S.coins -= DIRTY.cost; S.dirty = true; logMsg('Куплено: ' + DIRTY.n + '. Вторжения на турниры — без последствий.'); break; }
     case 'ibuy': {
       const i = +v, it = ITEMS[i]; S.items = S.items || [];
       if (S.items.includes(i) || (S.coins || 0) < it.cost) return;
