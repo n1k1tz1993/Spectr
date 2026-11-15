@@ -1316,6 +1316,7 @@ function fixHero(v) {   // старые сохранения героя
   if (v.cars && v.cars.length && v.garage == null) v.garage = v.cars.slice().sort((a, b) => (CARS[b] ? CARS[b].a * 1e5 + CARS[b].cost : 0) - (CARS[a] ? CARS[a].a * 1e5 + CARS[a].cost : 0))[0];
   if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
   if (v.face == null) v.face = 0;
+  relocHand(v);
   return v;
 }
 function loadGame(mode) {
@@ -1378,6 +1379,22 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
 const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); h.forEach(c => { if (c.k === 'fest') c.city = FEST_CITIES[H.region][rnd(0, 5)]; if (c.k === 'dh') c.city = DH_CITIES[rnd(0, DH_CITIES.length - 1)]; }); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD, city: DH_CITIES[rnd(0, DH_CITIES.length - 1)] }; return h; };
+// события чужого региона в руке (после перелёта или выбора региона) меняются на события текущего; сыгранные остаются
+function relocHand(H = S) {
+  if (!H || !H.hand || H.region == null) return;
+  const own = REGIONS[H.region].cards, ownT = new Set(own.map(c => c.t));
+  const foreign = new Set(); REGIONS.forEach((R, i) => { if (i !== H.region) R.cards.forEach(c => { if (!ownT.has(c.t)) foreign.add(c.t); }); });
+  H.hand = H.hand.map(c => {
+    if (c.used) return c;
+    if (c.k === 'fest') return FEST_CITIES[H.region].includes(c.city) ? c : { ...c, city: FEST_CITIES[H.region][rnd(0, 5)] };
+    if (!foreign.has(c.t)) return c;
+    const have = new Set(H.hand.map(x => x.t)), rest = own.filter(x => !have.has(x.t));
+    const same = rest.filter(x => x.k === c.k), safe = rest.filter(x => x.k !== 'm' || c.k === 'm');   // замена того же типа; минус — только вместо минуса
+    const free = same.length ? same : safe.length ? safe : rest;
+    const n = { ...(free.length ? free[rnd(0, free.length - 1)] : own[rnd(0, own.length - 1)]) };
+    return n;
+  });
+}
 // бонусы складываются, но суммарно не больше EFF_CAP; штрафы складываются без ограничения
 const EFF_CAP = 5;
 const effSum = (H, withGame) => { let pos = 0, neg = 0; for (const e of H.effects) if ((e.game ? withGame : e.from <= H.turn && H.turn <= e.to)) { if (e.v > 0) pos += e.v; else neg += e.v; } return Math.min(EFF_CAP, pos) + neg; };
@@ -4137,7 +4154,7 @@ function act(a, v) {
     case 'famebu': S.view = 'fame'; S.fameFrom = 'bureau'; break;
     case 'fameback': S.view = S.fameFrom === 'bureau' ? 'bureau' : 'more'; S.fameFrom = null; break;
     case 'ireg': if (S.intro === 1) S.introReg = +v; break;
-    case 'isign': if (S.intro === 1) { S.region = S.introReg | 0; S.intro = 2; logMsg('Документы подписаны. Карьера начинается: ' + REGIONS[S.region].name + '.'); save(); } break;
+    case 'isign': if (S.intro === 1) { S.region = S.introReg | 0; S.hand = drawHand(S); S.intro = 2; logMsg('Документы подписаны. Карьера начинается: ' + REGIONS[S.region].name + '.'); save(); } break;
     case 'igo': if (S.intro === 2) { S.intro = 0; S.tourPass = false; S.tourInv = []; S.view = 'tour'; introTour(); save(); } break;
     case 'hskip': S.skipNext = false; G.handoff = false; logMsg('Неделя пропущена: вторжение на турнир.'); endTurn(); break;
     case 'lgo': G.lann = G.lq[0]; G.lview = 'match'; break;
@@ -4240,7 +4257,7 @@ function act(a, v) {
     case 'eslgo': eslStart(); break;
     case 'fight': bureauFight(v); break;
     case 'flight': if (S.actions > 0) S.view = 'flight'; break;
-    case 'fly': if (spend()) { S.region = +v; S.jetlag = hasRoom(S, 4) ? 0 : 1; logMsg('Перелёт в ' + REGIONS[S.region].name + (S.jetlag ? '. Джетлаг до конца хода.' : '. Свой остров — без джетлага.')); S.view = 'main'; } break;
+    case 'fly': if (spend()) { S.region = +v; relocHand(S); S.jetlag = hasRoom(S, 4) ? 0 : 1; logMsg('Перелёт в ' + REGIONS[S.region].name + (S.jetlag ? '. Джетлаг до конца хода.' : '. Свой остров — без джетлага.')); S.view = 'main'; } break;
     case 'pass': clearJet(); logMsg('Неделя пропущена.'); endTurn(); break;
     case 'next': endTurn(); break;
     default: return;
