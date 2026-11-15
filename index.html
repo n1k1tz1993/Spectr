@@ -1500,7 +1500,8 @@ function useCard(i, ivDone) {
   if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
   if (c.k === 'spar') { c.used = true; if (G.players.length > 1) S.view = 'spar'; else sparStart(null); save(); return; }
   if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
-  if (c.k === 'fest') { c.used = true; festStart(c.city || FEST_CITIES[S.region][0]); save(); return; }
+  if (c.k === 'fest') { c.used = true; const fi = (S.invite || []).filter(h => G.mode === 'coop' && G.players[h] && h !== G.cur).slice(0, 1); S.invite = [];
+    fi.forEach(h => logTo(G.players[h], `${S.nick} позвал тебя на «${c.t}» в ${c.city || FEST_CITIES[S.region][0]}.`)); festStart(c.city || FEST_CITIES[S.region][0], fi); save(); return; }
   let R; const e0 = S.effects.length;
   if (c.k === 'm') {   // штраф и небольшой бонус
     const [b, bd] = mbOf(c); addEff(c.v, c.d); addEff(b, bd);
@@ -1955,10 +1956,11 @@ function viewClub() {
         ${prizeRulesHtml({ kind: 'club', belt: k })}
         ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. В конце каждой недели ты защищаешь его в титульном бою.</div>' : `<button class="btn gold" data-a="clubgo" data-v="${k}" style="text-align:center" ${!can || none ? 'disabled' : ''}>Участвовать · 1 действие</button>${can ? '' : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`}</div>`; }).join('')}`);
 }
-function festStart(city) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — крипты, без роста силы
+function festStart(city, inv = []) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — крипты, без роста силы
   const T = TIERS[Math.min(S.tiers[S.region] || 0, 2)], tk = takenSet(G.players.map(H => H.nick));
   const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
-  for (let i = 0; i < 7; i++) ps.push(Object.assign(genSpectre(S.region, tk, rnd(T.lo, T.hi)), { id: i + 1, seed: Math.random() }));
+  inv.forEach(h => ps.push({ id: ps.length, name: G.players[h].nick, h, seed: Math.random() }));   // приглашённый друг играет в той же сетке
+  for (let i = ps.length; i < 8; i++) ps.push(Object.assign(genSpectre(S.region, tk, rnd(T.lo, T.hi)), { id: i, seed: Math.random() }));
   tStart({ kind: 'fest', tier: null, region: S.region, city }, 'se8', ps);
 }
 function contractStart() {   // турнир на 16 по контракту полупрофессиональной команды
@@ -3229,7 +3231,7 @@ function viewMore() {   // «Ещё»: библиотека, магазин, и�
     </div>`) + navBar();
 }
 function viewColl() { return wrap(`<div class="card">${trophiesHtml() || '<div class="dim">Пока нет ни одного трофея.</div>'}</div>`) + navBar(); }
-const SHARE_K = ['n', 'p'];   // штрафные действия (бессонные ночи, болезни) — без приглашений   // на какие действия недели можно позвать других игроков
+const SHARE_K = ['n', 'p', 'r', 'cond', 'fest'];   // нельзя звать: дуэли, вызов Бюро, письма фанатов, контракт, болезни и бессонные ночи (m)   // штрафные действия (бессонные ночи, болезни) — без приглашений   // на какие действия недели можно позвать других игроков
 function viewCard() {   // до выполнения: картинка, описание, ожидаемый эффект, одна жёлтая кнопка
   const c = S.hand[S.sel];
   if (!c || c.used) { S.view = 'main'; return viewMain(); }
@@ -3237,7 +3239,7 @@ function viewCard() {   // до выполнения: картинка, опис
   return wrap(`<div class="card">
       <div><div class="dim">Событие недели</div><h2>${esc(c.t)}</h2>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
-        ${G.mode === 'coop' && G.players.length > 1 && SHARE_K.includes(c.k) ? `<div class="invbox"><div class="dim">Позвать с собой одного игрока — он получит тот же бонус, а действие потратишь только ты:</div><div class="invrow">${G.players.map((H, h) => h === G.cur ? '' : `<button class="invp ${(S.invite || []).includes(h) ? 'on' : ''}" data-a="invt" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}</button>`).join('')}</div></div>` : ''}
+        ${G.mode === 'coop' && G.players.length > 1 && SHARE_K.includes(c.k) ? `<div class="invbox"><div class="dim">${c.k === 'fest' ? 'Позвать с собой одного игрока — он сыграет в той же сетке фестиваля, а действие потратишь только ты:' : 'Позвать с собой одного игрока — он получит тот же бонус, а действие потратишь только ты:'}</div><div class="invrow">${G.players.map((H, h) => h === G.cur ? '' : `<button class="invp ${(S.invite || []).includes(h) ? 'on' : ''}" data-a="invt" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}</button>`).join('')}</div></div>` : ''}
         <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
