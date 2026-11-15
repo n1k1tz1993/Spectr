@@ -1879,15 +1879,33 @@ function ensureBelts() {
     return { name: g.name, country: g.country, face: g.face, abil: g.abil, p, rating: npcRating(p), since: 0, def: 0 }; });
 }
 const beltHolder = k => { const b = G.belts[k]; if (b.h != null && G.players[b.h]) { const H = G.players[b.h]; return { name: H.nick, country: H.country, face: H.face, rating: H.rating, hum: true }; } return b; };
-function clubStart(k) {
+function clubStart(k, hs) {   // турнир пояса в конце недели: все зарегистрированные игроки в одной сетке на 16
   ensureBelts();
-  const B = CLUB[k], r = S.region, tk = takenSet(G.players.map(H => H.nick).concat([beltHolder(k).name]));
-  const ps = [{ id: 0, name: S.nick, h: G.cur, seed: Math.random() }];
-  for (let i = 0; i < 15; i++) { const p = clubP(B); ps.push(Object.assign(genSpectre(r, tk, p), { id: i + 1, rating: npcRating(p), seed: Math.random() })); }
-  const npc = shuffle(ps.slice(1)), proT = shuffle(allRegionTeams(r).slice()), semiT = shuffle(SEMI.map((_, i) => i));
+  const B = CLUB[k], r = G.players[hs[0]].region, tk = takenSet(G.players.map(H => H.nick).concat([beltHolder(k).name]));
+  const ps = hs.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() }));
+  for (let i = ps.length - 1; i < 15; i++) { const p = clubP(B); ps.push(Object.assign(genSpectre(r, tk, p), { id: i + 1, rating: npcRating(p), seed: Math.random() })); }
+  const npc = shuffle(ps.slice(hs.length)), proT = shuffle(allRegionTeams(r).slice()), semiT = shuffle(SEMI.map((_, i) => i));
   npc.slice(0, B.pro).forEach((x, i) => { const t = proT[i % proT.length]; x.pro = { name: t[0], logo: t[1] }; x.tb = CLUB_PRO_TB; });
   npc.slice(B.pro, B.pro + B.semi).forEach((x, i) => { x.team = semiT[i % semiT.length]; x.tb = CLUB_SEMI_TB; });
-  tStart({ kind: 'club', belt: k, tier: null, region: r }, 'se16', ps);
+  tStart({ kind: 'club', belt: k, tier: null, region: r, wk: true }, 'se16', ps);
+}
+// регистрация: каждый игрок может записаться на один пояс за неделю; турниры идут в конце недели друг за другом (от младшего пояса к старшему)
+const clubRegs = () => (G.creg = G.creg && G.creg.length === 3 ? G.creg : [[], [], []]);
+const myReg = (h = G.cur) => clubRegs().findIndex(a => a.includes(h));
+function clubWeekStart() {   // вызывается, когда все сходили и лиги отыграли
+  const q = clubRegs().map((a, k) => a.filter(h => G.players[h]).length ? k : null).filter(k => k != null);
+  if (!q.length) { G.creg = null; return false; }
+  G.cq = q; G.cwHand = !!G.handoff; G.handoff = false; clubRunNext(); return true;
+}
+function clubRunNext() {
+  const k = G.cq[0], hs = clubRegs()[k].filter(h => G.players[h]);
+  S.cwPrev = S.view; clubStart(k, hs);
+}
+function clubWeekDone(R) {   // турнир недели закончился: следующий пояс или титульные бои
+  clubFinish(R); S.trun = null; G.cq.shift();
+  if (G.cq.length) { clubRunNext(); return; }
+  G.cq = null; G.creg = null; S.view = 'main'; G.handoff = G.cwHand; G.cwHand = null;
+  beltWeek(); G.week++;
 }
 const BELT_RT = [50, 75, 100];   // рейтинг за защиту или взятие пояса
 const beltEntry = (R, id) => { const x = R.ps[id], h = humOf(R, id); return h != null ? { h } : { name: x.name, country: x.country, face: x.face, abil: x.abil, p: x.p, rating: x.rating }; };
@@ -1946,15 +1964,16 @@ function viewTitle() {   // титульные бои конца недели с
       : `<div class="dim">Бой ${T.g.length + 1}</div><button class="imgbtn" data-a="tfplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>`}</div>`;
 }
 function viewClub() {
-  ensureBelts(); const none = S.actions <= 0;
-  return wrap(`<div class="card"><h2>Бойцовский клуб</h2><div class="dim">Три пояса, у каждого — действующий чемпион. Каждую неделю за каждый пояс проходит турнир: 16 бойцов, сетка Bo3, финал Bo5. Победитель становится претендентом, и в конце недели, когда все сходили, проводит титульный бой Bo3 с чемпионом. Если игроки не участвуют, клуб отыгрывает турнир сам. Чемпион обязан защищать пояс каждую неделю. Участие в турнире — ещё 1 действие.</div></div>
+  ensureBelts(); const none = S.actions <= 0, regs = clubRegs(), mr = myReg();
+  return wrap(`<div class="card"><h2>Бойцовский клуб</h2><div class="dim">Три пояса, у каждого — действующий чемпион. Каждую неделю за каждый пояс проходит турнир: 16 бойцов, сетка Bo3, финал Bo5. Победитель становится претендентом, и в конце недели, когда все сходили, проводит титульный бой Bo3 с чемпионом. Записаться можно на один пояс за неделю — это ещё 1 действие. Турниры проходят в конце недели, когда все сходили, друг за другом: сначала Элитный дивизион, потом Первый, потом Абсолютный. Все записавшиеся на один пояс играют в одной сетке. Если игроки не записались, клуб отыгрывает турнир сам. Чемпион обязан защищать пояс каждую неделю.</div></div>
     ${CLUB.map((B, k) => { const hd = beltHolder(k), mine = G.belts[k].h === G.cur, can = S.rating >= B.min;
       return `<div class="card club"><div class="clubh"><img class="beltimg" src="img/trophy/belt_${k}.webp" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'beltph',textContent:'Пояс'}))"><div><h3>${B.n}</h3><div class="dim">Бойцы: ${B.who}. ${B.pro ? B.pro + ' из профессиональных команд, ' : ''}${B.semi} из полупрофессиональных.</div></div></div>
         <div class="dim" style="margin-top:8px">Действующий чемпион</div>
         <div class="fame ${hd.hum ? 'hum' : ''}"><span class="ava">${faceImg(hd.face)}</span><span class="famei"><b>${flagOf(hd.country || '')} ${esc(hd.name)}</b><small>${rateHtml(hd.rating)}${G.belts[k].def ? ' · защит: ' + G.belts[k].def : ''}</small></span></div>
         ${G.beltChal && G.beltChal[k] ? `<div class="dim" style="margin-top:6px">Претендент этой недели: <b>${esc(beltName(G.beltChal[k]))}</b></div>` : ''}
         ${prizeRulesHtml({ kind: 'club', belt: k })}
-        ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. В конце каждой недели ты защищаешь его в титульном бою.</div>' : `<button class="btn gold" data-a="clubgo" data-v="${k}" style="text-align:center" ${!can || none ? 'disabled' : ''}>Участвовать · 1 действие</button>${can ? '' : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`}</div>`; }).join('')}`);
+        ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. В конце каждой недели ты защищаешь его в титульном бою.</div>' : (regs[k].length ? `<div class="dim" style="margin-top:6px">Записались: <b>${regs[k].map(h => esc(G.players[h].nick)).join(', ')}</b></div>` : '') + (mr === k ? `<div class="gold" style="margin-top:8px">Ты записан. Турнир — в конце недели.</div><button class="btn" data-a="clubun" style="text-align:center">Отменить запись</button>`
+          : `<button class="btn gold" data-a="clubgo" data-v="${k}" style="text-align:center" ${!can || none || mr >= 0 ? 'disabled' : ''}>Записаться · 1 действие</button>${can ? (mr >= 0 ? '<div class="dim">Ты уже записан на другой пояс.</div>' : '') : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`)}</div>`; }).join('')}`);
 }
 function festStart(city, inv = []) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — крипты, без роста силы
   const T = TIERS[Math.min(S.tiers[S.region] || 0, 2)], tk = takenSet(G.players.map(H => H.nick));
@@ -2715,7 +2734,9 @@ function lgProcess() {
   }
   // неделя закончилась: новый сезон стартует только после чемпионата мира (wfFinish) — перерыв BREAK_WEEKS недель
   if (G.leagues.every(L => L.phase === 'done') && !G.wc && !G.wf && !G.wcPool) startNewSeason();   // страховка для старых сохранений
-  G.lq = null; G.lview = null; G.lann = null; beltWeek(); G.week++;
+  G.lq = null; G.lview = null; G.lann = null;
+  if (clubWeekStart()) return;   // сначала турниры клуба с записавшимися игроками, потом титульные бои
+  beltWeek(); G.week++;
 }
 function lgAfterGame(L, m) {
   const done = m.done;
@@ -3037,7 +3058,7 @@ function viewNotice() {
 const INTRO_COINS = 500;
 function finishTour() {
   const R = S.trun; if (!R || !R.done) return;
-  if (R.kind === 'club') { clubFinish(R); S.view = 'club'; S.trun = null; return; }
+  if (R.kind === 'club') { if (R.wk) clubWeekDone(R); else { clubFinish(R); S.view = 'club'; S.trun = null; } return; }
   if (R.intro) {   // вступительный турнир: только стартовую крипту, без силы, кубка и открытия уровней
     const H = G.players[humOf(R, 0)];
     addCoins(H, INTRO_COINS); histTo(H, R.region, 'Вступительный турнир · победа');
@@ -4101,6 +4122,7 @@ function render() {
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
   if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); stageTop(); } lastView = null; return; }
   if (G && G.tq && G.tq.length && !F) { app.dataset.view = 'title'; app.innerHTML = viewTitle(); window.scrollTo(0, 0); lastView = null; return; }
+  if (G.cq && S.trun && S.trun.wk && !F && S.view !== 'trun') S.view = 'trun';
   if (G.handoff) { app.innerHTML = viewHandoff(); window.scrollTo(0, 0); stageTop(); lastView = null; return; }
   if (S.intro && !F) { app.dataset.view = 'intro'; app.innerHTML = viewIntro(); if (lastView !== 'intro' + S.intro) { window.scrollTo(0, 0); lastView = 'intro' + S.intro; } return; }
   if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';
@@ -4160,7 +4182,8 @@ function act(a, v) {
     case 'tfnext': if (G.tq) { G.tq.shift(); if (!G.tq.length) G.tq = null; save(); } break;
     case 'blg': S.blg = +v; break;
     case 'club': if (spend()) { clearJet(); S.view = 'club'; } break;   // приход в клуб — 1 действие, как бюро
-    case 'clubgo': { const k = +v; ensureBelts(); if (S.rating < CLUB[k].min || G.belts[k].h === G.cur || !spend()) return; clearJet(); clubStart(k); S.view = 'trun'; break; }
+    case 'clubgo': { const k = +v; ensureBelts(); if (S.rating < CLUB[k].min || G.belts[k].h === G.cur || myReg() >= 0 || !spend()) return; clearJet(); clubRegs()[k].push(G.cur); logMsg(`${CLUB[k].n}: ты записан на турнир. Он пройдёт в конце недели.`); save(); break; }
+    case 'clubun': { const k = myReg(); if (k < 0) return; clubRegs()[k] = clubRegs()[k].filter(h => h !== G.cur); S.actions += 1; logMsg('Регистрация в клубе отменена, действие возвращено.'); save(); break; }
     case 'famebu': S.view = 'fame'; S.fameFrom = 'bureau'; break;
     case 'fameback': S.view = S.fameFrom === 'bureau' ? 'bureau' : 'more'; S.fameFrom = null; break;
     case 'ireg': if (S.intro === 1) S.introReg = +v; break;
