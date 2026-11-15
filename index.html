@@ -769,6 +769,12 @@ html.land .fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
 .fya em.act{border-color:var(--gold);color:var(--gold)}
 .fya.cd .aic{filter:grayscale(1) brightness(.6)}
 .fyabs{display:flex;flex-direction:column;gap:10px}
+.fyitr{display:flex;flex-direction:column;gap:6px;border-top:1.5px solid rgba(58,143,216,.65);padding-top:8px}   /* расходники над журналом: пусто — только полоска */
+.fyitr:not(:has(button,span)){padding-top:0}
+.fyitr .fyit{display:flex;flex-wrap:nowrap;gap:5px;min-width:0}.fyitr .fyit.fb{justify-content:flex-end}.fyitr .fyit:empty{display:none}
+.fyitr .fyit button,.fyitr .fyit span{width:calc((100% - 35px) / 8);max-width:40px;height:auto;aspect-ratio:1/1;border-radius:5px;overflow:hidden;flex:0 0 auto}
+html.land .fyitr{flex-direction:row;justify-content:space-between}html.land .fyitr .fyit{flex:1}
+
 .fyc .fya{display:none}
 .fyl{border:1px solid rgba(58,143,216,.5);border-radius:14px;background:#0C1428;padding:12px 14px;position:relative}
 .fylh{display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid rgba(58,143,216,.25)}
@@ -1719,7 +1725,7 @@ function fItemsHtml(x, id) {   // доступные предметы бойца
   let ks;
   if (H) { const hi = heroIdx(H); ks = CONS.filter(c => consOf(H, c.k) > 0 && !U[hi + ':' + c.k]).map(c => c.k); }
   else ks = (x.kit || []).filter(k => !(x.kitUsed || {})[k]);
-  return `<div class="fyit" id="${id}-it">${ks.map(k => { const c = CONS.find(q => q.k === k);
+  return `<div class="fyit ${id}" id="${id}-it">${ks.map(k => { const c = CONS.find(q => q.k === k);
     return H && !F.done ? `<button data-a="fitem" data-v="${id}:${k}" title="${esc(c.n)}"><img src="img/shop/${k}.webp" alt=""></button>` : `<span title="${esc(c.n)}"><img src="img/shop/${k}.webp" alt=""></span>`; }).join('')}</div>`;
 }
 const ITEM = { ins: 1, gren: 2, stim: 3, smoke: 2, rage: 2, rageOut: 1.6, rageIn: 1.4, vamp: 2, vampPct: 0.5, crit: 1, batt: 0.2 };   // откалибровано: максимум без расходников ≈ Fak3r, с полным набором ≈ 80% побед   // сила предметов (в описаниях не показывается)
@@ -3855,7 +3861,7 @@ function fzCard(x, id) {   // карточка бойца по макету: п�
     <div class="fyp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
     <div class="fyi">
       <div class="fyhd"><div class="fynr"><div class="fyn">${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}<b>${esc(x.name)}</b></div>
-      <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div></div>${fItemsHtml(x, id)}</div>
+      <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div></div></div>
       ${team}
     </div>
     <div class="fybars">
@@ -3873,6 +3879,7 @@ function viewFight() {
     <div class="fyh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><div class="fyht"><div><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b></div><span class="fzst">${esc(F.title)}</span></div></div>
     <div class="fyf">${fzCard(F.a, 'fa')}<div class="fyvs">VS</div>${fzCard(F.b, 'fb')}</div>
     <div class="fyabs">${fyAb(F.a, 'fa')}${fyAb(F.b, 'fb')}</div>
+    <div class="fyitr">${fItemsHtml(F.a, 'fa')}${fItemsHtml(F.b, 'fb')}</div>
     <div class="fyl"><div class="fylh"><h3>Журнал боя</h3><button class="fyall" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button></div>
       <div class="flog" id="flog" onscroll="const f=document.getElementById('flast');if(f)f.hidden=this.scrollHeight-this.scrollTop-this.clientHeight<24"></div><button class="fzlast" id="flast" data-a="flast" hidden>К последнему ↓</button><div id="fend"></div>
       <div class="fyk" id="fctl"><button class="fyall fyall2" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button><button class="fysp" data-a="fspc"><span>▶</span><b id="fspl">×${F.speed || 1}</b></button><button class="fyskip" data-a="fskip">Пропустить »</button></div></div>
