@@ -1321,7 +1321,7 @@ function fixHero(v) {   // старые сохранения героя
 }
 function loadGame(mode) {
   try {
-    const v = JSON.parse((localStorage.getItem(SKEY[mode]) || 'null').replace(/"(name|n|nick)":"120"/g, '"$1":"eer0120"'));   // боец 120 переименован в eer0120
+    const v = JSON.parse((localStorage.getItem(SKEY[mode]) || 'null').replace(/"(name|n|nick)":"120"/g, '"$1":"eer0120"').replace(/ESL ONE/g, 'Корона Спектров'));   // боец 120 переименован в eer0120
     if (!v) return null;
     if (v.v === 2 && v.nick) return { v: 3, mode: 'solo', players: [fixHero(v)], cur: 0, handoff: false };   // одиночная карьера до совместной игры
     if (v.v !== 3 || !v.players || !v.players.length) return null;
@@ -1549,7 +1549,7 @@ function ivQuestions(H) {
     last ? `Твой недавний бой с ${last} обсуждают до сих пор. Чем он запомнился?` : 'Какой соперник запомнился тебе больше всего?',
     'Кого из соперников ты считаешь самым неудобным?',
     `Идёт ${seasonNo()}-й сезон. Какую цель ставишь до его конца?`,
-    'Впереди ESL ONE. Готовишься бороться за очки рейтинга?',
+    'Впереди Корона Спектров. Готовишься бороться за очки рейтинга?',
     'Чемпионат мира в этом сезоне — мечта или реальная цель?',
     'Говорят, в Бюро скоро объявят новый турнир. Будешь участвовать?',
     team ? `Ты выступаешь за ${team.name}. Как тебе в команде?` : 'Ты пока свободный агент. За какую команду хочешь выступать?',
@@ -1989,7 +1989,7 @@ function bureauFight(kind) {
 }
 
 
-// ---------- ESL ONE: с силы 50, свой состав — Элитные Спектры любого региона, игроки, добор сгенерированными (сила ≤50) ----------
+// ---------- Корона Спектров (бывш. ESL ONE): с силы 50, свой состав — Элитные Спектры любого региона, игроки, добор сгенерированными (сила ≤50) ----------
 const ESL_MIN_POWER = 50, ESL_SIZES = { 8: 'se8', 12: 'g12', 16: 'g16', 20: 'sw20' };
 const eslElite = key => { const [r, k] = key.split(':').map(Number); return Object.assign({ r }, lgPool(r)[k]); };
 function eslNew() { S.esl = { size: 8, pick: [], inv: [], gen: [] }; }
@@ -2005,7 +2005,7 @@ function eslFill() {   // добрать сгенерированными — к
 function eslStart() {
   const E = S.esl; if (!E || eslCount() !== E.size) return;
   const cost = 1 + (E.inv.length ? 1 : 0);
-  if (S.actions < cost) { logMsg('Не хватает действий для ESL ONE.'); return; }
+  if (S.actions < cost) { logMsg('Не хватает действий для Короны Спектров.'); return; }
   S.actions -= cost;
   const hums = [G.cur, ...E.inv.filter(h => G.players[h] && G.players[h].region === S.region)];
   const bots = E.pick.map(eslElite).concat(E.gen);
@@ -2018,8 +2018,8 @@ function viewEsl() {
   if (!S.esl) eslNew();
   const E = S.esl, n = eslCount(), full = n === E.size, over = n > E.size;
   const here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
-  let h = `<div class="card"><img class="esllogo" src="img/esl.webp" alt="ESL ONE"><h2>ESL ONE</h2>
-    <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}. Победитель получает медаль ESL ONE и +200 рейтинга.</div>${prizeRulesHtml({ kind: 'esl' })}</div>
+  let h = `<div class="card"><img class="esllogo" src="img/crown.webp" alt="Корона Спектров"><h2>Корона Спектров</h2>
+    <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}. Победитель получает медаль Короны Спектров и +200 рейтинга.</div>${prizeRulesHtml({ kind: 'esl' })}</div>
     <div class="card"><h3>Размер турнира</h3><div class="row" style="flex-wrap:nowrap">${Object.keys(ESL_SIZES).map(k => `<button class="btn ${+k === E.size ? 'here' : ''}" style="text-align:center;margin-top:0" data-a="eslsize" data-v="${k}">${k}</button>`).join('')}</div>
       <div style="margin-top:8px">Участников: <b class="${over ? 'minus' : full ? 'plus' : ''}">${n} из ${E.size}</b>${over ? ' — убери лишних' : ''}</div>
       <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="eslfill" style="text-align:center" ${n >= E.size ? 'disabled' : ''}>Дозаполнить</button><button class="btn gold" data-a="eslgo" style="text-align:center" ${full ? '' : 'disabled'}>Начать турнир</button></div>
@@ -2253,7 +2253,7 @@ const BREAK_WEEKS = 10;   // перерыв после чемпионата ми
 const newSeason = (r, week, prev, brk) => ({ r, season: prev ? prev.season + 1 : 1, phase: 'draft', draftEnd: week + (brk || DRAFT_WEEKS) - 1, teams: null, M: [], sched: null, ri: 0, left: 0, champ: null, worlds: [] });
 const ensureLeagues = () => { if (!G.week) G.week = 1; if (!G.leagues) G.leagues = REGIONS.map((_, r) => newSeason(r, 1)); ensureFame(); };
 // ---------- зал славы: общий для всех игроков сессии ----------
-// чемпионы лиг (на старте — случайные Элитные Спектры), 3 последних чемпиона мира, 5 последних ESL ONE, все турниры сессии
+// чемпионы лиг (на старте — случайные Элитные Спектры), 3 последних чемпиона мира, 5 последних Корон Спектров, все турниры сессии
 function fameEntry(name, face, country, team, extra) { return Object.assign({ name, face, country: country || null, team: team || null, week: G.week || 1 }, extra || {}); }
 function ensureFame() {
   if (G.fame) return;
@@ -3038,11 +3038,11 @@ function finishTour() {
   }
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
     const team = x.team != null && SEMI[x.team] ? { name: SEMI[x.team][0], logo: SEMI[x.team][1] } : R.kind === 'contract' && H ? { name: SEMI[R.team][0], logo: SEMI[R.team][1] } : null;
-    const nm = R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'Метеор Фест' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
+    const nm = R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'esl' ? 'Корона Спектров' : R.kind === 'dh' ? 'Метеор Фест' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
     const e = fameEntry(H ? H.nick : x.name, H ? H.face : x.face, H ? H.country : x.country, team, { r: R.region, season: fameSeason(), hum: !!H, t: nm });
     if (R.kind === 'esl') { G.fame.esl.unshift(e); G.fame.esl = G.fame.esl.slice(0, 5); }
     G.fame.tours.unshift(e); G.fame.tours = G.fame.tours.slice(0, 30); }
-  const T = R.kind === 'fest' ? { name: 'Фестиваль Спектров · ' + R.city, gain: 0 } : R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'Метеор Фест' + (R.city ? ' · ' + R.city : ''), gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
+  const T = R.kind === 'fest' ? { name: 'Фестиваль Спектров · ' + R.city, gain: 0 } : R.kind === 'esl' ? { name: 'Корона Спектров', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'Метеор Фест' + (R.city ? ' · ' + R.city : ''), gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
   for (const x of R.ps) {   // награды и история — каждому живому участнику
     const h = humOf(R, x.id); if (h == null) continue;
     const H = G.players[h];
@@ -3058,7 +3058,7 @@ function finishTour() {
         : awardTrophy(H, r, T.name);
       if (tr === 'dh') msg += ' Ты достиг вершины силы!';
       msg += ' ' + payPrize(R, x, H, 'W');
-      msg += tr === 'contract' ? '' : tr === 'esl' ? ` +200 рейтинга и медаль ESL ONE (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
+      msg += tr === 'contract' ? '' : tr === 'esl' ? ` +200 рейтинга и медаль Короны Спектров (всего ×${H.eslWins}).` : tr === 'new' ? ' Кубок в коллекции!' : tr === 'locked' ? ' Кубки можно собирать, когда прокачка завершена.' : '';
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id));
       const o = R.outs && R.outs[x.id];
@@ -3108,7 +3108,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
 const VIEW_TITLE = { club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
-  bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['ESL ONE', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
+  bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
@@ -3132,7 +3132,7 @@ const trophiesHtml = () => {   // коллекция: трофеи лиг кар
   const names = [...TIERS.map(t => t.name), 'Кубок лиги'], lbl = [...TIER_SHORT, 'Лига'];
   const big = [S.wfWon ? `<div class="ctro big" data-a="cupview" style="cursor:pointer">${wfCup(S)}<span>Чемпион мира${S.wfWon > 1 ? ' ×' + S.wfWon : ''}</span></div>` : '',
     S.wcWon ? `<div class="ctro big"><img src="img/trophy/wc.webp" alt=""><span>Wild Card${S.wcWon > 1 ? ' ×' + S.wcWon : ''}</span></div>` : '',
-    S.eslWins ? `<div class="ctro big"><img class="esl" src="img/esl.webp" alt=""><span>ESL ONE ×${S.eslWins}</span></div>` : '',
+    S.eslWins ? `<div class="ctro big"><img class="esl" src="img/crown.webp" alt=""><span>Корона Спектров ×${S.eslWins}</span></div>` : '',
     ...CLUB.map((B, k) => S.beltsWon && S.beltsWon[k] ? `<div class="ctro big"><img src="img/trophy/belt_${k}.webp" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'beltph',textContent:'Пояс'}))"><span>${B.n}${S.beltsWon[k] > 1 ? ' ×' + S.beltsWon[k] : ''}</span></div>` : '')].join('');
   const regs = REGIONS.map((R, r) => { const own = names.map((n, i) => S.troph.some(x => x.r === r && x.n === n) ? i : -1).filter(i => i >= 0);
     return own.length ? `<h3>${esc(R.name)} · ${LSHORT[r]}</h3><div class="ctrow">${own.map(i => `<div class="ctro">${TROPHY_IMG[r] ? `<img src="img/trophy/r${r}_${i}.webp" alt="">` : '<span class="trophy">🏆</span>'}<span>${lbl[i]}</span></div>`).join('')}</div>` : ''; }).join('');
@@ -3559,7 +3559,7 @@ const LIB_NOTES = [
   { t: "Борьба команд", d: "Команды сражаются за места в таблице не ради красоты. За победы корпорации платят крипту: из неё оплачиваются контракты, тренировки, переезды и экипировка. Чем выше команда, тем щедрее спонсоры." },
   { t: "Цифровая монета", d: "Крипта Спектров — цифровая монета. Её выпускает банк «Северный Альянс», а каждую сделку записывает распределённый реестр, который проверяет Бюро. Курс крипты растёт вместе со славой арены." },
   { t: "Кошелёк Спектра", d: "Рейтинг и крипта — разные вещи. Рейтинг показывает, кто сильнее: он растёт и падает от побед и поражений, его нельзя купить или потратить. Крипта — это деньги: её платят за победы, призовые места и контракты, а тратят в магазине на жильё, транспорт, артефакты и снаряжение." },
-  { t: "Призовой фонд ESL ONE", d: "ESL ONE — турнир, на котором организаторы разыгрывают очки рейтинга. Победитель получает щедрую долю общего фонда, а вместе с ней — внимание скаутов и корпораций. Поэтому за приглашение на ESL ONE Спектры готовы бороться не меньше, чем за сам титул." },
+  { t: "Призовой фонд Короны Спектров", d: "Корона Спектров — турнир, на котором организаторы разыгрывают очки рейтинга. Победитель получает щедрую долю общего фонда, а вместе с ней — внимание скаутов и корпораций. Поэтому за приглашение на Корону бойцы готовы бороться не меньше, чем за сам титул." },
   { t: "Разрыв потока", d: "Иногда, не справившись со своей силой, Спектр может потерять контроль над потоком Цы. Потеря контроля делает Спектра совершенно беззащитным. Урон от двух своих атак получает тот, у кого получилось нанести три крита подряд." },
   { t: "Veltor", img: "img/car/veltor_logo.webp", d: "Veltor — самый массовый автобренд мира Спектров. Его серебряную букву V с бирюзовой вставкой видно на каждой улице. Седан Veltor S4 — первая машина почти любого молодого Спектра: удобный, экономичный и достаточно быстрый, чтобы успеть из Бюро на арену. Бирюзовые огни на бампере светятся в цвет потока Цы." },
   { t: "Свой транспорт", d: "Спектр, который сам добирается до арены, успевает за неделю куда больше. Машина в гараже дарит одно лишнее действие каждую неделю: меньше времени в пробках и на такси — больше на тренировки, турниры и Бюро." },
@@ -3687,7 +3687,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
       <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
     <div class="card"><h2>Услуги бюро</h2>
       ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}${none ? '<div class="dim" style="margin-top:4px;font-size:13px">Действия на неделю закончились.</div>' : ''}
-      ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="ESL ONE"><img src="img/nav/esl.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="ESL ONE закрыт"><img src="img/nav/s_esl_lock.webp" alt=""></div>'}
+      ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="Корона Спектров"><img src="img/nav/crown.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="Корона Спектров закрыта"><img src="img/nav/s_crown_lock.webp" alt=""></div>'}
     </div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
     <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="blgb ${i === r ? 'on' : ''}" data-a="blg" data-v="${i}" aria-label="${LSHORT[i]}" title="${LSHORT[i]}"><img src="img/logo_${i}.webp" alt=""></button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}</div></div>`);
@@ -3703,7 +3703,7 @@ function viewFame() {
     <div class="fcol">
     <div class="card"><h2>Пояса Бойцовского клуба</h2>${(ensureBelts(), CLUB.map((B, k) => { const hd = beltHolder(k); return `<div class="famebelt"><img src="img/trophy/belt_${k}.webp" alt=""><span>${B.n}</span></div>${row({ name: hd.name, face: hd.face, country: hd.country, hum: hd.hum }, G.belts[k].since ? 'чемпион с недели ' + G.belts[k].since + (G.belts[k].def ? ' · защит: ' + G.belts[k].def : '') : 'до начала карьеры')}`; }).join(''))}</div>
     <div class="card"><h2>Чемпионы мира</h2>${F2.worlds.map((e, i) => row(e, (i === 0 ? 'Действующий чемпион · ' : '') + (e.team ? esc(e.team.name) + ' · ' : '') + ss(e))).join('')}</div>
-    <div class="card"><h2>ESL ONE · последние 5</h2>${F2.esl.map(e => row(e, e.season > 0 ? 'Неделя ' + e.week + ' · ' + ss(e) : ss(e))).join('')}</div>
+    <div class="card"><h2>Корона Спектров · последние 5</h2>${F2.esl.map(e => row(e, e.season > 0 ? 'Неделя ' + e.week + ' · ' + ss(e) : ss(e))).join('')}</div>
     <div class="card"><h2>Турниры сессии</h2>${F2.tours.length ? F2.tours.map(e => row(e, esc(e.t) + ' · ' + REGIONS[e.r].name + ' · неделя ' + e.week)).join('') : '<div class="dim">Пока ни одного турнира. Победители всех турниров, сыгранных в этой игре, появятся здесь.</div>'}</div>
     </div></div>`) + navBar();
 }
@@ -3918,7 +3918,7 @@ function viewTRun() {
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
-  let h = `<div class="card thead">${R.kind === 'club' ? `<h2>Бойцовский клуб · ${CLUB[R.belt].n}</h2><div class="gold">Чемпион: ${esc(beltName(holderEntry(R.belt)))} · победитель турнира — претендент</div>` : R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? `<img class="scene" src="img/dreamhack.webp" alt="Метеор Фест"><h2>Метеор Фест</h2>${R.city ? `<div class="gold">${esc(R.city)}</div>` : ''}<p class="dim" style="margin:6px 0 0">${esc(descOf({ k: 'dh', city: R.city }))}</p>` : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
+  let h = `<div class="card thead">${R.kind === 'club' ? `<h2>Бойцовский клуб · ${CLUB[R.belt].n}</h2><div class="gold">Чемпион: ${esc(beltName(holderEntry(R.belt)))} · победитель турнира — претендент</div>` : R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? `<img class="scene" src="img/dreamhack.webp" alt="Метеор Фест"><h2>Метеор Фест</h2>${R.city ? `<div class="gold">${esc(R.city)}</div>` : ''}<p class="dim" style="margin:6px 0 0">${esc(descOf({ k: 'dh', city: R.city }))}</p>` : R.kind === 'esl' ? '<img class="esllogo" src="img/crown.webp" alt=""><h2>Корона Спектров · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
@@ -3927,7 +3927,7 @@ function viewTRun() {
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><img class="tendimg" src="img/win/${won ? 'twin' : 'tlose'}.webp" alt=""><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовую крипту: ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Ты чемпион Метеор Феста!' : R.kind === 'contract' ? `+${CONTRACT_WIN} крипты, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовую крипту: ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Ты чемпион Метеор Феста!' : R.kind === 'contract' ? `+${CONTRACT_WIN} крипты, команда довольна.` : R.kind === 'esl' ? 'Медаль Короны Спектров в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <div class="tendq">${esc(R.endq || (R.endq = ivPick(won ? T_WIN_Q : T_LOSE_Q)))}</div>
       <button class="imgbtn" data-a="tfinish" aria-label="Завершить"><img src="img/nav/finish.webp" alt=""></button></div>`;
