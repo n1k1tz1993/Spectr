@@ -229,6 +229,7 @@ img.aic{object-fit:cover;background:#0B0F1C;display:block}
 .ser span.win{color:var(--txt);font-weight:700}
 .ser .ssc{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900}
 .ser.mine{background:rgba(245,197,66,.08);border-radius:6px}
+.tvface{display:block;width:64px;height:64px;margin:0 auto 6px;border-radius:12px;overflow:hidden;border:2px solid rgba(58,143,216,.6);background:linear-gradient(180deg,#1B2A55,#0C1428)}.tvface img{width:100%;height:100%;object-fit:cover;object-position:50% 15%;display:block}.tvs>div:last-child .tvface{border-color:rgba(240,96,90,.65)}
 .tvs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:8px;margin:12px 0 6px;font-weight:700}
 .tsc{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:34px;color:var(--gold)}
 .abrow{display:flex;gap:12px;align-items:flex-start}
@@ -1646,6 +1647,7 @@ const ABIL_LIST = [   // способности соперников: назва
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
 const FACE_COUNT = 71;   // портреты: img/face/0..70.webp (выбор героя и сгенерированные бойцы)
+const tFace = (R, id) => { const p = R.ps[id], f = isHum(R, id) ? G.players[humOf(R, id)].face : (p.img || p.face); return f == null ? '' : `<span class="tvface">${faceImg(f)}</span>`; };   // маленький портрет бойца в карточке матча
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
@@ -3971,7 +3973,7 @@ function viewTRun() {
   } else if (me) {
     const L = isHum(R, me.a) ? me.a : me.b, Rr = L === me.a ? me.b : me.a, mine = me.g.filter(x => x === L).length;
     h += `<div class="card"><h3>${hums.length > 1 ? 'Матч игрока ' + esc(R.ps[L].name) : 'Твой матч'} · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
-      <div class="tvs"><div>${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}</div></div>
+      <div class="tvs"><div>${tFace(R, L)}${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${tFace(R, Rr)}${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}</div></div>
       <div class="dim" style="text-align:center">Bo${me.bo}${me.bo === 2 ? ' · возможна ничья' : ''} · бой ${me.g.length + 1}</div>
       <button class="imgbtn" data-a="tplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>
       <button class="imgbtn tauto" data-a="tauto" aria-label="Досчитать турнир"><img src="img/nav/tauto.webp" alt=""></button><div class="dim" style="margin-top:4px">Все оставшиеся бои сыграются автоматически, без твоего участия.</div></div>`;
