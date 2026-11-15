@@ -373,6 +373,8 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .aboutx{all:unset;position:absolute;right:-6px;top:-10px;width:34px;height:34px;border:1.5px solid #C9A24A;border-radius:50%;background:rgba(10,16,32,.75);color:#E9C46A;font-size:18px;line-height:36px;text-align:center;cursor:pointer;z-index:2}
 .crhead{display:block;width:100%;max-width:560px;margin:16px auto 0}.crabil{display:block;width:100%;margin:18px 0 8px}
 .facenav{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px}.facenav button{all:unset;cursor:pointer;width:40px;height:34px;border-radius:8px;border:1.5px solid #C9A24A;background:#141C34;color:#E9C46A;font-size:24px;line-height:30px;text-align:center}.facenav button:active{transform:scale(.94)}.facenav span{font-size:12px;color:var(--dim)}
+.flagnav{display:flex;align-items:center;gap:10px;margin-top:6px}.flagnav button{all:unset;cursor:pointer;width:46px;height:46px;border-radius:10px;border:1.5px solid #C9A24A;background:#141C34;color:#E9C46A;font-size:28px;line-height:42px;text-align:center;flex:0 0 auto}.flagnav button:active{transform:scale(.94)}
+.flagnav span{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;height:46px;border-radius:10px;background:#0E1730;border:1px solid #2A3A5C;font-size:16px}.flagnav span b{font-size:28px;font-weight:400}
 .lbtns{display:flex;gap:8px;margin-top:8px}.lbtns .imgbtn{flex:1;margin-top:0}
 .hdloc{all:unset;cursor:pointer;font-weight:800;font-size:4.2cqw;color:#F3E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .hdm{grid-template-columns:27cqw minmax(0,1fr) 42cqw !important}
@@ -3757,13 +3759,12 @@ function viewSetup() {
       <div style="flex:1"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}"></div>
     </div>
     <div class="dim" style="margin-top:14px">Флаг</div>
-    <div class="row">${Object.keys(COUNTRIES).map(k => `<button class="btn ${k === setupFlag ? 'here' : ''}" style="width:auto;flex:1 0 auto;text-align:center;font-size:22px;padding:8px 12px" data-a="flag" data-v="${k}">${flagOf(k)}</button>`).join('')}</div>
-    <div class="dim" style="margin-top:6px">${COUNTRIES[setupFlag]}</div>
+    <div class="flagnav"><button data-a="sflag" data-v="-1" aria-label="Предыдущий флаг">‹</button><span><b>${flagOf(setupFlag)}</b>${COUNTRIES[setupFlag]}</span><button data-a="sflag" data-v="1" aria-label="Следующий флаг">›</button></div>
     <img class="crabil" src="img/nav/cr_abil.webp" alt="Придумай себе суперспособность">
     <div class="abrow">
       <button class="iconone" data-a="sicon" aria-label="Сменить иконку">${abilIcon(setupIcon)}</button>
       <div style="flex:1;min-width:0"><div class="dim">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
-        <div class="dim" style="margin-top:4px;font-size:12px">Нажми на иконку, чтобы сменить её (${setupIcon + 1} из ${ABIL_ICON_COUNT})</div></div>
+        <div class="facenav" style="max-width:200px"><button data-a="siprev" aria-label="Предыдущая иконка">‹</button><span>Иконка ${setupIcon + 1} / ${ABIL_ICON_COUNT}</span><button data-a="sicon" aria-label="Следующая иконка">›</button></div></div>
     </div>
     <div class="dim" style="margin-top:10px">Что делает твой сильнейший удар?</div><textarea id="adesc" maxlength="120" rows="2" placeholder="Например: обрушивает на врага огненный молот">${esc(setupADesc)}</textarea>
     <div class="dim" style="margin-top:4px">Эта фраза появится в журнале боя, когда ты применишь удар.</div>
@@ -4099,6 +4100,8 @@ function act(a, v) {
       case 'flag': setupFlag = v; setupErr = ''; break;
       case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
       case 'sface': setupFace = (setupFace + 1) % FACE_COUNT; break;
+      case 'sflag': { const ks = Object.keys(COUNTRIES); setupFlag = ks[(ks.indexOf(setupFlag) + +v + ks.length) % ks.length]; break; }
+      case 'siprev': setupIcon = (setupIcon + ABIL_ICON_COUNT - 1) % ABIL_ICON_COUNT; break;
       case 'sfprev': setupFace = (setupFace + FACE_COUNT - 1) % FACE_COUNT; break;       // нажатие — следующий портрет
       case 'srnd': if (!SETUP) return; setupRandom(); break;
       case 'start': {
