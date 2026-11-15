@@ -1075,7 +1075,7 @@ const TIER_SHORT = ['Новички', 'Любители', 'Полупро'];
 const IMGBY = {};
 REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { IMGBY[c.t] = `img/act/r${ri}_${i}.webp`; }));
 GENERIC.forEach((c, i) => { IMGBY[c.t] = `img/act/g_${i}.webp`; });
-IMGBY['DreamHack'] = 'img/act/dh.webp';
+IMGBY['Метеор Фест'] = 'img/act/dh.webp';
 const picOf = c => IMGBY[c.t] || '';   // фестиваль: картинка появится в img/act/fest.webp — тогда добавить IMGBY['Фестиваль Спектров']
 // большие картинки событий (4:3, комикс 1–4 панели): img/evt/<ключ>.webp — пока их нет, показывается миниатюра
 const bigOf = c => { const m = picOf(c).match(/img\/act\/(.+)\.webp$/); return m ? `img/evt/${m[1]}.webp` : ''; };
@@ -1182,7 +1182,7 @@ const EVT_DESC = {
 REGIONS.forEach((R, ri) => R.cards.forEach((c, i) => { if (EVT_DESC['r' + ri + '_' + i]) c.desc = EVT_DESC['r' + ri + '_' + i]; }));
 GENERIC.forEach((c, i) => { if (EVT_DESC['g_' + i]) c.desc = EVT_DESC['g_' + i]; });
 const DESC_BY_T = {}; [...REGIONS.flatMap(R => R.cards), ...GENERIC].forEach(c => { if (c.desc) DESC_BY_T[c.t] = c.desc; });
-const descOf = c => c.k === 'fest' ? `Этот фестиваль проводится в разных городах, и сегодня ты на автобусе с друзьями отправляешься в путешествие, чтобы побороться за кубок на лучшей арене. В этот раз фестиваль принимает ${c.city || FEST_CITIES[(S && S.region) | 0][0]}.` : c.desc || DESC_BY_T[c.t] || '';
+const descOf = c => c.k === 'dh' ? `Метеор Фест — главный фестиваль лиг, который каждый раз проходит в новом городе. Улицы украшают флагами и фонарями, на площади у арены — ярмарка и музыка, а в центре на бархате ждёт пояс с метеоритным камнем. Сильнейшие Спектры мира съезжаются сюда, чтобы побороться за него. В этот раз фестиваль принимает ${c.city || 'Сеул'}.` : c.k === 'fest' ? `Этот фестиваль проводится в разных городах, и сегодня ты на автобусе с друзьями отправляешься в путешествие, чтобы побороться за кубок на лучшей арене. В этот раз фестиваль принимает ${c.city || FEST_CITIES[(S && S.region) | 0][0]}.` : c.desc || DESC_BY_T[c.t] || '';
 // ---------- инвентарь: 20 артефактов, открываются за рейтинг (тратится один раз), надет один; дают +1…+20 к силе сверх потолка ----------
 // Иконка артефакта i — img/art/i.webp. Самый престижный — часы AUREON «Абсолют» (+20).
 const ITEMS = [
@@ -1284,7 +1284,7 @@ const TIERS = [
 ];
 const POWER_TOURNEY_CAP = 65, POWER_MAX = 100, TROPHY_GAIN = 1, DH_GAIN = 5;
 // До 65 — прокачка турнирами. Дальше: каждый новый кубок +1 (3 турнира + лига × 5 регионов = +20 → 85),
-// чемпионат мира +5, Wild Card +5, DreamHack +5 — максимум 100.
+// чемпионат мира +5, Wild Card +5, Метеор Фест +5 — максимум 100.
 function awardTrophy(H, r, name, gain = TROPHY_GAIN) {
   if (H.power < POWER_TOURNEY_CAP) return 'locked';
   if (H.troph.some(y => y.r === r && y.n === name)) return 'have';
@@ -1329,7 +1329,8 @@ function newHero(nick, country, ability, face) {
 }
 
 // ---------- механика ----------
-const DH_CARD = { t: 'DreamHack', k: 'dh' }, DH_CHANCE = 0.12;
+const DH_CARD = { t: 'Метеор Фест', k: 'dh' }, DH_CHANCE = 0.12;   // Метеор Фест — фестиваль лиг в разных городах мира
+const DH_CITIES = ['Нью-Йорк', 'Лос-Анджелес', 'Торонто', 'Берлин', 'Париж', 'Лондон', 'Москва', 'Санкт-Петербург', 'Самара', 'Пекин', 'Шанхай', 'Сеул', 'Пусан', 'Токио', 'Сингапур'];
 // особые действия — выпадают среди трёх случайных вместе с общими и региональными
 const FEST_CITIES = [
   ['Чикаго', 'Лос-Анджелес', 'Майами', 'Лас-Вегас', 'Сиэтл', 'Бостон'],
@@ -1368,7 +1369,7 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Gotham Volt', 'us_0'], ['Pacific Mirage', 'us_1'], ['Lone Star Fangs', 'us_2'], ['Neon Jackpots', 'us_3'], ['Great Lakes Forge', 'us_4'], ['Everglade Vipers', 'us_5'],
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
-const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); h.forEach(c => { if (c.k === 'fest') c.city = FEST_CITIES[H.region][rnd(0, 5)]; }); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD }; return h; };
+const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); h.forEach(c => { if (c.k === 'fest') c.city = FEST_CITIES[H.region][rnd(0, 5)]; if (c.k === 'dh') c.city = DH_CITIES[rnd(0, DH_CITIES.length - 1)]; }); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD, city: DH_CITIES[rnd(0, DH_CITIES.length - 1)] }; return h; };
 // бонусы складываются, но суммарно не больше EFF_CAP; штрафы складываются без ограничения
 const EFF_CAP = 5;
 const effSum = (H, withGame) => { let pos = 0, neg = 0; for (const e of H.effects) if ((e.game ? withGame : e.from <= H.turn && H.turn <= e.to)) { if (e.v > 0) pos += e.v; else neg += e.v; } return Math.min(EFF_CAP, pos) + neg; };
@@ -1449,7 +1450,7 @@ function cardExpect(c) {   // ожидаемый эффект до нажати�
   if (c.k === 'n') { const [v, d] = nbOf(c); return { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(v, d)) }; }
   if (c.k === 'fanp') return { kind: 'Бонус', cls: 'plus', txt: 'Бонус до конца недели' };
   if (c.k === 'cond') return { kind: 'Условие', cls: 'nt', txt: `Прокачка завершена — +20 рейтинга; иначе ${effTxt(...COND_B)}` };
-  if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'DreamHack для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе' };
+  if (c.k === 'dh') return { kind: 'Турнир', cls: 'rand', txt: 'Метеор Фест для всех игроков: 32 сильнейших бойца. Победа — постоянный бонус к силе' };
   if (c.k === 'spar') return { kind: 'Бой', cls: 'rand', txt: G && G.players.length > 1 ? `Спарринг Bo3 с любым игроком · победителю +${SPAR_WIN} рейтинга, поражение без потерь` : `Лестничный бой · победа — +${SPAR_WIN} рейтинга, поражение без потерь` };
   if (c.k === 'beast') return { kind: 'Бой', cls: 'rand', txt: `Бой со зверем · победа — +${BEAST.coins} крипты` };
   if (c.k === 'duel') return { kind: 'Бой', cls: 'rand', txt: `Дуэль · победа — +${DUEL_WIN} рейтинга` };
@@ -1465,7 +1466,7 @@ function useCard(i, ivDone) {
     clearJet(); S.view = 'iv'; save(); return;
   }
   const jet = ivDone ? S.iv.jet : !!S.jetlag; clearJet();   // любое действие недели снимает джетлаг
-  if (c.k === 'dh') { c.used = true; dhStart(); save(); return; }
+  if (c.k === 'dh') { c.used = true; dhStart(c.city); save(); return; }
   if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
   if (c.k === 'spar') { c.used = true; if (G.players.length > 1) S.view = 'spar'; else sparStart(null); save(); return; }
   if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
@@ -2008,15 +2009,15 @@ function viewEsl() {
   return wrap(h);
 }
 
-// ---------- DreamHack: выпадает среди трёх действий недели; играют все игроки; 32 бойца; победа — +5 силы, кубка нет ----------
-function dhStart() {
+// ---------- Метеор Фест (бывш. DreamHack): выпадает среди трёх действий недели; играют все игроки; 32 бойца; победа — +5 силы, кубка нет ----------
+function dhStart(city) {
   const hums = G.players.map((H, h) => h);
   const elite = []; for (let r = 0; r < REGIONS.length; r++) lgPool(r).slice(0, proCount(r)).forEach(f => elite.push(f));
   elite.sort((a, b) => b.p - a.p);
   const bots = elite.slice(0, 32 - hums.length);
   const ps = hums.map((h, i) => ({ id: i, name: G.players[h].nick, h, seed: Math.random() }))
     .concat(bots.map((b, i) => ({ id: hums.length + i, name: b.name, p: b.p, rating: b.rating, seed: Math.random(), face: b.face, abil: b.abil, country: b.country })));
-  tStart({ kind: 'dh', tier: null, region: S.region }, 'dh32', ps);
+  tStart({ kind: 'dh', tier: null, region: S.region, city: city || DH_CITIES[rnd(0, DH_CITIES.length - 1)] }, 'dh32', ps);
 }
 // ---------- лиги ----------
 // Лига региона: 12 команд (в Корее 14). Драфт открыт 5 недель, в нём 20 мест: про-игроки региона и все, кто встал в драфт;
@@ -2734,7 +2735,7 @@ const FMT = {
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
   g16: { n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
-  dh32: { n: 32, name: 'DreamHack', desc: '32 бойца, 8 групп по 4. В группе двойное выбывание (бои Bo1), выходит только победитель группы. Плей-офф Bo3, финал Bo5.' },
+  dh32: { n: 32, name: 'Метеор Фест', desc: '32 бойца, 8 групп по 4. В группе двойное выбывание (бои Bo1), выходит только победитель группы. Плей-офф Bo3, финал Bo5.' },
   sw20: { n: 20, name: 'Турнир на 20 бойцов', desc: 'Швейцарская система, 5 раундов Bo1. Двое лучших — сразу в полуфинал, 3–6 места играют плей-ин Bo3. Полуфинал и финал Bo5.' }
 };
 const STAGE_NAMES = { R16: '1/8 финала', TF: 'Титульный бой', QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал', GS: 'Групповой этап', DEC: 'Серия за выход из группы', PI: 'Плей-ин' };
@@ -3009,11 +3010,11 @@ function finishTour() {
   }
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
     const team = x.team != null && SEMI[x.team] ? { name: SEMI[x.team][0], logo: SEMI[x.team][1] } : R.kind === 'contract' && H ? { name: SEMI[R.team][0], logo: SEMI[R.team][1] } : null;
-    const nm = R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'DreamHack' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
+    const nm = R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'esl' ? 'ESL ONE' : R.kind === 'dh' ? 'Метеор Фест' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
     const e = fameEntry(H ? H.nick : x.name, H ? H.face : x.face, H ? H.country : x.country, team, { r: R.region, season: fameSeason(), hum: !!H, t: nm });
     if (R.kind === 'esl') { G.fame.esl.unshift(e); G.fame.esl = G.fame.esl.slice(0, 5); }
     G.fame.tours.unshift(e); G.fame.tours = G.fame.tours.slice(0, 30); }
-  const T = R.kind === 'fest' ? { name: 'Фестиваль Спектров · ' + R.city, gain: 0 } : R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'DreamHack', gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
+  const T = R.kind === 'fest' ? { name: 'Фестиваль Спектров · ' + R.city, gain: 0 } : R.kind === 'esl' ? { name: 'ESL ONE', gain: 0 } : R.kind === 'contract' ? { name: 'Турнир по контракту · ' + SEMI_TEAMS[R.team], gain: 0 } : R.kind === 'dh' ? { name: 'Метеор Фест' + (R.city ? ' · ' + R.city : ''), gain: 0 } : TIERS[R.tier], r = R.region, champ = R.ps[R.winner].name;
   for (const x of R.ps) {   // награды и история — каждому живому участнику
     const h = humOf(R, x.id); if (h == null) continue;
     const H = G.players[h];
@@ -3483,6 +3484,7 @@ function viewTeams() {   // библиотека: команды лиг по р�
 }
 // заметки библиотеки: история мира Спектров, общие для всех регионов
 const LIB_NOTES = [
+  { t: "Метеор Фест", d: "Раз в несколько недель лиги устраивают Метеор Фест — фестиваль, который переезжает из города в город. Спектры добираются поездами, такси и самолётами, у арены шумит ярмарка, а на бархатной подушке ждёт пояс с метеоритным камнем. Попасть туда можно только по приглашению, и приглашают сразу всех сильнейших." },
   { t: "Снаряжение на арене", d: "Многие Спектры носят с собой не только артефакты. Рудные батареи возвращают поток Цы, когда тело уже на пределе; гранаты, сыворотки и кристаллы решают исход боя за секунду. Профессионалы лиг не выходят на арену без такого набора, полупрофессионалы берут его изредка, а новички о нём даже не слышали." },
   { t: "Своё жильё", d: "Пока у Спектра нет своего угла, он живёт по графику Бюро: очереди, регистрация, пропуска. Тому, у кого есть собственное жильё, Бюро присылает документы на дом — и поход в его офис больше не съедает драгоценное время недели." },
   { t: "Остров вдали от часовых поясов", d: "Владельцы собственных островов давно перестали бояться джетлага: частная полоса, свой экипаж и тишина океана. Говорят, после перелёта на остров Спектр выходит на арену так, будто и не покидал дом." },
@@ -3882,7 +3884,7 @@ function viewTRun() {
   const sc = m => { const wa = m.g.filter(x => x === m.a).length; return [wa, m.g.length - wa]; };
   const series = m => { const [wa, wb] = sc(m); return `<div class="ser ${isHum(R, m.a) || isHum(R, m.b) ? 'mine' : ''}"><span class="${m.w === m.a ? 'win' : ''}">${nm(m.a)}</span><b class="ssc">${wa}:${wb}</b><span class="${m.w === m.b ? 'win' : ''}">${nm(m.b)}</span></div>`; };
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
-  let h = `<div class="card thead">${R.kind === 'club' ? `<h2>Бойцовский клуб · ${CLUB[R.belt].n}</h2><div class="gold">Чемпион: ${esc(beltName(holderEntry(R.belt)))} · победитель турнира — претендент</div>` : R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? '<img class="scene" src="img/dreamhack.webp" alt="DreamHack"><h2>DreamHack</h2>' : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
+  let h = `<div class="card thead">${R.kind === 'club' ? `<h2>Бойцовский клуб · ${CLUB[R.belt].n}</h2><div class="gold">Чемпион: ${esc(beltName(holderEntry(R.belt)))} · победитель турнира — претендент</div>` : R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? `<img class="scene" src="img/dreamhack.webp" alt="Метеор Фест"><h2>Метеор Фест</h2>${R.city ? `<div class="gold">${esc(R.city)}</div>` : ''}<p class="dim" style="margin:6px 0 0">${esc(descOf({ k: 'dh', city: R.city }))}</p>` : R.kind === 'esl' ? '<img class="esllogo" src="img/esl.webp" alt=""><h2>ESL ONE · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
     ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
@@ -3891,7 +3893,7 @@ function viewTRun() {
   if (R.done) {
     const won = isHum(R, R.winner), solo = hums.length === 1;
     h += `<div class="card" style="text-align:center"><img class="tendimg" src="img/win/${won ? 'twin' : 'tlose'}.webp" alt=""><div class="bonus ${won ? 'plus' : 'minus'}" style="font-size:22px;margin:0">${won ? (solo ? 'Ты выиграл турнир!' : esc(R.ps[R.winner].name) + ' выиграл турнир!') : 'Турнир окончен'}</div>
-      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовую крипту: ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Победа в DreamHack!' : R.kind === 'contract' ? `+${CONTRACT_WIN} крипты, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
+      <div class="dim" style="margin-top:6px">${solo ? (won ? (R.kind === 'fest' ? 'Кубок фестиваля твой — друзья в автобусе уже поют.' : R.intro ? `Бюро выдаёт стартовую крипту: ${coinHtml(INTRO_COINS)}. Дальше — твоя первая неделя.` : R.kind === 'dh' ? 'Ты чемпион Метеор Феста!' : R.kind === 'contract' ? `+${CONTRACT_WIN} крипты, команда довольна.` : R.kind === 'esl' ? 'Медаль ESL ONE в коллекции.' : 'Трофей отправится в коллекцию.') : 'Твой результат: ' + placeText(R, hums[0].id) + '. Победитель — ' + esc(R.ps[R.winner].name) + '.')
         : 'Победитель — ' + esc(R.ps[R.winner].name) + '.<br>' + hums.map(x => esc(x.name) + ': ' + placeText(R, x.id)).join('<br>')}</div>
       <div class="tendq">${esc(R.endq || (R.endq = ivPick(won ? T_WIN_Q : T_LOSE_Q)))}</div>
       <button class="imgbtn" data-a="tfinish" aria-label="Завершить"><img src="img/nav/finish.webp" alt=""></button></div>`;
