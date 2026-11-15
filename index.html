@@ -771,8 +771,8 @@ html.land .fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
 .fyabs{display:flex;flex-direction:column;gap:10px}
 .fyitr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;border-top:1.5px solid rgba(58,143,216,.65);padding-top:8px}   /* расходники над журналом в одну строку: свои слева, соперника справа; пусто — только полоска */
 .fyitr:not(:has(button,span)){padding-top:0}
-.fyitr .fyit{display:flex;flex-wrap:nowrap;gap:3px;min-width:0}.fyitr .fyit.fb{justify-content:flex-end}
-.fyitr .fyit button,.fyitr .fyit span{width:calc((100% - 21px) / 8);max-width:40px;height:auto;aspect-ratio:1/1;border-radius:4px;overflow:hidden;flex:0 0 auto;border-width:1px;box-sizing:border-box}
+.fyitr .fyit{display:grid;grid-template-columns:repeat(4,minmax(0,40px));gap:5px;min-width:0;align-content:start}.fyitr .fyit.fb{justify-content:end;direction:rtl}
+.fyitr .fyit button,.fyitr .fyit span{width:100%;max-width:40px;height:auto;aspect-ratio:1/1;border-radius:4px;overflow:hidden;flex:0 0 auto;border-width:1px;box-sizing:border-box}
 
 .fyc .fya{display:none}
 .fyl{border:1px solid rgba(58,143,216,.5);border-radius:14px;background:#0C1428;padding:12px 14px;position:relative}
