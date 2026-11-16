@@ -2688,7 +2688,7 @@ function wcFinish(L) {
       histTo(H, H.region, 'Wild Card: победа');
     } else histTo(H, H.region, 'Wild Card: турнир окончен');
   });
-  G.wc = null;
+  G.wcPrev = L; G.wc = null;   // сетка прошлого Wild Card — смотреть в Бюро
   wfCreate(Object.assign({}, T, { wcChamp: true }));
 }
 
@@ -2752,7 +2752,7 @@ function wfFinish(L) {
       histTo(H, H.region, 'Чемпионат мира: победа');
     } else { logTo(H, `Чемпионат мира окончен: ${wfPlaceTxt(pl)}. Призовые: +${prize} крипты.`); histTo(H, H.region, 'Чемпионат мира: ' + wfPlaceTxt(pl)); }
   });
-  G.wf = null;
+  G.wfPrev = L; G.wf = null;   // сетка прошлого чемпионата мира — смотреть в Бюро
   startNewSeason();
 }
 function startNewSeason() {   // перерыв BREAK_WEEKS недель и драфт нового сезона у всех лиг сразу
@@ -4200,14 +4200,14 @@ function lgStatus(L) {
 }
 function wfCardHtml() {   // карточка чемпионата мира в бюро
   if (!G.wf && !G.wfLast) return '';
-  const L = G.wf, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
+  const L = G.wf, P = !L && G.wfPrev, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
   return `<div class="card"><img class="evlogo sm" src="img/wf_logo.webp" alt=""><h3>Чемпионат мира</h3><div class="dim">${L ? `Идёт чемпионат мира: 16 бойцов, ${['групповой этап, 1-й круг', 'групповой этап, 1-й круг', 'групповой этап, 2-й круг', 'групповой этап, 2-й круг', 'четвертьфинал', 'полуфинал', 'финал'][L.block] || 'финал'}.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Чемпион мира сезона ${G.wfLast.season}: ${esc(G.wfLast.champ)} (${esc(G.wfLast.team)}).`}</div>
-    ${L ? `${ibtn('wf', 'wfview', '', 'Чемпионат мира')}` : ''}</div>`;
+    ${L || P ? `${ibtn('wf', 'wfview', '', 'Чемпионат мира')}${P ? '<div class="dim" style="text-align:center;margin-top:4px">Сетка прошлого чемпионата</div>' : ''}` : ''}</div>`;
 }
 function viewWF() {
-  const L = G.wf;
-  if (!L) return wrap(`<div class="card">Чемпионат мира сейчас не идёт.</div>${back}`);
-  let h = `<div class="card"><img class="evlogo" src="img/wf_logo.webp" alt="Чемпионат мира Спектров"><h2>Чемпионат мира</h2><div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю — постоянный бонус к силе.</div>${wfPrizeHtml()}</div>`;
+  const L = G.wf || G.wfPrev;
+  if (!L) return wrap(`<div class="card">Чемпионат мира ещё не проводился.</div>${back}`);
+  let h = `<div class="card"><img class="evlogo" src="img/wf_logo.webp" alt="Чемпионат мира Спектров"><h2>Чемпионат мира${G.wf ? '' : ' · прошлый'}</h2>${G.wf ? '' : `<div class="gold" style="margin-bottom:4px">Чемпион: ${esc(G.wfLast ? G.wfLast.champ : '')}</div>`}<div class="dim">По 3 лучших бойца каждой лиги и победитель Wild Card. 4 группы по 4, Bo1 в два круга, выходят двое. Четвертьфинал, полуфинал и финал Bo5 — каждый в свой ход. Победителю — постоянный бонус к силе.</div>${wfPrizeHtml()}</div>`;
   h += L.groups.map((_, g) => `<div class="card"><h3>Группа ${GL[g]}</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>И</td><td>В-П</td><td>О</td></tr>${lgGroupTable(L, g).map((x, k) => `<tr class="${k < 2 ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.pl}</td><td>${x.w}-${x.l}</td><td><b>${x.pts}</b></td></tr>`).join('')}</table></div>`).join('');
   for (const st of ['QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   return wrap(h + back);
@@ -4218,19 +4218,20 @@ function wcCardHtml() {   // карточка Wild Card в бюро
     return `<div class="card"><img class="evlogo sm" src="img/wc_logo.webp" alt=""><h3>Wild Card</h3>
       <div class="dim">${G.wcLast ? `Прошлый Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}). ` : ''}Следующий Wild Card начнётся, когда все лиги доиграют сезон. Записаться в первый этап (отбор из ${WC_S1} бойцов) может любой Спектр — регистрация бесплатная и не тратит действие.${S.league != null ? ' Бойцы лиги попадают в Wild Card и сами, если не войдут в тройку лучших; регистрация — запасной путь.' : ''}</div>
       ${reg ? '<div class="bonus nt" style="margin-top:8px">✓ Ты записан в Wild Card</div>' : ''}
-      <button class="btn ${reg ? '' : 'gold'}" data-a="wcreg" style="text-align:center">${reg ? 'Отменить регистрацию' : 'Записаться на Wild Card'}</button></div>`;
+      <button class="btn ${reg ? '' : 'gold'}" data-a="wcreg" style="text-align:center">${reg ? 'Отменить регистрацию' : 'Записаться на Wild Card'}</button>${wcPrevBtn()}</div>`;
   }
-  if (!G.wc) return '';
+  if (!G.wc) return G.wcPrev ? `<div class="card"><img class="evlogo sm" src="img/wc_logo.webp" alt=""><h3>Wild Card</h3><div class="dim">Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}). Он сейчас на чемпионате мира.</div>${wcPrevBtn()}</div>` : '';
   const L = G.wc, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
   const pend = G.wcPool ? REGIONS.filter((_, r) => !G.wcPool[r]).map((_, r) => LSHORT[r]) : [];
   return `<div class="card"><img class="evlogo sm" src="img/wc_logo.webp" alt=""><h3>Wild Card</h3><div class="dim">${L ? `Идёт турнир: ${wcPartNow(L)}, ${L.teams.length} бойцов.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Прошлый Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}).`}</div>
     ${L ? `${ibtn('wc', 'wcview', '', 'Сетка Wild Card')}` : ''}</div>`;
 }
+const wcPrevBtn = () => G.wcPrev ? `${ibtn('wc', 'wcview', '', 'Сетка Wild Card')}<div class="dim" style="text-align:center;margin-top:4px">Сетка прошлого Wild Card</div>` : '';
 const wcQualN = L => { let B = 1; while (B < L.n2 + 1) B *= 2; return Math.max(0, B - L.n2); };
 function viewWC() {
-  const L = G.wc;
-  if (!L) return wrap(`<div class="card">Wild Card сейчас не идёт.</div>${back}`);
-  let h = `<div class="card"><img class="evlogo" src="img/wc_logo.webp" alt="Wild Card"><h2>Wild Card</h2><div class="dim">Бойцы лиг, не попавшие на чемпионат мира. Этап 1: отбор Bo3 на 100 бойцов (последние места лиг, по бойцу от каждой полупро-команды с небольшим бонусом к силе и свободные бойцы) — 100 → 50 → 25, затем 25 играют швейцарку Bo1. Этап 2 — сетка на 64 Bo3, этап 3 — плей-офф, финал Bo5. Каждая часть — один ход.</div></div>`;
+  const L = G.wc || G.wcPrev;
+  if (!L) return wrap(`<div class="card">Wild Card ещё не проводился.</div>${back}`);
+  let h = `<div class="card"><img class="evlogo" src="img/wc_logo.webp" alt="Wild Card"><h2>Wild Card${G.wc ? '' : ' · прошлый'}</h2>${G.wc ? '' : `<div class="gold" style="margin-bottom:4px">Победитель: ${esc(G.wcLast ? G.wcLast.champ : '')}</div>`}<div class="dim">Бойцы лиг, не попавшие на чемпионат мира. Этап 1: отбор Bo3 на 100 бойцов (последние места лиг, по бойцу от каждой полупро-команды с небольшим бонусом к силе и свободные бойцы) — 100 → 50 → 25, затем 25 играют швейцарку Bo1. Этап 2 — сетка на 64 Bo3, этап 3 — плей-офф, финал Bo5. Каждая часть — один ход.</div></div>`;
   for (const st of ['K1', 'K2']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
   if (L.sw.length) h += `<div class="card"><h3>Этап 1 · швейцарская система</h3><table class="tbl ltbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${wcSwissTable(L).map((x, k) => `<tr class="${k < wcQualN(L) ? 'z1' : ''}"><td>${k + 1}</td><td>${lgTeamCell(L, x.i)}</td><td>${x.w}-${x.l}</td></tr>`).join('')}</table></div>`;
   for (const st of ['R64', 'R32', 'R16', 'QF', 'SF', 'F']) { const ms = lgStage(L, st); if (ms.length) h += `<div class="card"><h3>${LG_STAGE[st]}</h3>${ms.map(m => lgSeries(L, m)).join('')}</div>`; }
