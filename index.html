@@ -1041,6 +1041,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .ibtn.ibsm{flex:0 0 42%;margin:0}.ibtn.crrnd{margin-top:12px;padding:0}
 .ibsz{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.ibsz .ibtn{margin:0}
 .evlogo{display:block;width:min(260px,70%);height:auto;margin:0 auto 8px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}.evlogo.sm{width:min(150px,40%)}
+.ibtn:disabled{opacity:.4;filter:grayscale(.6);cursor:default}.ibtn:disabled .ib1{opacity:0!important}.ibtn.ibauto{margin:8px 12px 2px;width:auto;max-width:none}.ibtn.ibsm2{flex:1;margin:0}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1695,7 +1696,7 @@ const ABIL_LIST = [   // способности соперников: назва
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
 const FACE_COUNT = 71;   // портреты: img/face/0..70.webp (выбор героя и сгенерированные бойцы)
 const tFace = (R, id) => { const p = R.ps[id], f = isHum(R, id) ? G.players[humOf(R, id)].face : (p.img || p.face); return f == null ? '' : `<span class="tvface">${faceImg(f)}</span>`; };   // маленький портрет бойца в карточке матча
-const ibtn = (n, a, v = '', al = '', cls = '') => `<button class="ibtn ${cls}" data-a="${a}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="${al}"><img src="img/btn/${n}_0.webp" alt=""><img class="ib1" src="img/btn/${n}_1.webp" alt=""></button>`;   // нарисованная кнопка: синяя, при нажатии — золотая
+const ibtn = (n, a, v = '', al = '', cls = '', dis = false) => `<button class="ibtn ${cls}" data-a="${a}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="${al}"${dis ? ' disabled' : ''}><img src="img/btn/${n}_0.webp" alt=""><img class="ib1" src="img/btn/${n}_1.webp" alt=""></button>`;   // нарисованная кнопка: синяя, при нажатии — золотая
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
@@ -2086,7 +2087,7 @@ function viewTitle() {   // титульные бои конца недели с
     <img class="tfbelt" src="img/trophy/belt_${T.k}.webp" alt=""><h2>Титульный бой</h2><div class="gold">${B.n}</div>
     <div class="tfrow">${side(T.a)}<div class="tfsc">${sc.a}:${sc.b}<small>Bo3</small></div>${side(T.b)}</div>
     <div class="dim">Слева — действующий чемпион, справа — претендент.</div>
-    ${sc.done ? `<div class="bonus ${T[sc.done].h != null ? 'plus' : 'minus'}" style="font-size:20px">${sc.done === 'a' ? 'Титул защищён' : 'Новый чемпион'}: ${esc(beltName(T[sc.done]))}</div><button class="btn gold" data-a="tfnext">Дальше</button>`
+    ${sc.done ? `<div class="bonus ${T[sc.done].h != null ? 'plus' : 'minus'}" style="font-size:20px">${sc.done === 'a' ? 'Титул защищён' : 'Новый чемпион'}: ${esc(beltName(T[sc.done]))}</div>${ibtn('next', 'tfnext', '', 'Дальше')}`
       : `<div class="dim">Бой ${T.g.length + 1}</div><button class="imgbtn" data-a="tfplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>`}</div>`;
 }
 function viewClub() {
@@ -2098,8 +2099,8 @@ function viewClub() {
         <div class="fame ${hd.hum ? 'hum' : ''}"><span class="ava">${faceImg(hd.face)}</span><span class="famei"><b>${flagOf(hd.country || '')} ${esc(hd.name)}</b><small>${rateHtml(hd.rating)}${G.belts[k].def ? ' · защит: ' + G.belts[k].def : ''}</small></span></div>
         ${G.beltChal && G.beltChal[k] ? `<div class="dim" style="margin-top:6px">Претендент этой недели: <b>${esc(beltName(G.beltChal[k]))}</b></div>` : ''}
         ${prizeRulesHtml({ kind: 'club', belt: k })}
-        ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. В конце каждой недели ты защищаешь его в титульном бою.</div>' : (regs[k].length ? `<div class="dim" style="margin-top:6px">Записались: <b>${regs[k].map(h => esc(G.players[h].nick)).join(', ')}</b></div>` : '') + (mr === k ? `<div class="gold" style="margin-top:8px">Ты записан. Турнир — в конце недели.</div><button class="btn" data-a="clubun" style="text-align:center">Отменить запись</button>`
-          : `<button class="btn gold" data-a="clubgo" data-v="${k}" style="text-align:center" ${!can || none || mr >= 0 ? 'disabled' : ''}>Записаться · 1 действие</button>${can ? (mr >= 0 ? '<div class="dim">Ты уже записан на другой пояс.</div>' : '') : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`)}</div>`; }).join('')}`);
+        ${mine ? '<div class="gold" style="margin-top:8px">Пояс у тебя. В конце каждой недели ты защищаешь его в титульном бою.</div>' : (regs[k].length ? `<div class="dim" style="margin-top:6px">Записались: <b>${regs[k].map(h => esc(G.players[h].nick)).join(', ')}</b></div>` : '') + (mr === k ? `<div class="gold" style="margin-top:8px">Ты записан. Турнир — в конце недели.</div>${ibtn('clubunreg', 'clubun', '', 'Отменить запись')}`
+          : `${ibtn('clubreg', 'clubgo', k, 'Записаться · 1 действие', '', !can || none || mr >= 0)}${can ? (mr >= 0 ? '<div class="dim">Ты уже записан на другой пояс.</div>' : '') : `<div class="dim">Нужен рейтинг от ${B.min}.</div>`}`)}</div>`; }).join('')}`);
 }
 function festStart(city, inv = []) {   // фестиваль: 8 бойцов уровня героя, плей-офф; приз — крипты, без роста силы
   const T = TIERS[Math.min(S.tiers[S.region] || 0, 2)], tk = takenSet(G.players.map(H => H.nick));
@@ -2175,7 +2176,7 @@ function viewEsl() {
     <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}. Победитель получает медаль Короны Спектров и +200 рейтинга.</div>${prizeRulesHtml({ kind: 'esl' })}</div>
     <div class="card"><h3>Размер турнира</h3><div class="ibsz">${Object.keys(ESL_SIZES).map(k => `<button class="ibtn" data-a="eslsize" data-v="${k}" aria-label="${k} бойцов"><img src="img/btn/sz${k}_${+k === E.size ? 1 : 0}.webp" alt=""></button>`).join('')}</div>
       <div style="margin-top:8px">Участников: <b class="${over ? 'minus' : full ? 'plus' : ''}">${n} из ${E.size}</b>${over ? ' — убери лишних' : ''}</div>
-      <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="eslfill" style="text-align:center" ${n >= E.size ? 'disabled' : ''}>Дозаполнить</button><button class="btn gold" data-a="eslgo" style="text-align:center" ${full ? '' : 'disabled'}>Начать турнир</button></div>
+      <div class="row" style="flex-wrap:nowrap">${ibtn('crownfill', 'eslfill', '', 'Дозаполнить', '', n >= E.size)}${ibtn('crownstart', 'eslgo', '', 'Начать турнир', '', !full)}</div>
       ${E.gen.length ? `<div class="dim" style="margin-top:6px">Добрано бойцов: ${E.gen.length}. <a href="#" data-a="eslclear" style="color:var(--gold)">Убрать</a></div>` : ''}</div>`;
   if (G.mode === 'coop') h += `<div class="card"><h3>Игроки в регионе ${REGIONS[S.region].name}</h3>${here.length ? `<div class="row">${here.map(i => `<button class="btn ${E.inv.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="eslinv" data-v="${i}">${E.inv.includes(i) ? '✓ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div>` : '<div class="dim">Других игроков здесь нет.</div>'}</div>`;
   for (let r = 0; r < REGIONS.length; r++) {
@@ -3389,7 +3390,7 @@ function viewCard() {   // до выполнения: картинка, опис
       <div><div class="dim">Событие недели</div><h2>${esc(c.t)}</h2>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
         ${G.mode === 'coop' && G.players.length > 1 && SHARE_K.includes(c.k) ? `<div class="invbox"><div class="dim">${c.k === 'fest' ? 'Позвать с собой одного игрока — он сыграет в той же сетке фестиваля, а действие потратишь только ты:' : 'Позвать с собой одного игрока — он получит тот же бонус, а действие потратишь только ты:'}</div><div class="invrow">${G.players.map((H, h) => h === G.cur ? '' : `<button class="invp ${(S.invite || []).includes(h) ? 'on' : ''}" data-a="invt" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}</button>`).join('')}</div></div>` : ''}
-        <button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
+        ${c.k === 'duel' || c.k === 'spar' || isIv(c) ? '' : ibtn('apply', 'use', '', 'Применить', '', none)}<button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''} ${c.k === 'duel' || c.k === 'spar' || isIv(c) ? '' : 'hidden'}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : isIv(c) ? 'Начать интервью' : 'Провести время'} · 1 действие</button>
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
 }
@@ -3428,7 +3429,7 @@ function viewVic() {
   if (!V) { S.vic = null; S.view = 'main'; return viewMain(); }
   return wrap(`<div class="card evt vic"><div class="evtpic"><img class="big" src="${V.img}.webp" alt="${V.t}"></div>
       <div class="evtinfo"><h2 class="victt">${V.t}</h2><p>${esc(V.d(S.nick))}</p>
-        <button class="btn gold evtgo" data-a="vicok">Принять поздравления</button></div></div>`);
+        ${ibtn('congrats', 'vicok', '', 'Принять поздравления')}</div></div>`);
 }
 function viewIv() {   // интервью: вопрос, три ответа, кнопка «Ответ»
   const I = S.iv, c = I && S.hand[I.sel];
@@ -3438,7 +3439,7 @@ function viewIv() {   // интервью: вопрос, три ответа, к
       <div class="evtpic">${evtImg(c)}</div>
       <div class="evtinfo"><h2>${esc(c.t)}</h2><div class="dim">Вопрос ${I.n + 1} из 3</div>
         <div class="ivq">${esc(I.q[I.n])}</div>
-        <button class="btn gold evtgo" data-a="ivans">Ответ</button></div>
+        ${ibtn('answer', 'ivans', '', 'Ответ')}</div>
     </div>`);
 }
 function viewCardRes() {   // после выполнения: точный итог, срок и фраза героя
@@ -3449,7 +3450,7 @@ function viewCardRes() {   // после выполнения: точный ит
       <div class="evtinfo"><h2>${esc(R.c.t)}</h2><p>${descOf(R.c) ? esc(descOf(R.c)) : TEXT}</p>
         <div class="effbox ${R.cls}"><span>${R.kind}</span><b>${R.txt}</b></div>
         <div class="dim">Бонус получили:</div><div class="evtwho">${(R.who || [G.cur]).map(h => G.players[h]).filter(Boolean).map(H => `<span><div class="ava">${faceImg(H.face)}</div>${esc(H.nick)}</span>`).join('')}</div>
-        <button class="btn gold evtgo" data-a="cardback">Вернуться</button></div>
+        ${ibtn('back', 'cardback', '', 'Вернуться')}</div>
     </div>`);
 }
 // ---------- описания команд для библиотеки: ключ — логотип команды ----------
@@ -3755,7 +3756,7 @@ function viewLib() {
   const ni = LIB_NOTES[i].img;
   return wrap(`<div class="card" style="text-align:center">${ni ? `<img class="libimg" src="${ni}" alt="">` : '<img class="libhero" src="img/library.webp" alt="">'}
     <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${capF(effTxt(...LIB_B))}</div></div>
-    <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
+    ${ibtn('dossier', 'dossier', S.region, 'Досье Элитных Спектров')}
     ${ibtn('teams', 'teams', S.region, 'Команды лиг')}${back}`);
 }
 
@@ -3781,9 +3782,9 @@ function viewInv() {    // инвентарь: открытые артефакт
   let h = `<div class="card"><h2>Способности</h2><div class="abrow" style="align-items:center">${abilIcon(S.skill.icon)}<div style="flex:1"><b>${esc(S.skill.name)}</b><div class="dim">${effOf(S.skill.eff)[1]} · ${esc(effOf(S.skill.eff)[2])}</div></div></div><div class="abrow" style="align-items:center;margin-top:8px">${abilIcon(S.ability.icon)}<div style="flex:1"><b>${esc(S.ability.name)}</b><div class="dim">Разрушительная</div></div></div>${ibtn('skedit', 'skopen', '', 'Изменить способность')}</div><div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
   h += own.map(i => itemCard(ITEMS[i], i, (S.renaming === i
       ? `<input id="iname" maxlength="32" placeholder="${esc(ITEMS[i].n)}" value="${esc((S.iname && S.iname[i]) || '')}" style="margin-top:8px">
-         <div class="row" style="flex-wrap:nowrap;gap:8px">${ibtn('save', 'iren', i, 'Сохранить')}<button class="btn" data-a="irencancel" style="text-align:center">Отмена</button></div>
+         <div class="row" style="flex-wrap:nowrap;gap:8px">${ibtn('save', 'iren', i, 'Сохранить')}${ibtn('cancel', 'irencancel', '', 'Отмена')}</div>
          <div class="dim" style="font-size:12px">Оставь пустым, чтобы вернуть исходное название.</div>`
-      : `<div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ${S.equip === i ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${S.equip === i ? 'Снять' : 'Надеть'}</button>${ibtn('name', 'irename', i, 'Имя', 'ibsm')}</div>`), S.equip === i)).join('');
+      : `<div class="row" style="flex-wrap:nowrap;gap:8px">${ibtn(S.equip === i ? 'unequip' : 'equip', 'iequip', i, S.equip === i ? 'Снять' : 'Надеть', 'ibsm2')}${ibtn('name', 'irename', i, 'Имя', 'ibsm')}</div>`), S.equip === i)).join('');
   if (!own.length) h += `${ibtn('shop', 'shop', '', 'В магазин')}`;
   return wrap(h + back);
 }
@@ -3918,7 +3919,7 @@ function viewHandoff() {
     <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
     ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div>${ibtn('skip', 'hskip', '', 'Пропустить неделю')}` : `<button class="imgbtn" data-a="hgo" style="margin-top:14px" aria-label="Начать неделю"><img src="img/nav/startweek.webp" alt=""></button>`}</div>
     <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${flagOf(H.country)} ${esc(H.nick)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
-    <button class="btn" data-a="menu">Главное меню</button>`;
+    ${ibtn('menu', 'menu', '', 'Главное меню')}`;
 }
 function viewIntro() {   // вступление после создания героя: 1 — Бюро и выбор региона, 2 — первый турнир
   const sep = '<div class="insep"><i></i><b>✦</b><i></i></div>';
@@ -3979,7 +3980,7 @@ function viewSetup() {
     <div class="dim" style="margin-top:6px">Самый сильный удар без эффектов: тратит ${TB.qiUlt} Цы и применяется один раз за бой. Фраза появится в журнале боя.</div>
     <button class="imgbtn" data-a="start" aria-label="Создать персонажа" style="margin-top:16px"><img src="img/nav/cr_go.webp" alt=""></button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
-    <button class="btn" data-a="mback">Главное меню</button>
+    ${ibtn('menu', 'mback', '', 'Главное меню')}
   </div>`;
 }
 
@@ -4027,7 +4028,7 @@ function tbMenu() {   // всплывающее меню хода: стойки,
     <div class="pr-mh"><div><small>${F.a.me && F.b.me ? 'Ход игрока' : 'Твой ход'}</small><b>Ходит ${esc(x.name)}</b></div>
       <div class="pr-mini">${[[x, x === F.a ? 'a' : 'b'], [y, y === F.a ? 'a' : 'b']].map(([f, c]) => `<div class="${c}"><span>${esc(f.name)}</span><i class="h"><u style="width:${f.hp / f.hpMax * 100}%"></u></i><i class="q"><u style="width:${f.qi}%"></u></i></div>`).join('')}</div>
       <button class="pr-tog" data-a="fmenu">${MENU.open ? 'Свернуть ▾' : 'Меню ▴'}</button></div>
-    <button class="pr-autob" data-a="fauto">🤖 Автоход <small>— ход сделает автоматика</small></button>
+    ${ibtn('auto', 'fauto', '', 'Автоход', 'ibauto')}
     <div class="pr-mb">
       <h4>Стойка <small>— бесплатно, держится, пока не сменишь</small></h4>
       <div class="pr-seg">${STANCES.map(s => `<button class="pr-stb ${x.stance === s[0] ? 'on' : ''}" data-a="fst" data-v="${s[0]}" aria-label="Стойка ${s[2]}"><img src="img/stance/${s[0]}_${x.stance === s[0] ? 1 : 0}.webp" alt="${s[2]}"><small>${s[3]}</small></button>`).join('')}</div>
@@ -4048,8 +4049,8 @@ function viewFight() {
     <div class="pr-turnb ${F.done ? '' : mine ? 'me' : 'op'}">${F.done ? 'Бой окончен' : mine ? `Ход ${esc(x.name)}` : `Ходит ${esc(x.name)}…`}</div>
     <div class="fyl"><div class="fylh"><h3>Журнал боя</h3><button class="fyall" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button></div>
       <div class="flog" id="flog">${F.ev.map(e => `<div class="${e.c || ''}">${esc(e.t || e)}</div>`).join('')}</div>
-      <div id="fend">${F.done ? `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>` : ''}</div></div>
-    ${F.done ? '' : '<button class="btn pr-ff" data-a="fskip" style="text-align:center">⏩ Досчитать бой</button><div class="dim" style="text-align:center;font-size:13px;margin-top:-6px">Оставшиеся ходы за обоих сыграет автоматика — сразу к результату.</div>'}
+      <div id="fend">${F.done ? `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div>${ibtn('continue', 'fend', '', 'Продолжить')}` : ''}</div></div>
+    ${F.done ? '' : ibtn('ffight', 'fskip', '', 'Досчитать бой') + '<div class="dim" style="text-align:center;font-size:13px;margin-top:4px">Оставшиеся ходы за обоих сыграет автоматика — сразу к результату.</div>'}
     ${mine ? `<div style="height:${MENU.open ? 56 : 14}vh"></div>` : ''}
   </div>${mine ? tbMenu() : ''}`;
 }
@@ -4068,7 +4069,7 @@ function fightLoop() {   // после отрисовки: старт боя, в
       <div class="fwn">${wc ? `<span class="fzfl">${flagOf(wc)}</span>` : ''}<b>${esc(W.name)}</b></div>
       ${wc ? `<div class="dim">${esc(COUNTRIES[wc] || '')}</div>` : ''}
       ${W.beast ? '<div class="dim">Дикий зверь</div>' : `<div class="fwr"><img src="img/rank_${lg2.id}.webp" alt=""><span>${lg2.n}</span><b>${W.rating}</b></div>`}
-      <button class="btn gold" data-a="fend">Продолжить</button></div>`;
+      ${ibtn('continue', 'fend', '', 'Продолжить')}</div>`;
     setTimeout(() => { if (F && F.done && !document.querySelector('.fwin')) document.body.appendChild(ov); }, 900);
   }
 }
@@ -4185,7 +4186,7 @@ function lgCardHtml(r) {
   if (L.phase === 'draft') {
     if (S.league != null) h += `<div class="dim" style="margin-top:8px">Ты уже играешь в лиге ${LSHORT[S.league]}.</div>`;
     else if (!draftOpen(L)) h += '';
-    else if (S.draft === r) h += `<button class="btn here" data-a="ldraft" data-v="${r}">✓ Ты в драфте — выйти</button>`;
+    else if (S.draft === r) h += `${ibtn('draftout', 'ldraft', r, 'Ты в драфте — выйти')}`;
     else h += `<button class="imgbtn" data-a="ldraft" data-v="${r}" aria-label="Встать в драфт"><img src="img/nav/draft.webp" alt=""></button>${S.draft != null ? `<div class="dim" style="margin-top:4px">Вместо драфта ${LSHORT[S.draft]}.</div>` : ''}<div class="dim" style="margin-top:4px">Твой рейтинг: ${S.rating}. ${EU40(r) ? 'Место найдётся для каждого: чем выше рейтинг, тем сильнее команда возьмёт тебя.' : 'Чтобы пройти, нужно обойти Элитных Спектров по рейтингу.'}</div>`;
   } else {
     const t = lgTable(L).slice(0, 5);
@@ -4230,17 +4231,17 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
   if (!m) return '';
   if ((L.wc || L.wf) && G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
     <div class="logo" style="font-size:30px;margin:18px 0 6px">${L.wf ? 'Чемпионат мира!' : 'Играет Wild Card!'}</div><div class="dim">${L.wf ? (m.label || LG_STAGE[m.st]) : `${wcPartNow(L)[0].toUpperCase() + wcPartNow(L).slice(1)} · ${LG_STAGE[m.st] || ''}`}</div>
-    <button class="btn gold" data-a="lgo" style="margin-top:14px">Начать</button></div>`;
+    ${ibtn('lgstart', 'lgo', '', 'Начать')}</div>`;
   if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
     <img src="img/logo_${L.r}.webp" alt="" style="width:120px;height:120px;border-radius:16px;margin:14px auto;display:block">
     <div class="logo" style="font-size:30px">Играет лига ${LSHORT[L.r]}!</div><div class="dim">${esc(REGIONS[L.r].league)} · ${LG_STAGE[m.st]}</div>
-    <button class="btn gold" data-a="lgo" style="margin-top:14px">Начать</button></div>`;
+    ${ibtn('lgstart', 'lgo', '', 'Начать')}</div>`;
   const L1 = lgHum(L, m.a) ? m.a : m.b, R1 = L1 === m.a ? m.b : m.a, mine = m.g.filter(x => x === L1).length;
   return `<div class="card" style="margin-top:16px"><div class="dim">Неделя ${G.week} · ${L.title || 'лига ' + LSHORT[L.r]} · ${L.wf && m.st === 'RR' ? 'Группы' : LG_STAGE[m.st]}${m.label && !L.wc ? ' · ' + esc(m.label) : ''}</div>
     <h3>Матч игрока ${esc(lgTeamName(L, L1))}</h3>
     <div class="tvs"><div>${lgTeamCell(L, L1)}<br>${rateHtml(lgRating(L, L1), 'mid')}</div><div class="tsc">${mine}:${m.g.length - mine}</div><div>${lgTeamCell(L, R1)}<br>${rateHtml(lgRating(L, R1), 'mid')}</div></div>
     <div class="dim" style="text-align:center">Bo${m.bo}${m.bo === 2 ? ' · возможна ничья' : ''} · бой ${m.g.length + 1}</div>
-    <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button><button class="btn" data-a="lsim">Досчитать матч</button></div>
+    <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${ibtn('lgsim', 'lsim', '', 'Досчитать матч')}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
 const VIEWS = { skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
