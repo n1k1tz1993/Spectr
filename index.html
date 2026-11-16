@@ -4054,7 +4054,7 @@ function viewSetup() {
       <div class="crface"><button class="faceone" data-a="sface" aria-label="Сменить портрет">${faceImg(setupFace)}</button><div class="facenav"><button data-a="sfprev" aria-label="Предыдущий портрет">‹</button><span>${setupFace + 1} / ${FACE_COUNT}</span><button data-a="sface" aria-label="Следующий портрет">›</button></div></div>
       <div class="crinfo"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}">
         <div class="dim" style="margin-top:12px">Флаг</div>
-        <div class="flagnav sm"><button data-a="sflag" data-v="-1" aria-label="Предыдущий флаг">‹</button><span><b>${flagOf(setupFlag)}</b>${COUNTRIES[setupFlag]}</span><button data-a="sflag" data-v="1" aria-label="Следующий флаг">›</button></div>
+        <div class="flagnav sm"><button data-a="sflag" data-v="-1" aria-label="Предыдущий флаг">‹</button><span title="${esc(COUNTRIES[setupFlag])}" aria-label="${esc(COUNTRIES[setupFlag])}" style="justify-content:center"><b style="font-size:30px;line-height:1">${flagOf(setupFlag)}</b></span><button data-a="sflag" data-v="1" aria-label="Следующий флаг">›</button></div>
         ${ibtn('rnd', 'srnd', '', 'Случайно', 'crrnd')}</div>
     </div>
     <button class="crabilb" data-a="sabil" aria-label="Случайные способности"><img class="crabil" src="img/nav/cr_abil.webp" alt="Придумай себе суперспособность"><span>🎲 Нажми — и игра придумает способности за тебя</span></button>
