@@ -3193,7 +3193,7 @@ function viewMail() {
   const D = S.mailD, others = G.players.map((H, i) => i).filter(i => i !== G.cur), T = G.players[D.to];
   const own = (S.items || []).slice().sort((a, b) => b - a);
   const has = i => (T.items || []).includes(i) || postFor(D.to).some(P => P.items.some(x => x.i === i));
-  return wrap(`<div class="card"><img src="img/post.webp" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block">
+  return wrap(`<div class="card"><img src="img/post.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
     <h2 style="margin-top:10px">Почта Спектров</h2><div class="dim">Собери посылку: крипта и артефакты. Машины и жильё переслать нельзя. Получатель откроет посылку в начале своего хода. Отправка тратит 1 действие.</div></div>
     <div class="card"><h3>Кому</h3><div class="row" style="gap:6px">${others.map(i => `<button class="btn ${i === D.to ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="mto" data-v="${i}">${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div></div>
     <div class="card"><h3>Крипта</h3><div class="dim">На счету: ${coinHtml(S.coins)}</div>
@@ -3209,11 +3209,11 @@ function viewParcel() {
   const P = postFor(G.cur)[0];
   if (!P) { S.view = 'main'; return viewMain(); }
   const F0 = G.players[P.from];
-  return wrap(`<div class="card" style="text-align:center"><img src="img/parcel.webp" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block">
+  return wrap(`<div class="card" style="text-align:center"><img src="img/parcel.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
     <h2 style="margin-top:10px">Вам посылка!</h2><div class="dim">Почта Спектров доставила посылку от <b>${F0 ? flagOf(F0.country) + ' ' + esc(F0.nick) : 'другого Спектра'}</b>.</div>
     <div style="text-align:left;margin-top:10px">${P.coins ? `<div class="mrow" style="margin-top:6px">${COIN_SVG.replace('class="coin"', 'class="coin" style="width:48px;height:48px"')}<b>${(P.coins | 0).toLocaleString('ru-RU')} крипты</b></div>` : ''}
       ${P.items.map(x => `<div class="mrow" style="margin-top:6px">${artImg(x.i)}<b>${esc(x.n || ITEMS[x.i].n)}</b></div>`).join('')}</div>
-    ${ibtn('receive', 'mget', '', 'Получить')}${postFor(G.cur).length > 1 ? `<div class="dim" style="margin-top:6px">Ещё посылок: ${postFor(G.cur).length - 1}</div>` : ''}</div>`);
+    ${ibtn('receive', 'mget', '', 'Получить посылку')}${postFor(G.cur).length > 1 ? `<div class="dim" style="margin-top:6px">Ещё посылок: ${postFor(G.cur).length - 1}</div>` : ''}</div>`);
 }
 function viewNotice() {
   const N = S.notice;
