@@ -1035,6 +1035,11 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .crrnd{margin-top:12px;text-align:center;padding:10px 8px}
 .skfx{gap:6px}.skfx button{padding:0!important;border:0!important;background:none!important;border-radius:0!important;line-height:0}.skfx button img{width:100%;height:auto;display:block;aspect-ratio:520/205;object-fit:fill}.skfx button:active{transform:scale(.97)}
 .pr-seg .pr-stb{padding:0!important;border:0!important;background:none!important;font-weight:400}.pr-stb img{width:100%;height:auto;display:block;aspect-ratio:400/287;object-fit:fill}.pr-stb small{margin-top:3px;font-size:11.5px!important}.pr-stb:active{transform:scale(.97)}
+.ibtn{all:unset;cursor:pointer;display:block;width:100%;max-width:520px;margin:10px auto 0;position:relative;line-height:0;-webkit-tap-highlight-color:transparent}
+.ibtn img{width:100%;height:auto;display:block}.ibtn .ib1{position:absolute;inset:0;opacity:0;transition:opacity .12s}
+.ibtn:active .ib1{opacity:1}.ibtn:active{transform:scale(.98)}
+.ibtn.ibsm{flex:0 0 42%;margin:0}.ibtn.crrnd{margin-top:12px;padding:0}
+.ibsz{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.ibsz .ibtn{margin:0}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1689,6 +1694,7 @@ const ABIL_LIST = [   // способности соперников: назва
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
 const FACE_COUNT = 71;   // портреты: img/face/0..70.webp (выбор героя и сгенерированные бойцы)
 const tFace = (R, id) => { const p = R.ps[id], f = isHum(R, id) ? G.players[humOf(R, id)].face : (p.img || p.face); return f == null ? '' : `<span class="tvface">${faceImg(f)}</span>`; };   // маленький портрет бойца в карточке матча
+const ibtn = (n, a, v = '', al = '', cls = '') => `<button class="ibtn ${cls}" data-a="${a}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="${al}"><img src="img/btn/${n}_0.webp" alt=""><img class="ib1" src="img/btn/${n}_1.webp" alt=""></button>`;   // нарисованная кнопка: синяя, при нажатии — золотая
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
@@ -2166,7 +2172,7 @@ function viewEsl() {
   const here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
   let h = `<div class="card"><img class="esllogo" src="img/crown.webp" alt="Корона Спектров"><h2>Корона Спектров</h2>
     <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}. Победитель получает медаль Короны Спектров и +200 рейтинга.</div>${prizeRulesHtml({ kind: 'esl' })}</div>
-    <div class="card"><h3>Размер турнира</h3><div class="row" style="flex-wrap:nowrap">${Object.keys(ESL_SIZES).map(k => `<button class="btn ${+k === E.size ? 'here' : ''}" style="text-align:center;margin-top:0" data-a="eslsize" data-v="${k}">${k}</button>`).join('')}</div>
+    <div class="card"><h3>Размер турнира</h3><div class="ibsz">${Object.keys(ESL_SIZES).map(k => `<button class="ibtn" data-a="eslsize" data-v="${k}" aria-label="${k} бойцов"><img src="img/btn/sz${k}_${+k === E.size ? 1 : 0}.webp" alt=""></button>`).join('')}</div>
       <div style="margin-top:8px">Участников: <b class="${over ? 'minus' : full ? 'plus' : ''}">${n} из ${E.size}</b>${over ? ' — убери лишних' : ''}</div>
       <div class="row" style="flex-wrap:nowrap"><button class="btn" data-a="eslfill" style="text-align:center" ${n >= E.size ? 'disabled' : ''}>Дозаполнить</button><button class="btn gold" data-a="eslgo" style="text-align:center" ${full ? '' : 'disabled'}>Начать турнир</button></div>
       ${E.gen.length ? `<div class="dim" style="margin-top:6px">Добрано бойцов: ${E.gen.length}. <a href="#" data-a="eslclear" style="color:var(--gold)">Убрать</a></div>` : ''}</div>`;
@@ -3168,12 +3174,12 @@ function viewOffer() {
     <div class="dim" style="text-align:left">${esc(SEMI_INFO[SEMI_TEAMS[t]] || '')}</div>
     <ul class="offl"><li>Сразу: ${coinHtml(SIGN_COINS)} за подписание</li><li>На полупрофессиональном турнире ты выступаешь под флагом команды: бонус к силе и +50% к призовым</li>
       <li>Условие: за ${SEMI_CT_WEEKS} недели сыграть за команду хотя бы один полупрофессиональный турнир. Иначе бонус за подписание вернётся команде</li><li>Через ${SEMI_CT_WEEKS} недели контракт расторгается</li></ul>
-    <button class="btn gold" data-a="offyes" style="text-align:center">Подписать</button><button class="btn" data-a="offno" style="text-align:center">Отказаться</button></div>`);
+    ${ibtn('sign', 'offyes', '', 'Подписать')}${ibtn('refuse', 'offno', '', 'Отказаться')}</div>`);
 }
 function viewNotice() {
   const N = S.notice;
   return wrap(`<div class="card offer">${N.team != null ? `<img class="offlogo" src="img/team/${SEMI[N.team][1]}.webp" alt="">` : ''}<h2>${esc(N.t)}</h2><p style="text-align:left">${esc(N.d)}</p>
-    <button class="btn gold" data-a="noteok" style="text-align:center">Понятно</button></div>`);
+    ${ibtn('ok', 'noteok', '', 'Понятно')}</div>`);
 }
 const INTRO_COINS = 500;
 function finishTour() {
@@ -3337,7 +3343,7 @@ function viewMain() {
   const rows = S.hand.length
     ? S.hand.map((c, i) => { return `<button class="arow ${c.used ? 'done' : ''}" data-a="card" data-v="${i}" ${c.used ? 'disabled' : ''}>${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div></div><i class="arch">›</i></button>`; }).join('')
     : '<div class="dim">Все действия этой недели выполнены.</div>';
-  const skn = S.skillNew ? `<div class="card" style="border-color:var(--gold)"><h2>Новая система боя</h2><div class="dim">Бои теперь пошаговые. У тебя две способности: обычная с эффектом и разрушительная. Настрой обычную способность.</div><button class="btn gold" data-a="skopen" style="text-align:center">Настроить способность</button></div>` : '';
+  const skn = S.skillNew ? `<div class="card" style="border-color:var(--gold)"><h2>Новая система боя</h2><div class="dim">Бои теперь пошаговые. У тебя две способности: обычная с эффектом и разрушительная. Настрой обычную способность.</div>${ibtn('skset', 'skopen', '', 'Настроить способность')}</div>` : '';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2>${(([st, eta]) => `<div class="dim">Сезон ${seasonNo()} · ${esc(st)}</div><div class="sstat">${esc(eta)}</div>`)(seasonStatus())}
         <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.semi ? `<div class="ctline"><img src="img/team/${SEMI[S.semi.team][1]}.webp" alt=""><span>Контракт: <b>${esc(SEMI_TEAMS[S.semi.team])}</b> · до конца недели ${S.semi.until}${S.semi.worked ? ' · отработан' : ' · нужен полупро-турнир'}</span></div>` : S.league != null ? `<div class="ctline pro"><span>Профессиональная команда · призовые +70%</span></div>` : ''}${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
@@ -3749,7 +3755,7 @@ function viewLib() {
   return wrap(`<div class="card" style="text-align:center">${ni ? `<img class="libimg" src="${ni}" alt="">` : '<img class="libhero" src="img/library.webp" alt="">'}
     <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${capF(effTxt(...LIB_B))}</div></div>
     <button class="btn gold" data-a="dossier" data-v="${S.region}">Досье Элитных Спектров</button>
-    <button class="btn gold" data-a="teams" data-v="${S.region}">Команды лиг</button>${back}`);
+    ${ibtn('teams', 'teams', S.region, 'Команды лиг')}${back}`);
 }
 
 function itemCard(it, i, act, on) {
@@ -3771,13 +3777,13 @@ function viewShop() {   // магазин: только названия и це
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
   const own = (S.items || []).slice().sort((a, b) => b - a);
-  let h = `<div class="card"><h2>Способности</h2><div class="abrow" style="align-items:center">${abilIcon(S.skill.icon)}<div style="flex:1"><b>${esc(S.skill.name)}</b><div class="dim">${effOf(S.skill.eff)[1]} · ${esc(effOf(S.skill.eff)[2])}</div></div></div><div class="abrow" style="align-items:center;margin-top:8px">${abilIcon(S.ability.icon)}<div style="flex:1"><b>${esc(S.ability.name)}</b><div class="dim">Разрушительная</div></div></div><button class="btn" data-a="skopen" style="text-align:center">Изменить способность</button></div><div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
+  let h = `<div class="card"><h2>Способности</h2><div class="abrow" style="align-items:center">${abilIcon(S.skill.icon)}<div style="flex:1"><b>${esc(S.skill.name)}</b><div class="dim">${effOf(S.skill.eff)[1]} · ${esc(effOf(S.skill.eff)[2])}</div></div></div><div class="abrow" style="align-items:center;margin-top:8px">${abilIcon(S.ability.icon)}<div style="flex:1"><b>${esc(S.ability.name)}</b><div class="dim">Разрушительная</div></div></div>${ibtn('skedit', 'skopen', '', 'Изменить способность')}</div><div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
   h += own.map(i => itemCard(ITEMS[i], i, (S.renaming === i
       ? `<input id="iname" maxlength="32" placeholder="${esc(ITEMS[i].n)}" value="${esc((S.iname && S.iname[i]) || '')}" style="margin-top:8px">
-         <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn gold" data-a="iren" data-v="${i}" style="text-align:center">Сохранить</button><button class="btn" data-a="irencancel" style="text-align:center">Отмена</button></div>
+         <div class="row" style="flex-wrap:nowrap;gap:8px">${ibtn('save', 'iren', i, 'Сохранить')}<button class="btn" data-a="irencancel" style="text-align:center">Отмена</button></div>
          <div class="dim" style="font-size:12px">Оставь пустым, чтобы вернуть исходное название.</div>`
-      : `<div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ${S.equip === i ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${S.equip === i ? 'Снять' : 'Надеть'}</button><button class="btn" data-a="irename" data-v="${i}" style="text-align:center;flex:0 0 auto;width:auto">✎ Имя</button></div>`), S.equip === i)).join('');
-  if (!own.length) h += `<button class="btn gold" data-a="shop" style="text-align:center">В магазин</button>`;
+      : `<div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ${S.equip === i ? 'here' : 'gold'}" data-a="iequip" data-v="${i}" style="text-align:center">${S.equip === i ? 'Снять' : 'Надеть'}</button>${ibtn('name', 'irename', i, 'Имя', 'ibsm')}</div>`), S.equip === i)).join('');
+  if (!own.length) h += `${ibtn('shop', 'shop', '', 'В магазин')}`;
   return wrap(h + back);
 }
 function viewDossier() {
@@ -3790,7 +3796,7 @@ function viewDossier() {
       ${(sk => `<div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(sk.icon)}<div><div class="dim" style="font-size:12px">Способность · ${effOf(sk.eff)[1]}</div><b>${esc(sk.name)}</b><div class="dim">${esc(effOf(sk.eff)[2])}</div></div></div>`)(skillOf(one.name, one.abil))}
       <div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(one.abil.icon)}<div><div class="dim" style="font-size:12px">Разрушительная</div><b>${esc(one.abil.name)}</b><div class="dim">${esc(one.abil.desc)}</div></div></div>
       <div style="margin-top:10px">${one.bio ? esc(one.bio) : '<span class="dim">Досье пока не заполнено.</span>'}</div>
-      <button class="btn" data-a="dsel" data-v="-1">К списку</button></div>`;
+      ${ibtn('tolist', 'dsel', -1, 'К списку')}</div>`;
   } else {
     h += `<div class="card"><h3><img class="tlogo" src="img/logo_${r}.webp" alt=""> ${esc(REGIONS[r].league)}</h3>${list.map((f, k) => `<button class="erow" data-a="dsel" data-v="${k}"><span class="ava">${faceImg(f.face)}</span><span style="flex:1;text-align:left"><b>${esc(f.name)}</b> ${flagOf(f.country)}<br><span class="dim" style="font-size:12px">${esc(f.abil.name)}</span></span>${rateHtml(f.rating)}</button>`).join('')}</div>`;
   }
@@ -3909,7 +3915,7 @@ function viewHandoff() {
     <div class="ava" style="width:96px;height:96px;margin:14px auto">${faceImg(S.face)}</div>
     <h2>Ход игрока ${G.cur + 1} из ${n}: ${flagOf(S.country)} ${esc(S.nick)}</h2>
     <div class="dim">Передай телефон игроку ${esc(S.nick)}.</div>
-    ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div><button class="btn gold" data-a="hskip" style="margin-top:10px">Пропустить неделю</button>` : `<button class="imgbtn" data-a="hgo" style="margin-top:14px" aria-label="Начать неделю"><img src="img/nav/startweek.webp" alt=""></button>`}</div>
+    ${S.skipNext ? `<div class="minus" style="margin-top:10px">${esc(S.nick)} вторгся на турнир и пропускает эту неделю.</div>${ibtn('skip', 'hskip', '', 'Пропустить неделю')}` : `<button class="imgbtn" data-a="hgo" style="margin-top:14px" aria-label="Начать неделю"><img src="img/nav/startweek.webp" alt=""></button>`}</div>
     <div class="card"><h3>Игроки</h3><table class="tbl">${G.players.map((H, i) => `<tr><td>${i === G.cur ? '▶' : ''}</td><td>${flagOf(H.country)} ${esc(H.nick)}</td><td>${REGIONS[H.region].city}</td><td style="text-align:right">${rateHtml(H.rating)}</td></tr>`).join('')}</table></div>
     <button class="btn" data-a="menu">Главное меню</button>`;
 }
@@ -3947,7 +3953,7 @@ function viewSkill() {   // настройка способности (стар�
     ${skillEditor(k.name, k.icon, k.eff, 'ke')}
     <div class="sksep"></div><div class="skh">Разрушительная</div><div class="abrow" style="align-items:center">${abilIcon(S.ability.icon)}<div><b>${esc(S.ability.name)}</b><div class="dim">${esc(S.ability.desc || '')}</div></div></div>
     <div class="minus" style="margin-top:8px">${esc(S.skErr || '')}</div>
-    <button class="btn gold" data-a="kesave" style="text-align:center">Сохранить</button></div>`);
+    ${ibtn('save', 'kesave', '', 'Сохранить')}</div>`);
 }
 function viewSetup() {
   const who = SETUP && SETUP.mode === 'coop' ? `<div class="dim">Игрок ${SETUP.made.length + 1} из ${SETUP.n}</div>` : '';
@@ -3957,7 +3963,7 @@ function viewSetup() {
       <div class="crinfo"><div class="dim">Ник</div><input id="nick" maxlength="16" placeholder="Введи ник" value="${esc(setupNick)}">
         <div class="dim" style="margin-top:12px">Флаг</div>
         <div class="flagnav sm"><button data-a="sflag" data-v="-1" aria-label="Предыдущий флаг">‹</button><span><b>${flagOf(setupFlag)}</b>${COUNTRIES[setupFlag]}</span><button data-a="sflag" data-v="1" aria-label="Следующий флаг">›</button></div>
-        <button class="btn gold crrnd" data-a="srnd">🎲 Случайно</button></div>
+        ${ibtn('rnd', 'srnd', '', 'Случайно', 'crrnd')}</div>
     </div>
     <button class="crabilb" data-a="sabil" aria-label="Случайные способности"><img class="crabil" src="img/nav/cr_abil.webp" alt="Придумай себе суперспособность"><span>🎲 Нажми — и игра придумает способности за тебя</span></button>
     ${skillEditor(setupSName, setupSIcon, setupEff, 'sk')}
@@ -4010,11 +4016,11 @@ const MENU = { open: true };
 function tbMenu() {   // всплывающее меню хода: стойки, все действия с описанием и уроном, все расходники с описанием
   const x = F[F.cur], y = tbOpp(x), ef = effOf(x.skill.eff), its = tbItems(x);
   const acts = [
-    ['series', '<span class="pr-emo">👊</span>', 'Серия ударов', '5 ударов подряд, любой может промахнуться или стать критом.', `≈ ${tbRange(x, y, TB.series, TB.hit(x.p))}`, `+${TB.qiSeries}`, true],
+    ['series', '<img src="img/btn/ic_series.webp" alt="">', 'Серия ударов', '5 ударов подряд, любой может промахнуться или стать критом.', `≈ ${tbRange(x, y, TB.series, TB.hit(x.p))}`, `+${TB.qiSeries}`, true],
     ['abil', abilIcon(x.skill.icon), x.skill.name, `${ef[1]}: ${ef[2].charAt(0).toLowerCase() + ef[2].slice(1)}.${x.st.seal ? ' Сейчас под печатью.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.abilHits, { pierce: x.skill.eff === 'pierce', k: x.skill.eff === 'pierce' ? TB.e.pierce : 1, sure: true })}`, `−${TB.qiAbil}`, canAbil(x)],
     ['ult', abilIcon(x.abil.icon), x.abil.name, `Разрушительная: самый сильный удар, один раз за бой.${x.ultUsed ? ' Уже использована.' : x.qi < TB.qiUlt ? ' Цы не хватает — после удара истощение и пропуск хода.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.ultHits, { sure: true })}`, `−${TB.qiUlt}`, canUlt(x)],
-    ['def', '<span class="pr-emo">🛡</span>', 'Защита', `Блокирует ${Math.round(TB.defBlock * 100)}% урона следующего хода соперника.`, '', `−${TB.qiDef}`, x.qi >= TB.qiDef],
-    ['conc', '<span class="pr-emo">🧘</span>', 'Концентрация Цы', 'Восстанавливает Цы, но в этот ход получаешь +15% урона.', '', `+${TB.qiConc}`, true],
+    ['def', '<img src="img/btn/ic_def.webp" alt="">', 'Защита', `Блокирует ${Math.round(TB.defBlock * 100)}% урона следующего хода соперника.`, '', `−${TB.qiDef}`, x.qi >= TB.qiDef],
+    ['conc', '<img src="img/btn/ic_conc.webp" alt="">', 'Концентрация Цы', 'Восстанавливает Цы, но в этот ход получаешь +15% урона.', '', `+${TB.qiConc}`, true],
   ];
   return `<div class="pr-menu ${MENU.open ? '' : 'min'}">
     <div class="pr-mh"><div><small>${F.a.me && F.b.me ? 'Ход игрока' : 'Твой ход'}</small><b>Ходит ${esc(x.name)}</b></div>
@@ -4142,7 +4148,7 @@ function wfCardHtml() {   // карточка чемпионата мира в �
   if (!G.wf && !G.wfLast) return '';
   const L = G.wf, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
   return `<div class="card"><h3>Чемпионат мира</h3><div class="dim">${L ? `Идёт чемпионат мира: 16 бойцов, ${['групповой этап, 1-й круг', 'групповой этап, 1-й круг', 'групповой этап, 2-й круг', 'групповой этап, 2-й круг', 'четвертьфинал', 'полуфинал', 'финал'][L.block] || 'финал'}.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Чемпион мира сезона ${G.wfLast.season}: ${esc(G.wfLast.champ)} (${esc(G.wfLast.team)}).`}</div>
-    ${L ? `<button class="btn" data-a="wfview" style="text-align:center">Чемпионат мира</button>` : ''}</div>`;
+    ${L ? `${ibtn('wf', 'wfview', '', 'Чемпионат мира')}` : ''}</div>`;
 }
 function viewWF() {
   const L = G.wf;
@@ -4157,7 +4163,7 @@ function wcCardHtml() {   // карточка Wild Card в бюро
   const L = G.wc, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
   const pend = G.wcPool ? REGIONS.filter((_, r) => !G.wcPool[r]).map((_, r) => LSHORT[r]) : [];
   return `<div class="card"><h3>Wild Card</h3><div class="dim">${L ? `Идёт турнир: ${wcPartNow(L)}, ${L.teams.length} бойцов.${me ? ' <b class="gold">Ты участвуешь!</b>' : ''}` : `Прошлый Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}).`}</div>
-    ${L ? `<button class="btn" data-a="wcview" style="text-align:center">Сетка Wild Card</button>` : ''}</div>`;
+    ${L ? `${ibtn('wc', 'wcview', '', 'Сетка Wild Card')}` : ''}</div>`;
 }
 const wcQualN = L => { let B = 1; while (B < L.n2 + 1) B *= 2; return Math.max(0, B - L.n2); };
 function viewWC() {
