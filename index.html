@@ -1033,6 +1033,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .abrow .iconone{flex:0 0 64px;width:64px;height:64px}
 .crface .facenav{gap:4px}.crface .facenav button{width:34px;flex:0 0 34px}.crface .facenav span{white-space:nowrap;font-size:13px}
 .crrnd{margin-top:12px;text-align:center;padding:10px 8px}
+.skfx{gap:6px}.skfx button{padding:0!important;border:0!important;background:none!important;border-radius:0!important;line-height:0}.skfx button img{width:100%;height:auto;display:block;aspect-ratio:520/205;object-fit:fill}.skfx button:active{transform:scale(.97)}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -3937,8 +3938,7 @@ function skillEditor(name, icon, eff, pre) {   // обычная способн�
         <div class="facenav" style="max-width:200px"><button data-a="${pre}icon" data-v="-1" aria-label="Предыдущая иконка">‹</button><span>Иконка ${icon + 1} / ${ABIL_ICON_COUNT}</span><button data-a="${pre}icon" data-v="1" aria-label="Следующая иконка">›</button></div></div>
     </div>
     <div class="dim" style="margin-top:10px">Эффект · тратит ${TB.qiAbil} Цы, можно применять каждый ход</div>
-    <div class="skfx">${EFFECTS.map(e => `<button class="${e[0] === eff ? 'on' : ''}" data-a="${pre}eff" data-v="${e[0]}">${e[1]}</button>`).join('')}</div>
-    <div class="skdesc"><b>${effOf(eff)[1]}:</b> ${effOf(eff)[2].charAt(0).toLowerCase() + effOf(eff)[2].slice(1)}.</div>`;
+    <div class="skfx">${EFFECTS.map(e => `<button class="${e[0] === eff ? 'on' : ''}" data-a="${pre}eff" data-v="${e[0]}" aria-label="${e[1]}: ${e[2]}"><img src="img/eff/${e[0]}_${e[0] === eff ? 1 : 0}.webp" alt="${e[1]}"></button>`).join('')}</div>`;
 }
 function viewSkill() {   // настройка способности (старые сохранения и смена в профиле)
   const k = S.skEdit || (S.skEdit = { ...S.skill });
