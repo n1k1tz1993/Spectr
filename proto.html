@@ -1029,8 +1029,8 @@ html.land .fy{margin-left:0;margin-right:0}
 'use strict';
 // ===================== ПРАВИЛА (все цифры здесь — удобно подкручивать) =====================
 const R = {
-  hp: p => Math.round(1300 * Math.exp(0.003 * (p - 50))),   // запас HP от силы
-  hit: p => 40 * Math.exp(0.006 * (p - 50)),                // урон одного удара серии от силы
+  hp: p => Math.round(1300 * Math.exp(0.008 * (p - 50))),   // запас HP от силы
+  hit: p => 40 * Math.exp(0.008 * (p - 50)),                // урон одного удара серии от силы
   series: 5, miss: 0.10, crit: 0.12, critK: 1.6, spread: 0.15,
   abilHits: 4.2,          // способность ≈ 4.2 удара (≈13%)
   ultHits: 12,            // разрушительная ≈ 12 ударов (≈37%)
@@ -1040,6 +1040,7 @@ const R = {
   concTaken: 1.15,         // Концентрация: в этот круг получаешь +15%
   exhaustTaken: 1.20, exhaustQi: 20,
   stance: { bal: { d: 1, t: 1 }, rage: { d: 1.3, t: 1.3 }, def: { d: 0.75, t: 0.75 } },
+  it: { stim: 0.12, gren: 0.08, batt: 25, rage: 0.27, rageIn: 0.18, ins: 0.15, vamp: 0.36, smoke: 0.55, crit: 0.75 },   // сила расходников
   fatigueFrom: 8, fatigue: 0.05, init: 40,
   e: { stun: 0.4, drain: 25, drainSelf: 10, wound: 0.03, heal: 0.075, barrier: 0.09, mark: 1.35, weak: 0.70, reflect: 0.4, pierce: 1.3, seal: 2 },   // сила эффектов
 };
@@ -1057,16 +1058,15 @@ const EFFECTS = [
   ['seal', 'Печать', 'Соперник 2 хода не может применять способности и разрушительную'],
 ];
 const ITEMS = [
-  ['ins', 'Инсайдерские данные', 'Следующее действие: удары не промахиваются и +8% урона'],
-  ['stim', 'Стимулятор', 'Лечит 7% HP'],
-  ['smoke', 'Дымовая шашка', 'Следующий ход соперника: каждый удар промахивается с шансом +35%'],
-  ['gren', 'Граната «Разлом»', 'Мгновенно наносит 4.5% HP соперника'],
-  ['batt', 'Рудная батарея', '+15 Цы'],
-  ['rage', 'Сыворотка «Ярость»', 'До твоего следующего хода: наносишь +15%, получаешь +10%'],
-  ['vamp', 'Кровавый кристалл', 'Этот ход: лечишь 20% нанесённого урона'],
-  ['crit', 'Линза фокуса', 'Этот ход: шанс крита 60%'],
+  ['ins', 'Инсайдерские данные', 'Следующее действие: удары не промахиваются и +15% урона'],
+  ['stim', 'Стимулятор', 'Лечит 12% HP'],
+  ['smoke', 'Дымовая шашка', 'Следующий ход соперника: каждый удар промахивается с шансом +55%'],
+  ['gren', 'Граната «Разлом»', 'Мгновенно наносит 8% HP соперника'],
+  ['batt', 'Рудная батарея', '+25 Цы'],
+  ['rage', 'Сыворотка «Ярость»', 'До твоего следующего хода: наносишь +27%, получаешь +18%'],
+  ['vamp', 'Кровавый кристалл', 'Этот ход: лечишь 36% нанесённого урона'],
+  ['crit', 'Линза фокуса', 'Этот ход: шанс крита 75%'],
 ];
-const PERS = { agr: 'Агрессор', tac: 'Тактик', cau: 'Осторожный' };
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1074,20 +1074,20 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 // ===================== СОСТОЯНИЕ =====================
 let CFG = {
   me: { name: 'N1K', country: 'RU', face: 5, p: 70, abName: 'Песчаный шторм', abIcon: 12, eff: 'mark', ultName: 'Разрыв реальности', ultIcon: 40, items: ITEMS.map(i => i[0]) },
-  op: { name: 'Fak3r', country: 'KR', face: 23, p: 76, eff: 'stun', pers: 'tac', skill: 0.8, items: ['stim', 'gren', 'batt'] },
+  op: { name: 'Fak3r', country: 'KR', face: 23, p: 76, eff: 'stun', skill: 0.8, items: ['stim', 'gren', 'batt'] },
 };
 let B = null, VIEW = 'setup', BUSY = false, SEL = null;
 
 function mkF(c, me) {
   const hp = R.hp(c.p);
-  return { me, name: c.name, country: c.country, rating: Math.round(c.p * 30), face: c.face, p: c.p, hpMax: hp, hp, qi: R.qiStart, stance: me ? 'bal' : (c.pers === 'agr' ? 'rage' : c.pers === 'cau' ? 'def' : 'bal'),
+  return { me, name: c.name, country: c.country, rating: Math.round(c.p * 30), face: c.face, p: c.p, hpMax: hp, hp, qi: R.qiStart, stance: 'bal', stCd: rnd(1, 2),
     eff: c.eff, abName: c.abName || EFFECTS.find(e => e[0] === c.eff)[1], abIcon: c.abIcon ?? 7, ultName: c.ultName || 'Разрушительный удар', ultIcon: c.ultIcon ?? 33,
-    pers: c.pers || 'tac', skill: c.skill ?? 0.7, items: [...(c.items || [])], used: {}, ultUsed: false, turns: 0,
+    skill: c.skill ?? 0.7, items: [...(c.items || [])], used: {}, ultUsed: false, turns: 0,
     st: {}, defend: false, conc: false, exhausted: false, itemTurn: false, tmp: {} };
 }
 function newBattle(sim) {
   const a = mkF(CFG.me, true), b = mkF(CFG.op, false);
-  if (sim) { a.me = false; a.pers = CFG.simPers || 'tac'; a.skill = 0.7; }
+  if (sim) { a.me = false; a.skill = 0.7; }
   const sa = a.p + Math.random() * R.init, sb = b.p + Math.random() * R.init;   // кто ходит первым: сила + случай
   return { a, b, cur: sa >= sb ? 'a' : 'b', round: 0, log: [], done: false, win: null, sim: !!sim };
 }
@@ -1097,10 +1097,10 @@ const nameCls = (B, x) => x === B.a ? 'a' : 'b';
 // ===================== МЕХАНИКА =====================
 function log(t, cls = '') { if (!B.sim) B.log.push([t, cls]); }
 function fl(x, txt, cls) { if (B.sim) return; const el = document.getElementById('pic-' + nameCls(B, x)); if (!el) return; const d = document.createElement('div'); d.className = 'float ' + cls; d.textContent = txt; el.appendChild(d); setTimeout(() => d.remove(), 1100); }
-function dealtMul(x) { let m = R.stance[x.stance].d; if (x.st.weak) m *= R.e.weak; if (x.tmp.rage || x.st.rageItem) m *= 1.15; if (x.tmp.ins) m *= 1.08; return m; }
+function dealtMul(x) { let m = R.stance[x.stance].d; if (x.st.weak) m *= R.e.weak; if (x.tmp.rage || x.st.rageItem) m *= 1 + R.it.rage; if (x.tmp.ins) m *= 1 + R.it.ins; return m; }
 function takenMul(y, pierce) {
   let m = pierce ? Math.max(1, R.stance[y.stance].t) : R.stance[y.stance].t;
-  if (y.st.mark) m *= R.e.mark; if (y.conc) m *= R.concTaken; if (y.exhausted) m *= R.exhaustTaken; if (y.st.rageItem) m *= 1.1;
+  if (y.st.mark) m *= R.e.mark; if (y.conc) m *= R.concTaken; if (y.exhausted) m *= R.exhaustTaken; if (y.st.rageItem) m *= 1 + R.it.rageIn;
   if (y.defend && !pierce) m *= 1 - R.defBlock;
   return m;
 }
@@ -1108,17 +1108,17 @@ function applyDmg(x, y, raw) {   // raw уже с множителями; щит
   let d = Math.max(1, Math.round(raw));
   if (y.st.barrier > 0) { const ab = Math.min(y.st.barrier, d); y.st.barrier -= ab; d -= ab; if (y.st.barrier <= 0) delete y.st.barrier; if (ab) log(`${y.name}: щит поглотил ${ab}.`, 'dim'); }
   y.hp = Math.max(0, y.hp - d);
-  if (x.tmp.vamp && d > 0) { const h = Math.round(d * 0.2); x.hp = Math.min(x.hpMax, x.hp + h); x.tmp.vampSum = (x.tmp.vampSum || 0) + h; }
+  if (x.tmp.vamp && d > 0) { const h = Math.round(d * R.it.vamp); x.hp = Math.min(x.hpMax, x.hp + h); x.tmp.vampSum = (x.tmp.vampSum || 0) + h; }
   return d;
 }
 function strikes(x, y, n, base, opt = {}) {   // серия ударов / способность / разрушительная
   let total = 0, crits = 0, misses = 0;
   const mul = dealtMul(x) * takenMul(y, opt.pierce) * (opt.k || 1);
   for (let i = 0; i < n; i++) {
-    const missP = x.tmp.ins ? 0 : R.miss + (y.st.smoke ? 0.35 : 0);
+    const missP = x.tmp.ins ? 0 : R.miss + (y.st.smoke ? R.it.smoke : 0);
     if (!opt.sure && Math.random() < missP) { misses++; y.qi = Math.min(R.qiMax, y.qi + R.qiCritDodge); continue; }
     let h = base * (1 - R.spread + Math.random() * 2 * R.spread) * mul;
-    if (Math.random() < (x.tmp.crit ? 0.6 : R.crit)) { h *= R.critK; crits++; x.qi = Math.min(R.qiMax, x.qi + R.qiCritDodge); }
+    if (Math.random() < (x.tmp.crit ? R.it.crit : R.crit)) { h *= R.critK; crits++; x.qi = Math.min(R.qiMax, x.qi + R.qiCritDodge); }
     total += applyDmg(x, y, h);
   }
   return { total, crits, misses };
@@ -1169,9 +1169,9 @@ function effect(x, y) {
 function useItem(x, k) {
   if (x.used[k] || x.itemTurn || !x.items.includes(k)) return false;
   const y = opp(B, x); x.used[k] = true; x.itemTurn = true; const it = ITEMS.find(i => i[0] === k);
-  if (k === 'stim') { const h = Math.round(x.hpMax * 0.07); x.hp = Math.min(x.hpMax, x.hp + h); fl(x, '+' + h, 'heal'); }
-  else if (k === 'gren') { const d = applyDmg(x, y, y.hpMax * 0.045); fl(y, '−' + d, 'dmg'); }
-  else if (k === 'batt') { x.qi = Math.min(R.qiMax, x.qi + 15); fl(x, '+15 Цы', 'info'); }
+  if (k === 'stim') { const h = Math.round(x.hpMax * R.it.stim); x.hp = Math.min(x.hpMax, x.hp + h); fl(x, '+' + h, 'heal'); }
+  else if (k === 'gren') { const d = applyDmg(x, y, y.hpMax * R.it.gren); fl(y, '−' + d, 'dmg'); }
+  else if (k === 'batt') { x.qi = Math.min(R.qiMax, x.qi + R.it.batt); fl(x, '+' + R.it.batt + ' Цы', 'info'); }
   else if (k === 'smoke') x.st.smoke = 1;   // ты в дыму — соперник мажет
   else if (k === 'rage') x.st.rageItem = 1;
   else x.tmp[k] = true;   // ins, vamp, crit — на это действие
@@ -1225,11 +1225,8 @@ function aiTurn(x) {
   if (B.done) return;
   const y = opp(B, x), sk = x.skill, hpR = x.hp / x.hpMax, oR = y.hp / y.hpMax;
   // стойка
-  let st = x.pers === 'agr' ? 'rage' : x.pers === 'cau' ? 'def' : 'bal';
-  if (hpR < 0.3 && Math.random() < sk) st = 'def';
-  if (y.exhausted && Math.random() < sk) st = 'rage';
-  if (oR < 0.25 && Math.random() < sk) st = 'rage';
-  x.stance = st;
+  // стойка: бот меняет её случайно раз в 2–3 своих хода — игроку приходится подстраиваться
+  if (--x.stCd <= 0) { x.stance = pick(STANCES.map(s => s[0]).filter(k => k !== x.stance)); x.stCd = rnd(2, 3); log(`${x.name} меняет стойку: ${STANCES.find(s => s[0] === x.stance)[2]}.`, 'dim'); }
   aiItems(x, y); if (B.done) return;
   // действие
   const dumb = Math.random() > sk;   // у слабых ботов чаще случайный выбор
@@ -1239,12 +1236,12 @@ function aiTurn(x) {
   else if (dumb) act = pick(['series', 'series', canAbil(x) ? 'abil' : 'series', x.qi < 40 ? 'conc' : 'series', canUlt(x) && x.qi >= R.qiUlt ? 'ult' : 'series']);
   else {
     const threat = !y.ultUsed && y.qi + R.qiTurn >= R.qiUlt;
-    if (threat && x.qi >= R.qiDef + 5 && hpR < 0.7 && Math.random() < 0.55 + 0.3 * (x.pers === 'cau')) act = 'def';
-    else if (canUlt(x) && x.qi >= R.qiUlt && (x.pers === 'agr' || oR < 0.6 || hpR < 0.45)) act = 'ult';
+    if (threat && x.qi >= R.qiDef + 5 && hpR < 0.7 && Math.random() < 0.6) act = 'def';
+    else if (canUlt(x) && x.qi >= R.qiUlt && (oR < 0.6 || hpR < 0.45 || Math.random() < 0.3)) act = 'ult';
     else if (x.qi < 25 && !(canUlt(x) && oR < 0.3)) act = 'conc';
     else if (canAbil(x)) {
       const useful = { heal: hpR < 0.65, barrier: threat || hpR < 0.6, drain: y.qi >= 45, mark: !y.st.mark, weak: !y.st.weak, wound: !y.st.wound, stun: true, pierce: y.defend || y.stance === 'def', reflect: threat, seal: threat }[x.eff];
-      act = useful && (x.qi - R.qiAbil >= 15 || x.pers === 'tac') && Math.random() < (x.pers === 'tac' ? 0.8 : 0.5) ? 'abil' : 'series';
+      act = useful && Math.random() < 0.75 ? 'abil' : 'series';
     } else act = 'series';
   }
   if (act === 'abil' && !canAbil(x)) act = 'series';
@@ -1287,7 +1284,7 @@ function viewSetup() {
   <div class="card"><h2>Соперник (бот)</h2>
     <div class="pr-row"><div><label class="pr-l">Ник</label><input class="pr-in" id="on" value="${esc(o.name)}"></div><div><label class="pr-l">Страна</label><select class="pr-in" id="oc">${cs.replace(`value="${o.country}" KSEL`, `value="${o.country}" selected`).replace(/ KSEL/g, '')}</select></div></div>
     <label class="pr-l">Сила: <b id="opv">${o.p}</b></label><input type="range" min="30" max="90" value="${o.p}" id="op" style="width:100%">
-    <div class="pr-row"><div><label class="pr-l">Характер</label><select class="pr-in" id="ope">${Object.entries(PERS).map(([k, v]) => `<option value="${k}" ${k === o.pers ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+    <div class="pr-row">
     <div><label class="pr-l">Эффект</label><select class="pr-in" id="oef">${EFFECTS.map(e => `<option value="${e[0]}" ${e[0] === o.eff ? 'selected' : ''}>${e[1]}</option>`).join('')}</select></div></div>
     <label class="pr-l">Мастерство бота: <b id="osv">${Math.round(o.skill * 100)}%</b> (насколько точно читает бой)</label><input type="range" min="0" max="100" value="${Math.round(o.skill * 100)}" id="os" style="width:100%">
     <label class="pr-l">Расходники бота</label><div class="pr-its">${ITEMS.map(i => `<button class="${o.items.includes(i[0]) ? '' : 'off'}" data-oi="${i[0]}" title="${i[1]}"><img src="img/shop/${i[0]}.webp"></button>`).join('')}</div>
@@ -1380,7 +1377,7 @@ function readSetup() {
   const v = id => document.getElementById(id);
   if (!v('mn')) return;
   Object.assign(CFG.me, { name: v('mn').value || 'Игрок', country: v('mc').value, p: +v('mp').value, abName: v('an').value || 'Способность', ultName: v('un').value || 'Разрушительный удар' });
-  Object.assign(CFG.op, { name: v('on').value || 'Бот', country: v('oc').value, p: +v('op').value, pers: v('ope').value, eff: v('oef').value, skill: +v('os').value / 100 });
+  Object.assign(CFG.op, { name: v('on').value || 'Бот', country: v('oc').value, p: +v('op').value, eff: v('oef').value, skill: +v('os').value / 100 });
 }
 function startBattle() { document.querySelectorAll('.fwin').forEach(e => e.remove()); shownWin = false; MENU_OPEN = true; B = newBattle(false); VIEW = 'fight'; render(); setTimeout(startTurn, 400); window.scrollTo(0, 0); }
 document.addEventListener('input', e => {
