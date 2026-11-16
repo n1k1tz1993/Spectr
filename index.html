@@ -1169,7 +1169,7 @@ const picOf = c => IMGBY[c.t] || '';
 // большие картинки событий (4:3, комикс 1–4 панели): img/evt/<ключ>.webp — пока их нет, показывается миниатюра
 const bigOf = c => { const m = picOf(c).match(/img\/act\/(.+)\.webp$/); return m ? `img/evt/${m[1]}.webp` : ''; };
 // внутри действия — своя картинка img/evt/<key>.webp; пока её нет — заглушка (иконки действий только в меню выбора)
-const evtImg = c => `<div class="evtph"><span>${esc(c.t)}</span>${bigOf(c) ? `<img class="big" src="${bigOf(c)}" alt="" onerror="this.remove()">` : ''}</div>`;
+const evtImg = c => `<div class="evtph"><span>${esc(c.t)}</span>${bigOf(c) ? `<img class="big" src="${bigOf(c)}" alt="" onerror="if(this.dataset.f){this.remove()}else{this.dataset.f=1;this.style.objectPosition='50% 40%';this.src='${picOf(c)}'}">` : ''}</div>`;
 // описания действий: рассказывают мир Спектров (ключ — как у картинки)
 const EVT_DESC = {
   "r0_0": "Вечеринка на крыше нью-йоркского небоскрёба собрала звёзд лиги USA. Здесь рождаются союзы, слухи и контракты — а ты уходишь домой с ощущением, что следующая неделя будет твоей.",
