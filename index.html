@@ -1034,6 +1034,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .crface .facenav{gap:4px}.crface .facenav button{width:34px;flex:0 0 34px}.crface .facenav span{white-space:nowrap;font-size:13px}
 .crrnd{margin-top:12px;text-align:center;padding:10px 8px}
 .skfx{gap:6px}.skfx button{padding:0!important;border:0!important;background:none!important;border-radius:0!important;line-height:0}.skfx button img{width:100%;height:auto;display:block;aspect-ratio:520/205;object-fit:fill}.skfx button:active{transform:scale(.97)}
+.pr-seg .pr-stb{padding:0!important;border:0!important;background:none!important;font-weight:400}.pr-stb img{width:100%;height:auto;display:block;aspect-ratio:400/287;object-fit:fill}.pr-stb small{margin-top:3px;font-size:11.5px!important}.pr-stb:active{transform:scale(.97)}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -4022,7 +4023,7 @@ function tbMenu() {   // всплывающее меню хода: стойки,
     <button class="pr-autob" data-a="fauto">🤖 Автоход <small>— ход сделает автоматика</small></button>
     <div class="pr-mb">
       <h4>Стойка <small>— бесплатно, держится, пока не сменишь</small></h4>
-      <div class="pr-seg">${STANCES.map(s => `<button class="${x.stance === s[0] ? 'on' : ''}" data-a="fst" data-v="${s[0]}">${s[1]} ${s[2]}<small>наносишь / получаешь<br>${s[3]}</small></button>`).join('')}</div>
+      <div class="pr-seg">${STANCES.map(s => `<button class="pr-stb ${x.stance === s[0] ? 'on' : ''}" data-a="fst" data-v="${s[0]}" aria-label="Стойка ${s[2]}"><img src="img/stance/${s[0]}_${x.stance === s[0] ? 1 : 0}.webp" alt="${s[2]}"><small>${s[3]}</small></button>`).join('')}</div>
       <h4>Действие <small>— заканчивает ход</small></h4>
       <div class="pr-acts">${acts.map(([k, ic, n, d, dmg, c, ok]) => `<button class="pr-act ${ok ? '' : 'dis'} ${k === 'ult' ? 'ult' : ''}" data-a="fact" data-v="${k}" ${ok ? '' : 'disabled'}><span class="pr-ic">${ic}</span><span class="pr-tx"><b>${esc(n)}</b><small>${d}</small>${dmg ? `<em>Урон ${dmg}</em>` : ''}</span><span class="pr-cost"><b>${c}</b>Цы</span></button>`).join('')}</div>
       <h4>Расходники <small>— один за ход, ход не заканчивает</small></h4>
