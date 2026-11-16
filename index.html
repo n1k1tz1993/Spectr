@@ -968,6 +968,64 @@ html.land .fyl .flog{height:auto}
 html.land .fy{margin-left:0;margin-right:0}
 .fyc{padding:0 2px}
 .fyb em{min-width:0}
+/* пошаговый бой */
+html.land .pr-st{grid-column:1/-1}
+
+.fyc.pr-turn .fyp{box-shadow:0 0 0 3px rgba(255,255,255,.35),0 0 22px rgba(50,200,240,.55)}
+.fyc.fb.pr-turn .fyp{box-shadow:0 0 0 3px rgba(255,255,255,.35),0 0 22px rgba(240,96,90,.6)}
+.fyp>img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.pr-stance{position:absolute;left:6px;top:6px;z-index:2;font-size:11.5px;font-weight:800;padding:2px 7px;border-radius:8px;background:rgba(10,16,32,.85);border:1px solid #fff3}
+.pr-st{display:flex;flex-wrap:wrap;gap:4px;min-height:20px}
+.pr-st span{font-size:11px;padding:2px 6px;border-radius:8px;background:#22304F;border:1px solid #37507E;white-space:nowrap}
+.pr-st span.bad{background:#3A1E26;border-color:#7A3A46}.pr-st span.good{background:#1C3A2A;border-color:#3A7A55}
+.pr-float{position:absolute;left:50%;top:45%;z-index:4;transform:translate(-50%,-50%);font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-size:30px;font-weight:900;text-shadow:0 2px 6px #000;pointer-events:none;white-space:nowrap;animation:prfl 1.1s ease-out forwards}
+.pr-float.heal{color:#8BF0A0}.pr-float.dmg{color:#FFB3A8}.pr-float.info{color:#FFE7A3;font-size:20px}
+@keyframes prfl{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-120%) scale(1)}}
+.pr-turnb{text-align:center;font-weight:800;padding:8px;border-radius:12px;border:1px solid var(--line);background:#0C1428;color:var(--dim)}
+.pr-turnb.me{border-color:var(--cA,#32C8F0);color:#9FE4FF}.pr-turnb.op{border-color:#F0605A;color:#FFB8B0}
+.fyl .flog{height:150px}
+/* всплывающее меню хода */
+.pr-menu{position:fixed;left:0;right:0;bottom:0;z-index:60;max-width:560px;margin:0 auto;max-height:62vh;display:flex;flex-direction:column;border-radius:18px 18px 0 0;border:2px solid #E9C46A;border-bottom:0;background:linear-gradient(#141E3A,#0B1226);box-shadow:0 -10px 30px rgba(0,0,0,.6),0 0 24px rgba(233,196,106,.25);animation:prup .3s ease-out}
+@keyframes prup{from{transform:translateY(100%)}}
+.pr-mh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(233,196,106,.3)}
+.pr-mh small{display:block;color:var(--dim);font-size:12px}.pr-mh b{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:20px;color:#FFE7A3;letter-spacing:.02em}
+.pr-tog{all:unset;cursor:pointer;font-size:13px;color:var(--gold);padding:6px 10px;border:1px solid rgba(233,196,106,.5);border-radius:10px}
+.pr-mb{overflow:auto;padding:4px 12px 16px}
+.pr-menu.min .pr-mb{display:none}
+.pr-mb h4{margin:12px 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:#E9C46A}.pr-mb h4 small{text-transform:none;letter-spacing:0;color:var(--dim);font-weight:400}
+.pr-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pr-seg button{all:unset;cursor:pointer;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:#1A2540;font-size:13px;font-weight:700}
+.pr-seg button small{display:block;font-weight:400;color:var(--dim);font-size:11px}.pr-seg button.on{border-color:var(--gold);background:#2E2A18}
+.pr-acts{display:grid;gap:6px}
+.pr-act{all:unset;cursor:pointer;display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:#1A2540}
+.pr-act:active{transform:scale(.98)}
+.pr-ic{width:46px;height:46px;border-radius:10px;overflow:hidden;display:grid;place-items:center;background:#0E1730}.pr-ic img{width:100%;height:100%}.pr-emo{font-size:26px}
+.pr-tx b{display:block;font-size:15px}.pr-tx small{display:block;color:var(--dim);font-size:12px;line-height:1.3}.pr-tx em{display:block;font-style:normal;font-size:12px;color:#FFB3A8;margin-top:2px}
+.pr-cost{text-align:right;font-size:11px;color:var(--dim);white-space:nowrap}.pr-cost b{display:block;font-size:16px;color:#5FE7FF}
+.pr-act.dis{opacity:.35;cursor:default}.pr-act.ult{border-color:#A0702A;background:linear-gradient(90deg,#2E2412,#1A2540)}
+.pr-itl{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pr-it{all:unset;cursor:pointer;display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;padding:6px;border-radius:10px;border:1px solid rgba(233,196,106,.55);background:#141F38}
+.pr-it img{width:40px;height:40px;border-radius:6px}.pr-it b{display:block;font-size:12.5px;line-height:1.2}.pr-it small{display:block;font-size:11px;color:var(--dim);line-height:1.25}
+.pr-it.off{opacity:.35;cursor:default;border-color:#444}
+
+
+.pr-autob{all:unset;cursor:pointer;display:block;margin:8px 12px 2px;padding:8px;text-align:center;border-radius:10px;border:1px solid rgba(50,200,240,.6);background:#10223A;color:#9FE4FF;font-weight:700;font-size:14px}.pr-autob small{font-weight:400;color:var(--dim)}
+.pr-mini .a span{color:#9FE4FF}
+.pr-mini .b span{color:#FFB8B0}
+.pr-mini .h u{background:#5BDB6A}
+.pr-mini .q u{background:#3FCBF2}
+.pr-mini div{display:grid;grid-template-columns:52px 1fr;gap:1px 6px;align-items:center}
+.pr-mini em{display:none}
+.pr-mini i{display:block;height:5px;border-radius:3px;background:#1A2540;overflow:hidden}
+.pr-mini span{grid-row:span 2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.pr-mini u{display:block;height:100%}
+.pr-mini{flex:1;min-width:0;display:grid;gap:4px;font-size:11px}
+
+.skh{font-weight:800;color:var(--gold);margin:12px 0 8px;font-size:15px}.sksep{height:1px;background:var(--line);margin:16px 0 4px}
+.skfx{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.skfx button{all:unset;cursor:pointer;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--nest);font-size:12px;color:var(--dim);line-height:1.3}
+.skfx button b{display:block;font-size:14px;color:var(--txt)}.skfx button.on{border-color:var(--gold);background:#2A2A1C}
+html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-template-columns:1fr 1fr}html.land .pr-itl{grid-template-columns:repeat(4,1fr)}html.land .pr-mb h4{margin:8px 0 4px}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1322,6 +1380,7 @@ function fixHero(v) {   // старые сохранения героя
   if (v.cars && v.cars.length && v.garage == null) v.garage = v.cars.slice().sort((a, b) => (CARS[b] ? CARS[b].a * 1e5 + CARS[b].cost : 0) - (CARS[a] ? CARS[a].a * 1e5 + CARS[a].cost : 0))[0];
   if (!v.ability) v.ability = { name: 'Спектральный удар', desc: '', icon: 0 };
   if (v.face == null) v.face = 0;
+  if (!v.skill) { v.skill = skillOf(v.nick); v.skillNew = true; }   // пошаговый бой: у старых героев обычная способность выбирается заново
   relocHand(v);
   return v;
 }
@@ -1601,33 +1660,6 @@ const IV_END = { iv: 'Хорошее вышло интервью. Всё ска�
 const isPod = c => !!c && c.k === 'cond';
 const isIv = c => !!c && (/^Интервью/.test(c.t) || isPod(c));
 // ---------- бой ----------
-// Всё считается от одной характеристики — силы (10–125). Сила игроку не показывается.
-const FIGHT = {
-  // Сила влияет экспоненциально, поэтому шанс победы зависит только от разницы сил, а не от уровня:
-  // разница 10 — около 30%, разница 20 — около 10%. Длина боя при любой силе — около минуты.
-  k: 1.1,                                  // крутизна силы: разница 10 — около 28%, разница 20 — около 12% побед у слабого (бой ~45 с)
-  ps: p => 50 + FIGHT.k * (p - 50),        // «приведённая» сила: чем меньше k, тем меньше решает разница
-  hp: p => Math.round(1800 * Math.exp(0.003 * FIGHT.ps(p))),     // здоровье
-  qi: p => Math.round(55 + p * 0.3),                   // запас Цы (расход считается в процентах от запаса)
-  def: p => 100 * (Math.exp(0.0025 * FIGHT.ps(p)) - 1),          // защита: урон × 100 / (100 + защита)
-  dmg: p => FIGHT.dmgK * Math.exp(0.0055 * FIGHT.ps(p)),  dmgK: 46,   // бой ~35 с                 // базовый урон удара
-  costPct: 0.046,                           // обычный удар: −4,6% Цы — Цы кончается примерно раз за бой
-  abilPct: 0.20,                            // способность (5 ударов): −20% Цы
-  regen: 0.006,                              // восстановление Цы в секунду, доля от запаса
-  cd: 1.0,                                  // скорость атаки одинаковая: удар раз в секунду
-  rest: 5,                                  // передышка без Цы, потом Цы полная
-  spread: 0.3,                              // разброс урона обычного удара ±
-  diceDiv: 1000,                            // поправка к броску: разница сил / diceDiv (сейчас по сути выключена)
-  abilHits: 10,                             // способность = урон 10 ударов, проходит одним ударом
-  abilCrit: 0.2,                            // шанс крита способности
-  abilCd: 16,                               // перезарядка способности, секунд: за бой ~45 с — 2–3 применения
-  abilStart: 8,                             // способность готова только через 8 с после начала боя
-  qiProc: 0.02, qiProcMin: 0.20, qiProcMax: 0.20,   // 2% за удар: прилив Цы +20%
-  double: 0.03,                             // двойная атака: 3% — сразу ещё один удар
-  blockMin: 0.4,                            // блок гасит 40–100% урона, иногда весь
-  ruptureMult: 2,                           // «Разрыв потока» после трёх критов подряд: сам получает урон двух своих критов и остаётся без защиты
-  thrMe: 0.5, thrNpc: 0.4                   // при каком остатке Цы применяется способность
-};
 const ABIL_LIST = [   // способности соперников: название и что делает
   ['Громовой разлом', 'раскалывает землю громовым ударом'], ['Ледяная спираль', 'закручивает вокруг врага ледяную спираль'],
   ['Пылающий шквал', 'обрушивает шквал пылающих ударов'], ['Теневой рывок', 'исчезает в тени и бьёт со спины'],
@@ -1652,8 +1684,7 @@ const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'strin
 const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
-const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), lastCrit: false, abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]),
-  thr: me ? FIGHT.thrMe : FIGHT.thrNpc, acd: 0, hp: FIGHT.hp(p), hpMax: FIGHT.hp(p), qi: FIGHT.qi(p), qiMax: FIGHT.qi(p), rest: 0, cd: 0 });
+const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]) });
 // команда героя: если он сейчас играет в лиге — её логотип и название
 const heroTeam = (H, hi) => { if (!G || !G.leagues || H.league == null) return null; const L = G.leagues[H.league], T = L && L.teams && L.teams.find(t => t.h === hi); return T ? { logo: T.logo, name: T.name } : null; };
 // команда Элитного Спектра в текущем сезоне его лиги
@@ -1661,37 +1692,11 @@ const eliteTeam = (r, name) => { const L = G && G.leagues && G.leagues[r], T = L
 const withMeta = (f, country, team) => Object.assign(f, { country: country || f.country || null, team: team || f.team || null });
 function startFight(title, opp, onEnd) { startFightAB(title, heroF(S, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S)))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
-  F = { title, a, b, onEnd, t: 0, done: false, won: false, ev: [], fx: [], speed: 1, used: {} };
-  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;   // кто бьёт первым — случайно
-  S.view = 'fight';
+  for (const x of [a, b]) { if (!x.skill && x.H) x.skill = x.H.skill; tbInit(x); }
+  F = { title, a, b, onEnd, done: false, won: false, ev: [], fx: [], round: 0, used: {} };
+  F.cur = a.p + Math.random() * TB.init >= b.p + Math.random() * TB.init ? 'a' : 'b';   // кто ходит первым: сила + случай
+  MENU.open = true; S.view = 'fight';
 }
-function rollHit(x, y) {
-  // d20: 19–20 крит (10%), 1–3 уклон (15%), 4 парирование (5%), 5–6 блок (10%), остальное — удар
-  const roll = rnd(1, 20), r = roll + Math.round((x.p - y.p) / FIGHT.diceDiv);
-  const base = FIGHT.dmg(x.p) * 100 / (100 + FIGHT.def(y.p));
-  if (x.blind > 0) { x.blind--; return { kind: 'dodge', dmg: 0, base }; }   // дымовая шашка: атакующий бьёт мимо
-  if (x.critN > 0 && !x.inAbil) { x.critN--; return { kind: 'crit', dmg: Math.round(base * 2), base }; }   // линза фокуса
-  if (roll === 20 || r >= 19) return { kind: 'crit', dmg: Math.round(base * 2), base };
-  if (y.exposed > 0) return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)), base };   // после «Разрыва потока» — без уклонов, блоков и парирований
-  if (roll === 1 || r <= 3) return { kind: 'dodge', dmg: 0, base };
-  if (r === 4) return { kind: 'parry', dmg: 0, base };
-  if (r <= 6) {   // блок гасит часть урона: от 40% до 100%, примерно в трети случаев — весь
-    const cut = Math.random() < 0.33 ? 1 : FIGHT.blockMin + Math.random() * (1 - FIGHT.blockMin);
-    return { kind: 'block', dmg: Math.round(base * (1 - cut)), full: cut >= 1, base };
-  }
-  return { kind: 'hit', dmg: Math.round(base * (1 - FIGHT.spread + Math.random() * 2 * FIGHT.spread)), base };
-}
-// журнал боя: только яркие моменты без цифр — урон виден на портретах. {a} — кто действует, {b} — соперник
-const FL_CRIT = ['{a} проводит разрушительную атаку!', '{a} находит брешь в защите и бьёт со всей силы!', '{a} обрушивает мощнейший удар — арена содрогается!', '{a} вкладывает в удар всю Цы. {b} отлетает назад!'];
-const FL_CRIT2 = ['{a} не сбавляет темп — ещё один сокрушительный удар!', '{a} проводит серию разрушительных атак!', 'Второй крит подряд! {a} в ударе!'];
-const FL_DODGE = ['{b} легко уходит от атаки.', '{b} в последний миг уклоняется!', 'Удар рассекает пустоту — {b} уже в стороне.'];
-const FL_BLOCK = ['{b} принимает удар на блок — урон погашен полностью.', '{b} блокирует и не отступает ни на шаг.', '{b} выдерживает атаку, не пропустив ни капли урона.'];
-const FL_BLOCKP = ['{b} частично блокирует удар.', '{b} успевает подставить блок, но часть удара проходит.', '{b} гасит удар, хоть и не до конца.'];
-const FL_PARRY = ['{b} парирует удар и тут же контратакует! Критический удар!', '{b} отводит клинок {a} в сторону и бьёт в ответ — крит!', 'Парирование! {b} ловит момент и наносит сокрушительный ответ!'];
-const FL_DOUBLE = ['{a} проводит двойную атаку!', '{a} бьёт дважды подряд — {b} не успевает опомниться!', 'Молниеносная двойная атака от {a}!'];
-const FL_RUPTURE = ['Разрыв потока! {a} не справляется со своей силой — поток Цы вырывается из-под контроля и бьёт по нему самому!', 'Разрыв потока! После трёх критов подряд {a} теряет контроль над Цы и остаётся совершенно беззащитным!', 'Разрыв потока! Сила {a} обращается против него самого — Цы на нуле, защиты нет!'];
-const FL_NOQI = ['{a} выдыхается: Цы иссякла, нужна передышка.', '{a} растратил всю Цы и отходит, чтобы перевести дух.', 'Цы на нуле! {a} вынужден отступить на пару мгновений.'];
-const FL_QI = ['{a} чувствует прилив Цы!', '{a} ловит второе дыхание — Цы вспыхивает с новой силой.', '{a} собирается с силами, Цы прибывает.'];
 const FL_HP = {
   50: ['{a} потерял половину здоровья — бой становится серьёзным.', '{a} пропустил немало ударов. Дальше будет только жёстче.', '{a} уже ранен, но взгляд всё ещё твёрдый.'],
   30: ['{a} получил много урона — теперь придётся драться осторожнее.', '{a} тяжело дышит и уходит в глухую оборону.', '{a} почти без сил. Каждая ошибка может стать последней.'],
@@ -1705,119 +1710,212 @@ function hpMark(y) {   // отметки 50%, 30%, 10% здоровья — по
 }
 const fev = (m, c = '') => { F.ev.push({ t: m, c }); if (F.ev.length > 120) { F.ev.shift(); F.evCut = (F.evCut || 0) + 1; } };   // журнал: новые строки внизу
 const fxPush = (who, text, cls, layer) => { F.fx.push({ who: who === F.a ? 'fa' : 'fb', text, cls, layer }); };
-function useAbility(x, y) {
-  // 5 ударов: каждый может критануть или не попасть; урон проходит одним ударом, вне очереди
-  let sum = 0, crits = 0, miss = 0;
-  x.inAbil = true; for (let i = 0; i < FIGHT.abilHits; i++) { const r = rollHit(x, y); sum += r.dmg; if (r.kind === 'crit') crits++; if (r.dmg === 0) miss++; } x.inAbil = false;
-  const mult = Math.random() < FIGHT.abilCrit ? 1.1 + Math.random() * 0.9 : 1;
-  const dmg = Math.round(sum * mult);
-  x.qi = Math.max(0, x.qi - x.qiMax * FIGHT.abilPct); x.acd = FIGHT.abilCd;
-  y.hp = Math.max(0, y.hp - dmg);
-  // в журнал — что делает удар (фраза, которую придумал игрок), и урон от него
-  const what = (x.abil.desc || 'наносит серию из пяти ударов').replace(/[.!\s]+$/, '');
-  fev(`${x.name} применяет «${x.abil.name}» — ${what.charAt(0).toLowerCase() + what.slice(1)}!${mult > 1 ? ' Сокрушительная мощь!' : ''}`, 'ab');
-  x.abT = F.t; hpMark(y);
-  fxPush(y, `Коронный${mult > 1 ? ' ×' + mult.toFixed(1) : ''}: −${dmg}`, 'rand', 1);
-  if (y.hp <= 0) { F.done = true; F.won = x === F.a; }
+// ---------- пошаговый бой ----------
+// Ходят по очереди. Ход: стойка (бесплатно) → одно действие; плюс до одного расходника за ход (ход не заканчивает).
+// Сила растит и HP, и урон; победа обычно за 5–7 ходов. Все цифры — здесь.
+const TB = {
+  hp: p => Math.round(1300 * Math.exp(0.008 * (p - 50))),   // здоровье
+  hit: p => 40 * Math.exp(0.008 * (p - 50)),                // урон одного удара серии
+  series: 5, miss: 0.10, crit: 0.12, critK: 1.6, spread: 0.15,
+  abilHits: 4.2, ultHits: 12,                                // способность ≈ 4 удара + эффект; разрушительная ≈ 12 ударов
+  qiStart: 50, qiTurn: 10, qiMax: 100,
+  qiSeries: 5, qiAbil: 25, qiUlt: 70, qiDef: 20, qiConc: 40, qiCritDodge: 5,
+  defBlock: 0.60, concTaken: 1.15, exhaustTaken: 1.20, exhaustQi: 20,
+  stance: { bal: { d: 1, t: 1 }, rage: { d: 1.3, t: 1.3 }, def: { d: 0.75, t: 0.75 } },
+  e: { stun: 0.4, drain: 25, drainSelf: 10, wound: 0.03, heal: 0.075, barrier: 0.09, mark: 1.35, weak: 0.70, reflect: 0.4, pierce: 1.3, seal: 2 },
+  it: { stim: 0.12, gren: 0.08, batt: 25, rage: 0.27, rageIn: 0.18, ins: 0.15, vamp: 0.36, smoke: 0.55, crit: 0.75 },
+  fatigueFrom: 8, fatigue: 0.05, init: 40,
+};
+const STANCES = [['bal', '⚖', 'Баланс', '100% / 100%'], ['rage', '🔥', 'Ярость', '+30% / +30%'], ['def', '🛡', 'Защитная', '−25% / −25%']];
+const EFFECTS = [   // эффекты обычной способности: игрок придумывает любую способность и даёт ей один из них
+  ['stun', 'Оглушение', '40% шанс, что соперник пропустит следующий ход'],
+  ['pierce', 'Пробой', 'Игнорирует Защиту и Защитную стойку, урон +30%'],
+  ['drain', 'Иссушение', '−25 Цы у соперника, +10 Цы себе'],
+  ['wound', 'Рана', 'Соперник 3 хода теряет по 3% HP'],
+  ['heal', 'Восстановление', 'Лечит 7.5% HP'],
+  ['barrier', 'Барьер', 'Щит 9% HP до конца хода соперника'],
+  ['mark', 'Метка', 'Соперник 2 хода получает +35% урона'],
+  ['weak', 'Ослабление', 'Соперник 2 хода наносит −30% урона'],
+  ['reflect', 'Отражение', '40% урона следующей атаки соперника возвращается ему'],
+  ['seal', 'Печать', 'Соперник 2 хода не может применять способности и разрушительную'],
+];
+const effOf = k => EFFECTS.find(e => e[0] === k) || EFFECTS[0];
+const ITEM_TB = {   // что делают расходники в пошаговом бою
+  ins: 'Следующее действие: удары не промахиваются и +15% урона', stim: 'Лечит 12% HP', smoke: 'Следующий ход соперника: каждый удар промахивается с шансом +55%',
+  gren: 'Мгновенно наносит 8% HP соперника', batt: '+25 Цы', rage: 'До твоего следующего хода: наносишь +27%, получаешь +18%',
+  vamp: 'Этот ход: лечишь 36% нанесённого урона', crit: 'Этот ход: шанс крита 75%'
+};
+const SKILL_NAMES = {   // обычные способности бойцов-ботов и Элитных Спектров (по эффекту)
+  stun: ['Сотрясающий удар', 'Оглушающий рёв', 'Удар по нервам', 'Громовой хлопок'], pierce: ['Пронзающий выпад', 'Бронебой', 'Игла пустоты', 'Точный прострел'],
+  drain: ['Иссушающее касание', 'Пожиратель Цы', 'Тёмная воронка', 'Похищение силы'], wound: ['Рваная рана', 'Отравленный клинок', 'Кровавый росчерк', 'Жгучий порез'],
+  heal: ['Второе дыхание', 'Целебный поток', 'Восстановление Цы', 'Живительная волна'], barrier: ['Кристальный щит', 'Стена Цы', 'Рудный панцирь', 'Сфера защиты'],
+  mark: ['Метка охотника', 'Знак слабости', 'Прицел', 'Клеймо'], weak: ['Сковывающий удар', 'Тяжесть', 'Ослабляющая волна', 'Путы'],
+  reflect: ['Зеркальный блок', 'Ответный удар', 'Отражение', 'Контрвыпад'], seal: ['Печать тишины', 'Запрет Цы', 'Замок силы', 'Немота']
+};
+const strHash = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+function skillOf(name, abil) {   // обычная способность: у героя своя, у ботов — постоянная по нику
+  if (abil && abil.skill) return abil.skill;
+  const h = strHash(name), e = EFFECTS[h % EFFECTS.length][0], ns = SKILL_NAMES[e];
+  return { name: ns[(h >>> 4) % ns.length], icon: (h >>> 8) % ABIL_ICON_COUNT, eff: e };
 }
-const fHero = x => x.me && G ? G.players.find(H => H.nick === x.name) : null;
-function fItemsHtml(x, id) {   // доступные предметы бойца — квадратики справа от ника; использованные исчезают
-  const H = fHero(x), U = F.used || {};
-  let ks;
-  if (H) { const hi = heroIdx(H); ks = CONS.filter(c => consOf(H, c.k) > 0 && !U[hi + ':' + c.k]).map(c => c.k); }
-  else ks = (x.kit || []).filter(k => !(x.kitUsed || {})[k]);
-  return `<div class="fyit ${id}" id="${id}-it">${ks.map(k => { const c = CONS.find(q => q.k === k);
-    return H && !F.done ? `<button data-a="fitem" data-v="${id}:${k}" title="${esc(c.n)}"><img src="img/shop/${k}.webp" alt=""></button>` : `<span title="${esc(c.n)}"><img src="img/shop/${k}.webp" alt=""></span>`; }).join('')}</div>`;
+const tbOpp = x => x === F.a ? F.b : F.a, tbId = x => x === F.a ? 'fa' : 'fb';
+function tbInit(x) {
+  Object.assign(x, { hpMax: TB.hp(x.p), hp: TB.hp(x.p), qi: TB.qiStart, stance: 'bal', stCd: rnd(1, 2), ultUsed: false, turns: 0, st: {}, defend: false, conc: false, exhausted: false, itemTurn: false, tmp: {}, used: {} });
+  if (!x.skill) x.skill = skillOf(x.name, x.abil);
+  return x;
 }
-const ITEM = { ins: 1, gren: 2, stim: 3, smoke: 2, rage: 2, rageOut: 1.6, rageIn: 1.4, vamp: 2, vampPct: 0.5, crit: 1, batt: 0.2 };   // откалибровано: максимум без расходников ≈ Fak3r, с полным набором ≈ 80% побед   // сила предметов (в описаниях не показывается)
-const hitOf = (a, b) => FIGHT.dmg(a.p) * 100 / (100 + FIGHT.def(b.p));
-function applyItem(x, y, k) {   // эффект предмета: одинаково для игрока и бойцов-ботов
-  if (k === 'ins') { const d = Math.round(hitOf(x, y) * ITEM.ins); y.hp = Math.max(0, y.hp - d); fev(`${x.name} пускает в ход инсайдерские данные и бьёт точно в слабое место!`, 'crit'); fxPush(y, '📁Инсайд: −' + d, 'minus', 1); hpMark(y); }
-  if (k === 'gren') { const d = Math.round(hitOf(x, y) * ITEM.gren); y.hp = Math.max(0, y.hp - d); fev(`${x.name} швыряет гранату «Разлом» — арену накрывает взрывом!`, 'crit'); fxPush(y, '🔥Граната: −' + d, 'minus', 1); hpMark(y); }
-  if (k === 'stim') { const d = Math.round(hitOf(y, x) * ITEM.stim); x.hp = Math.min(x.hpMax, x.hp + d); fev(`${x.name} вкалывает стимулятор — раны затягиваются на глазах!`, 'qi'); fxPush(x, '💉Стимулятор: +' + d, 'plus', 1); }
-  if (k === 'smoke') { y.blind = ITEM.smoke; fev(`${x.name} бросает дымовую шашку — ${y.name} теряет его из виду!`, 'nt'); fxPush(y, '💨Дым!', 'rand', 2); }
-  if (k === 'batt') { x.qi = Math.min(x.qiMax, x.qi + x.qiMax * ITEM.batt); if (x.rest > 0) { x.rest = 0; x.cd = 0.3; } fev(`${x.name} подключает рудную батарею — поток Цы снова течёт!`, 'qi'); fxPush(x, '🔋Цы восстановлена', 'qi', 2); }
-  if (k === 'rage') { x.rage = ITEM.rage; fev(`${x.name} вкалывает «Ярость» — удары тяжелеют, но защита трещит!`, 'crit'); fxPush(x, '😡Ярость!', 'rand', 2); }
-  if (k === 'vamp') { x.vamp = ITEM.vamp; fev(`${x.name} сжимает кровавый кристалл — каждый удар теперь лечит!`, 'qi'); fxPush(x, '🩸Вампиризм!', 'rand', 2); }
-  if (k === 'crit') { x.critN = ITEM.crit; fev(`${x.name} смотрит сквозь линзу фокуса — слабые места соперника как на ладони!`, 'crit'); fxPush(x, '💥Фокус!', 'rand', 2); }
-  if (y.hp <= 0 && !F.done) { F.done = true; F.won = x === F.a; }
-  F.itemsDirty = true;
+const tbFx = (x, t, c) => { if (!F.sim) (F.fx = F.fx || []).push({ id: tbId(x), t, c }); };
+const tbLog = (t, c = '') => { if (!F.sim) fev(t, c); };
+function dealtMul(x) { let m = TB.stance[x.stance].d; if (x.st.weak) m *= TB.e.weak; if (x.st.rageItem) m *= 1 + TB.it.rage; if (x.tmp.ins) m *= 1 + TB.it.ins; return m; }
+function takenMul(y, pierce) {
+  let m = pierce ? Math.max(1, TB.stance[y.stance].t) : TB.stance[y.stance].t;
+  if (y.st.mark) m *= TB.e.mark; if (y.conc) m *= TB.concTaken; if (y.exhausted) m *= TB.exhaustTaken; if (y.st.rageItem) m *= 1 + TB.it.rageIn;
+  if (y.defend && !pierce) m *= 1 - TB.defBlock;
+  return m;
 }
-function useFItem(id, k) {
-  if (!F || F.done) return;
-  const x = id === 'fa' ? F.a : F.b, y = x === F.a ? F.b : F.a, H = fHero(x); if (!H) return;
-  const key = heroIdx(H) + ':' + k; F.used = F.used || {};   // каждый предмет — раз за матч
-  if (F.used[key] || consOf(H, k) <= 0) return;
-  H.cons[k]--; F.used[key] = true;
-  applyItem(x, y, k); fightPaint();
+function tbDmg(x, y, raw) {   // урон: щит, вампиризм
+  let d = Math.max(1, Math.round(raw));
+  if (y.st.barrier > 0) { const ab = Math.min(y.st.barrier, d); y.st.barrier -= ab; d -= ab; if (y.st.barrier <= 0) delete y.st.barrier; if (ab) tbLog(`${y.name}: щит поглотил ${ab}.`, 'nt'); }
+  y.hp = Math.max(0, y.hp - d);
+  if (x.tmp.vamp && d > 0) { const h = Math.round(d * TB.it.vamp); x.hp = Math.min(x.hpMax, x.hp + h); x.tmp.vampSum = (x.tmp.vampSum || 0) + h; }
+  return d;
 }
-function npcUseItems(x, y) {   // бот применяет предметы по ситуации
-  if (!x.kit || !x.kit.length || x.me) return;
-  x.kitUsed = x.kitUsed || {};
-  const has = k => x.kit.includes(k) && !x.kitUsed[k], use = k => { x.kitUsed[k] = true; applyItem(x, y, k); };
-  const hp = x.hp / x.hpMax;
-  if (has('stim') && hp < 0.4) return use('stim');
-  if (has('batt') && x.rest > 0) return use('batt');
-  if (has('smoke') && hp < 0.6 && y.hp > x.hp) return use('smoke');
-  if (has('vamp') && hp < 0.7) return use('vamp');
-  if (F.t > 4 && Math.random() < 0.01) { const r = ['gren', 'ins', 'crit', 'rage'].filter(has); if (r.length) use(r[rnd(0, r.length - 1)]); }
-}
-function fightStep(dt) {
-  for (const [x, y] of [[F.a, F.b], [F.b, F.a]]) {
-    if (F.done) return;
-    npcUseItems(x, y); if (F.done) return;
-    x.acd = Math.max(0, x.acd - dt); if (x.exposed > 0) x.exposed -= dt;
-    if (x.rest > 0) { x.rest -= dt; if (x.rest <= 0) { x.rest = 0; x.qi = x.qiMax; x.cd = 0.3; } continue; }
-    x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.regen * dt);
-    x.cd -= dt;
-    if (x.cd > 0) continue;
-    if (x.qi < x.qiMax * FIGHT.costPct) { x.rest = FIGHT.rest; x.restN = (x.restN || 0) + 1; fev(pick(FL_NOQI, x, y), 'qi'); fxPush(x, 'Нет Цы', 'rand', 2); continue; }
-    x.qi -= x.qiMax * FIGHT.costPct; x.cd = FIGHT.cd;
-    const swings = Math.random() < FIGHT.double ? 2 : 1;   // редкая двойная атака
-    if (swings === 2) { fev(pick(FL_DOUBLE, x, y), 'crit'); fxPush(x, 'Двойная атака!', 'rand', 2); }
-    for (let sw = 0; sw < swings && !F.done; sw++) {
-      const r = rollHit(x, y);
-      if (r.kind === 'parry') {   // парирование: удар не проходит, защитник отвечает критом
-        const back = Math.round(FIGHT.dmg(y.p) * 100 / (100 + FIGHT.def(x.p)) * 2);
-        x.hp = Math.max(0, x.hp - back); x.critRun = 0;
-        fev(pick(FL_PARRY, x, y), 'crit'); fxPush(y, 'Парирование!', 'nt', 1); fxPush(x, '💥Крит!: −' + back, 'minus', 1);
-        hpMark(x);
-        if (x.hp <= 0) { F.done = true; F.won = y === F.a; return; }
-        continue;
-      }
-      if (r.dmg > 0) { if (x.rage > 0) r.dmg = Math.round(r.dmg * ITEM.rageOut); if (y.rage > 0) r.dmg = Math.round(r.dmg * ITEM.rageIn); }
-      if (x.rage > 0) x.rage--;
-      y.hp = Math.max(0, y.hp - r.dmg);
-      if (x.vamp > 0) { x.vamp--; if (r.dmg > 0) { const hl = Math.round(r.dmg * ITEM.vampPct); x.hp = Math.min(x.hpMax, x.hp + hl); fxPush(x, '🩸+' + hl, 'plus', 2); } }
-      // в журнал — только яркие моменты; обычные удары видны цифрами на портрете
-      if (r.kind === 'crit') fev(pick(x.lastCrit ? FL_CRIT2 : FL_CRIT, x, y), 'crit');
-      else if (r.kind === 'dodge') fev(pick(FL_DODGE, x, y), 'nt');
-      else if (r.kind === 'block') fev(pick(r.full ? FL_BLOCK : FL_BLOCKP, x, y), 'nt');
-      x.critRun = r.kind === 'crit' ? (x.critRun || 0) + 1 : 0;
-      x.lastCrit = r.kind === 'crit';
-      fxPush(y, { crit: '💥Крит!: −' + r.dmg, dodge: 'Уклон!', block: r.full ? 'Блок!' : 'Блок −' + r.dmg, hit: '−' + r.dmg }[r.kind], r.kind === 'dodge' || r.kind === 'block' ? 'nt' : 'minus', 1);
-      if (x.critRun >= 3 && y.hp > 0) {   // «Разрыв потока»: потеря контроля над Цы — урон двух своих критов себе, Цы в ноль, без защиты
-        const self = Math.round(r.dmg * FIGHT.ruptureMult);
-        x.hp = Math.max(0, x.hp - self); x.qi = 0; x.critRun = 0; x.lastCrit = false; x.exposed = FIGHT.rest + 2;
-        fev(pick(FL_RUPTURE, x, y), 'rupture'); fxPush(x, 'Разрыв потока! −' + self, 'minus', 1); fxPush(x, 'Цы: 0', 'qi', 2);
-        hpMark(x);
-        if (x.hp <= 0) { F.done = true; F.won = y === F.a; return; }
-      }
-      if (r.dmg > 0) hpMark(y);
-      if (y.hp <= 0) break;
-    }
-    if (Math.random() < FIGHT.qiProc && x.qi > 0) {   // редкий прилив Цы: +20%
-      x.qi = Math.min(x.qiMax, x.qi + x.qiMax * FIGHT.qiProcMin);
-      fev(pick(FL_QI, x, y), 'qi'); fxPush(x, '+20% Цы', 'qi', 2);
-    }
-    if (y.hp <= 0) { F.done = true; F.won = x === F.a; return; }
-    // после обычного удара: если Цы опустилась до порога — способность сразу, вне очереди (ритм ударов не сбивается)
-    if (x.acd <= 0 && x.qi <= x.qiMax * x.thr && x.qi >= x.qiMax * FIGHT.abilPct) useAbility(x, y);
+function tbStrikes(x, y, n, base, opt = {}) {
+  let total = 0, crits = 0, misses = 0;
+  const mul = dealtMul(x) * takenMul(y, opt.pierce) * (opt.k || 1);
+  for (let i = 0; i < n; i++) {
+    const missP = x.tmp.ins ? 0 : TB.miss + (y.st.smoke ? TB.it.smoke : 0);
+    if (!opt.sure && Math.random() < missP) { misses++; y.qi = Math.min(TB.qiMax, y.qi + TB.qiCritDodge); continue; }
+    let h = base * (1 - TB.spread + Math.random() * 2 * TB.spread) * mul;
+    if (Math.random() < (x.tmp.crit ? TB.it.crit : TB.crit)) { h *= TB.critK; crits++; x.qi = Math.min(TB.qiMax, x.qi + TB.qiCritDodge); }
+    total += tbDmg(x, y, h);
   }
-  F.t += dt;
-  if (F.t > 300 && !F.done) { F.done = true; F.won = F.a.hp / F.a.hpMax >= F.b.hp / F.b.hpMax; }
+  return { total, crits, misses };
 }
-const finishFight = () => { while (!F.done) fightStep(0.1); };
+function tbReflect(x, y, d) { if (y.st.reflect && d > 0) { const r = Math.round(d * TB.e.reflect); x.hp = Math.max(0, x.hp - r); delete y.st.reflect; tbLog(`Отражение! ${x.name} получает ${r} урона обратно.`, 'ab'); tbFx(x, '−' + r, 'dmg'); } }
+function tbSpend(x, q) { x.qi -= q; if (x.qi <= 0) { x.qi = 0; x.exhausted = true; tbLog(`${x.name} истощён: Цы на нуле — следующий ход пропущен.`, 'hp30'); } }
+const canAbil = x => x.qi >= TB.qiAbil && !x.st.seal, canUlt = x => !x.ultUsed && !x.st.seal;
+function tbAction(x, act) {
+  F.await = false;
+  const y = tbOpp(x);
+  x.conc = false; x.defend = false;
+  if (act === 'series') {
+    const r = tbStrikes(x, y, TB.series, TB.hit(x.p)); x.qi = Math.min(TB.qiMax, x.qi + TB.qiSeries);
+    tbLog(`${x.name}: серия ударов — ${r.total} урона${r.crits ? `, критов: ${r.crits}` : ''}${r.misses ? `, мимо: ${r.misses}` : ''}.`, r.crits >= 2 ? 'crit' : ''); tbFx(y, '−' + r.total, 'dmg'); tbReflect(x, y, r.total);
+  } else if (act === 'abil') {
+    tbSpend(x, TB.qiAbil);
+    const pierce = x.skill.eff === 'pierce', r = tbStrikes(x, y, 1, TB.hit(x.p) * TB.abilHits, { pierce, k: pierce ? TB.e.pierce : 1, sure: true });
+    tbLog(`${x.name} применяет «${x.skill.name}» — ${r.total} урона.`, 'ab'); tbFx(y, '−' + r.total, 'dmg');
+    tbEffect(x, y); tbReflect(x, y, r.total);
+  } else if (act === 'ult') {
+    x.ultUsed = true; tbSpend(x, TB.qiUlt);
+    const r = tbStrikes(x, y, 1, TB.hit(x.p) * TB.ultHits, { sure: true });
+    const what = (x.abil && x.abil.desc || '').replace(/[.!\s]+$/, '');
+    tbLog(`💥 ${x.name}: «${x.abil.name}»${what ? ' — ' + what.charAt(0).toLowerCase() + what.slice(1) : ''}! ${r.total} урона!`, 'crit'); tbFx(y, '💥 −' + r.total, 'dmg'); tbReflect(x, y, r.total);
+  } else if (act === 'def') {
+    tbSpend(x, TB.qiDef); if (x.hp > 0) { x.defend = true; tbLog(`${x.name} уходит в защиту: следующий ход соперника ослаблен на ${Math.round(TB.defBlock * 100)}%.`, 'nt'); tbFx(x, 'Защита', 'info'); }
+  } else if (act === 'conc') {
+    x.conc = true; x.qi = Math.min(TB.qiMax, x.qi + TB.qiConc); tbLog(`${x.name} концентрирует Цы (+${TB.qiConc}).`, 'qi'); tbFx(x, '+' + TB.qiConc + ' Цы', 'info');
+  }
+  if (x.tmp.vampSum) { tbLog(`${x.name}: кровавый кристалл вернул ${x.tmp.vampSum} HP.`, 'qi'); tbFx(x, '+' + x.tmp.vampSum, 'heal'); }
+  x.tmp = {};
+  if (y.st.smoke) delete y.st.smoke;
+  if (y.hp > 0) hpMark(y);
+  tbEnd(x);
+}
+function tbEffect(x, y) {
+  const e = x.skill.eff;
+  if (e === 'stun') { if (Math.random() < TB.e.stun) { y.st.stun = 1; tbLog(`${y.name} оглушён!`, 'crit'); tbFx(y, 'Оглушён', 'info'); } else tbLog('Оглушение не сработало.', 'nt'); }
+  else if (e === 'drain') { const d = Math.min(TB.e.drain, y.qi); y.qi -= d; x.qi = Math.min(TB.qiMax, x.qi + TB.e.drainSelf); tbLog(`${y.name} теряет ${d} Цы.`, 'qi'); if (y.qi <= 0 && d > 0) { y.exhausted = true; tbLog(`${y.name} истощён!`, 'hp30'); } }
+  else if (e === 'wound') { y.st.wound = 3; tbLog(`${y.name} ранен на 3 хода.`, 'nt'); }
+  else if (e === 'heal') { const h = Math.round(x.hpMax * TB.e.heal); x.hp = Math.min(x.hpMax, x.hp + h); tbLog(`${x.name} восстанавливает ${h} HP.`, 'qi'); tbFx(x, '+' + h, 'heal'); }
+  else if (e === 'barrier') { x.st.barrier = Math.round(x.hpMax * TB.e.barrier); tbLog(`${x.name} ставит щит на ${x.st.barrier}.`, 'nt'); }
+  else if (e === 'mark') { y.st.mark = 2; tbLog(`${y.name} помечен: +${Math.round((TB.e.mark - 1) * 100)}% урона 2 хода.`, 'nt'); }
+  else if (e === 'weak') { y.st.weak = 2; tbLog(`${y.name} ослаблен: −${Math.round((1 - TB.e.weak) * 100)}% урона 2 хода.`, 'nt'); }
+  else if (e === 'reflect') { x.st.reflect = 1; tbLog(`${x.name} готов отразить удар.`, 'nt'); }
+  else if (e === 'seal') { y.st.seal = TB.e.seal; tbLog(`${y.name} запечатан на ${TB.e.seal} хода.`, 'nt'); }
+}
+const tbItems = x => x.H && !F.sim ? CONS.map(c => c.k).filter(k => consOf(x.H, k) > 0 || x.used[k]) : x.H ? [] : (x.kit || []);   // герой — из инвентаря (в фоновых боях не тратит), бот — свой набор
+function tbUseItem(x, k) {
+  if (x.used[k] || x.itemTurn || !tbItems(x).includes(k)) return false;
+  if (x.H) { if (consOf(x.H, k) <= 0) return false; x.H.cons[k]--; }
+  const y = tbOpp(x), c = CONS.find(q => q.k === k); x.used[k] = true; x.itemTurn = true;
+  if (k === 'stim') { const h = Math.round(x.hpMax * TB.it.stim); x.hp = Math.min(x.hpMax, x.hp + h); tbFx(x, '+' + h, 'heal'); }
+  else if (k === 'gren') { const d = tbDmg(x, y, y.hpMax * TB.it.gren); tbFx(y, '🔥 −' + d, 'dmg'); }
+  else if (k === 'batt') { x.qi = Math.min(TB.qiMax, x.qi + TB.it.batt); tbFx(x, '+' + TB.it.batt + ' Цы', 'info'); }
+  else if (k === 'smoke') x.st.smoke = 1;
+  else if (k === 'rage') x.st.rageItem = 1;
+  else x.tmp[k] = true;   // ins, vamp, crit — на это действие
+  tbLog(`${x.name} применяет «${c.n}».`, 'ab');
+  if (y.hp <= 0) tbFinish(x);
+  return true;
+}
+function tbStart() {   // начало хода текущего бойца
+  if (!F || F.done) return;
+  const x = F[F.cur], y = tbOpp(x);
+  x.turns++; x.itemTurn = false; x.defend = false; x.conc = false;
+  if (x.st.rageItem) delete x.st.rageItem;
+  if (x.turns >= TB.fatigueFrom) { const d = Math.round(x.hpMax * TB.fatigue); x.hp = Math.max(0, x.hp - d); tbLog(`${x.name} устаёт: −${d}.`, 'nt'); if (x.hp <= 0) return tbFinish(y); }
+  if (x.st.wound) { const d = Math.round(x.hpMax * TB.e.wound); x.hp = Math.max(0, x.hp - d); tbLog(`${x.name}: рана −${d}.`, 'nt'); tbFx(x, '−' + d, 'dmg'); if (--x.st.wound <= 0) delete x.st.wound; if (x.hp <= 0) return tbFinish(y); }
+  for (const k of ['mark', 'weak']) if (x.st[k] && --x.st[k] <= 0) delete x.st[k];
+  if (x.st.barrier) delete x.st.barrier;
+  if (x.exhausted) { x.qi = Math.min(TB.qiMax, x.qi + TB.exhaustQi); x.exhausted = false; tbLog(`${x.name} приходит в себя после истощения (+${TB.exhaustQi} Цы) и пропускает ход.`, 'qi'); return tbEnd(x, true); }
+  if (x.st.stun) { delete x.st.stun; x.qi = Math.min(TB.qiMax, x.qi + TB.qiTurn); tbLog(`${x.name} оглушён и пропускает ход.`, 'nt'); return tbEnd(x, true); }
+  x.qi = Math.min(TB.qiMax, x.qi + TB.qiTurn);
+  if (!x.me || F.sim || F.fast) { if (F.sim || F.fast) tbAI(x); else { F.busy = true; fightPaint(); const f0 = F; setTimeout(() => { if (F !== f0 || F.done) return; F.busy = false; tbAI(x); }, 900); } }
+  else { F.await = true; fightPaint(); }   // ждём решения игрока; время на ход не ограничено
+}
+function tbEnd(x) {
+  const y = tbOpp(x);
+  if (y.hp <= 0) return tbFinish(x);
+  if (x.hp <= 0) return tbFinish(y);
+  if (x.st.seal && --x.st.seal <= 0) delete x.st.seal;
+  F.cur = F.cur === 'a' ? 'b' : 'a'; F.round++;
+  if (F.round > 60) return tbFinish(x.hp / x.hpMax >= y.hp / y.hpMax ? x : y);
+  if (F.sim || F.fast) tbStart(); else { fightPaint(); const f0 = F; setTimeout(() => { if (F === f0) tbStart(); }, 450); }
+}
+function tbFinish(w) { if (F.done) return; F.done = true; F.won = w === F.a; F.await = false; tbLog(`Победа: ${w.name}!`, 'crit'); if (!F.sim) fightPaint(); }
+// ---------- ИИ: ботам, автоходу и «Досчитать бой» ----------
+function tbAIItems(x, y) {
+  const has = k => tbItems(x).includes(k) && !x.used[k] && (!x.H || consOf(x.H, k) > 0);
+  if (has('stim') && x.hp < x.hpMax * 0.4) return tbUseItem(x, 'stim');
+  if (has('batt') && x.qi < 35) return tbUseItem(x, 'batt');
+  if (has('gren') && (y.hp < y.hpMax * 0.12 || Math.random() < 0.25)) return tbUseItem(x, 'gren');
+  if (has('smoke') && y.qi >= 70 && !y.ultUsed) return tbUseItem(x, 'smoke');
+  if (has('crit') && Math.random() < 0.3) return tbUseItem(x, 'crit');
+  if (has('rage') && x.hp > x.hpMax * 0.5 && Math.random() < 0.3) return tbUseItem(x, 'rage');
+  if (has('vamp') && x.hp < x.hpMax * 0.7 && Math.random() < 0.4) return tbUseItem(x, 'vamp');
+  if (has('ins') && Math.random() < 0.3) return tbUseItem(x, 'ins');
+}
+const estUlt = (x, y) => TB.hit(x.p) * TB.ultHits * dealtMul(x) * takenMul(y), estSeries = (x, y) => TB.hit(x.p) * TB.series * 0.95 * dealtMul(x) * takenMul(y);
+const tbSkill = r => Math.min(0.92, Math.max(0.3, 0.3 + (r || 0) / 2100 * 0.55));   // мастерство бота от рейтинга: бронза ~0.3–0.55, алмаз ~0.8, мастер ~0.9
+function tbAI(x) {
+  if (!F || F.done) return;
+  const y = tbOpp(x), sk = x.me ? 0.75 : tbSkill(x.rating), hpR = x.hp / x.hpMax, oR = y.hp / y.hpMax;
+  if (--x.stCd <= 0) { x.stance = STANCES.map(s => s[0]).filter(k => k !== x.stance)[rnd(0, 1)]; x.stCd = rnd(2, 3); tbLog(`${x.name} меняет стойку: ${STANCES.find(s => s[0] === x.stance)[2]}.`, 'nt'); }   // стойка — случайно раз в 2–3 хода
+  tbAIItems(x, y); if (F.done) return;
+  const rand = Math.random() > sk;
+  let act;
+  if (canUlt(x) && estUlt(x, y) >= y.hp && (x.qi >= TB.qiUlt || Math.random() < 0.6 + sk * 0.3)) act = 'ult';
+  else if (estSeries(x, y) >= y.hp * 1.1) act = 'series';
+  else if (rand) act = ['series', 'series', canAbil(x) ? 'abil' : 'series', x.qi < 40 ? 'conc' : 'series', canUlt(x) && x.qi >= TB.qiUlt ? 'ult' : 'series'][rnd(0, 4)];
+  else {
+    const threat = !y.ultUsed && y.qi + TB.qiTurn >= TB.qiUlt;
+    if (threat && x.qi >= TB.qiDef + 5 && hpR < 0.7 && Math.random() < 0.6) act = 'def';
+    else if (canUlt(x) && x.qi >= TB.qiUlt && (oR < 0.6 || hpR < 0.45 || Math.random() < 0.3)) act = 'ult';
+    else if (x.qi < 25 && !(canUlt(x) && oR < 0.3)) act = 'conc';
+    else if (canAbil(x)) {
+      const useful = { heal: hpR < 0.65, barrier: threat || hpR < 0.6, drain: y.qi >= 45, mark: !y.st.mark, weak: !y.st.weak, wound: !y.st.wound, stun: true, pierce: y.defend || y.stance === 'def', reflect: threat, seal: threat }[x.skill.eff];
+      act = useful && Math.random() < 0.75 ? 'abil' : 'series';
+    } else act = 'series';
+  }
+  if (act === 'abil' && !canAbil(x)) act = 'series';
+  if (act === 'def' && x.qi < TB.qiDef) act = 'series';
+  if (act === 'ult' && !canUlt(x)) act = 'series';
+  tbAction(x, act);
+}
+const finishFight = () => { if (!F || F.done) return; F.fast = true; F.busy = false; if (F.await) { F.await = false; tbAI(F[F.cur]); } };   // «Досчитать бой»: оставшиеся ходы за обоих — автоматика
+
 
 function specialFight(kind) {   // зверь от Бюро (сила 1–25, +250) или дуэль (сила игрока −20, не ниже 10; +50)
   let opp, title, win;
@@ -2891,11 +2989,12 @@ function tFighter(R, id) {   // боец турнира: флаг и логот�
   const H = G.players[h];
   return heroF(H, withMeta(fighter(H.nick, heroPower(H) + (x.tb || 0), H.rating, true, H.ability, H.face), H.country, semi(x.team != null ? x.team : R.kind === 'contract' ? R.team : null) || heroTeam(H, h)));
 }
-function simAB(fa, fb) {   // бой без показа — тем же движком, что и живой бой; true, если победил первый
+function simAB(fa, fb) {   // бой без показа — тем же движком; герои расходники не тратят; true, если победил первый
   const keep = F;
-  F = { a: fa, b: fb, t: 0, done: false, won: false, ev: [], fx: [], speed: 1 };
-  F.a.cd = 0.3 + Math.random() * 0.7; F.b.cd = 0.3 + Math.random() * 0.7; F.a.acd = F.b.acd = FIGHT.abilStart;
-  finishFight();
+  for (const x of [fa, fb]) { if (!x.skill && x.H) x.skill = x.H.skill; tbInit(x); }
+  F = { a: fa, b: fb, sim: true, done: false, won: false, ev: [], round: 0 };
+  F.cur = fa.p + Math.random() * TB.init >= fb.p + Math.random() * TB.init ? 'a' : 'b';
+  tbStart();
   useGame(F.a); useGame(F.b);
   const w = F.won; F = keep; return w;
 }
@@ -3224,6 +3323,7 @@ function viewMain() {
   const rows = S.hand.length
     ? S.hand.map((c, i) => { return `<button class="arow ${c.used ? 'done' : ''}" data-a="card" data-v="${i}" ${c.used ? 'disabled' : ''}>${picOf(c) ? `<img class="pic" src="${picOf(c)}" alt="" loading="lazy">` : `<div class="pic">${esc(c.t)}</div>`}<div class="tx"><div class="ttl">${esc(c.t)}</div></div><i class="arch">›</i></button>`; }).join('')
     : '<div class="dim">Все действия этой недели выполнены.</div>';
+  const skn = S.skillNew ? `<div class="card" style="border-color:var(--gold)"><h2>Новая система боя</h2><div class="dim">Бои теперь пошаговые. У тебя две способности: обычная с эффектом и разрушительная. Настрой обычную способность.</div><button class="btn gold" data-a="skopen" style="text-align:center">Настроить способность</button></div>` : '';
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2>${(([st, eta]) => `<div class="dim">Сезон ${seasonNo()} · ${esc(st)}</div><div class="sstat">${esc(eta)}</div>`)(seasonStatus())}
         <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>${S.semi ? `<div class="ctline"><img src="img/team/${SEMI[S.semi.team][1]}.webp" alt=""><span>Контракт: <b>${esc(SEMI_TEAMS[S.semi.team])}</b> · до конца недели ${S.semi.until}${S.semi.worked ? ' · отработан' : ' · нужен полупро-турнир'}</span></div>` : S.league != null ? `<div class="ctline pro"><span>Профессиональная команда · призовые +70%</span></div>` : ''}${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
@@ -3246,7 +3346,7 @@ function viewMain() {
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
     </div>`;
   const news = S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div></div>` : '';
-  return wrap(ORIENT === 'land' ? `<div class="mgrid land2"><div class="mcol">${map}${events}</div><div class="mcol">${week}${daily}${news}</div></div>` : `<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
+  return wrap(ORIENT === 'land' ? `${skn}<div class="mgrid land2"><div class="mcol">${map}${events}</div><div class="mcol">${week}${daily}${news}</div></div>` : `${skn}<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
 }
 function viewMore() {   // «Ещё»: библиотека, магазин, инвентарь, коллекция, история, настройки
   const it = (a, t, d, dis) => `<button class="btn morei" data-a="${a}" ${dis ? 'disabled' : ''}><b>${t}</b><span class="dim">${d}</span></button>`;
@@ -3598,7 +3698,7 @@ const LIB_NOTES = [
   { t: "Цифровая монета", d: "Крипта Спектров — цифровая монета. Её выпускает банк «Северный Альянс», а каждую сделку записывает распределённый реестр, который проверяет Бюро. Курс крипты растёт вместе со славой арены." },
   { t: "Кошелёк Спектра", d: "Рейтинг и крипта — разные вещи. Рейтинг показывает, кто сильнее: он растёт и падает от побед и поражений, его нельзя купить или потратить. Крипта — это деньги: её платят за победы, призовые места и контракты, а тратят в магазине на жильё, транспорт, артефакты и снаряжение." },
   { t: "Призовой фонд Короны Спектров", d: "Корона Спектров — турнир, на котором организаторы разыгрывают очки рейтинга. Победитель получает щедрую долю общего фонда, а вместе с ней — внимание скаутов и корпораций. Поэтому за приглашение на Корону бойцы готовы бороться не меньше, чем за сам титул." },
-  { t: "Разрыв потока", d: "Иногда, не справившись со своей силой, Спектр может потерять контроль над потоком Цы. Потеря контроля делает Спектра совершенно беззащитным. Урон от двух своих атак получает тот, у кого получилось нанести три крита подряд." },
+  { t: "Истощение", d: "Спектр, который выжал из себя всю Цы, на время теряет связь с потоком. Он пропускает ход, едва восстанавливает силы и становится лёгкой мишенью. Опытные бойцы вовремя уходят в Концентрацию — новички выжигают себя до дна разрушительным ударом." },
   { t: "Veltor", img: "img/car/veltor_logo.webp", d: "Veltor — самый массовый автобренд мира Спектров. Его серебряную букву V с бирюзовой вставкой видно на каждой улице. Седан Veltor S4 — первая машина почти любого молодого Спектра: удобный, экономичный и достаточно быстрый, чтобы успеть из Бюро на арену. Бирюзовые огни на бампере светятся в цвет потока Цы." },
   { t: "Свой транспорт", d: "Спектр, который сам добирается до арены, успевает за неделю куда больше. Машина в гараже дарит одно лишнее действие каждую неделю: меньше времени в пробках и на такси — больше на тренировки, турниры и Бюро." },
   { t: "Крылья над городом", d: "Вертолёт — самый быстрый способ жить между аренами. Пока другие стоят в пробках, его владелец уже на месте. Вертолёт в гараже дарит сразу два лишних действия в неделю — вдвое больше, чем любая машина." },
@@ -3657,7 +3757,7 @@ function viewShop() {   // магазин: только названия и це
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
   const own = (S.items || []).slice().sort((a, b) => b - a);
-  let h = `<div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
+  let h = `<div class="card"><h2>Способности</h2><div class="abrow" style="align-items:center">${abilIcon(S.skill.icon)}<div style="flex:1"><b>${esc(S.skill.name)}</b><div class="dim">${effOf(S.skill.eff)[1]} · ${esc(effOf(S.skill.eff)[2])}</div></div></div><div class="abrow" style="align-items:center;margin-top:8px">${abilIcon(S.ability.icon)}<div style="flex:1"><b>${esc(S.ability.name)}</b><div class="dim">Разрушительная</div></div></div><button class="btn" data-a="skopen" style="text-align:center">Изменить способность</button></div><div class="card"><h2>Инвентарь</h2><div class="dim">${own.length ? 'Надеть можно один артефакт. Он усиливает тебя, пока ты его не снимешь.' : 'Пока пусто. Артефакты открываются в магазине за рейтинг.'}</div></div>`;
   h += own.map(i => itemCard(ITEMS[i], i, (S.renaming === i
       ? `<input id="iname" maxlength="32" placeholder="${esc(ITEMS[i].n)}" value="${esc((S.iname && S.iname[i]) || '')}" style="margin-top:8px">
          <div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn gold" data-a="iren" data-v="${i}" style="text-align:center">Сохранить</button><button class="btn" data-a="irencancel" style="text-align:center">Отмена</button></div>
@@ -3673,7 +3773,8 @@ function viewDossier() {
   let h = `<div class="card"><h2>Досье Элитных Спектров</h2><div class="dim">Сильнейшие Спектры регионов: кто они и на что способны.</div><div class="row">${tabs}</div></div>`;
   if (one) {
     h += `<div class="card dos"><div class="dosimg">${faceImg(one.face)}</div><h2>${flagOf(one.country)} ${esc(one.name)}</h2><div>${rateHtml(one.rating, 'mid')}</div>
-      <div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(one.abil.icon)}<div><b>${esc(one.abil.name)}</b><div class="dim">${esc(one.abil.desc)}</div></div></div>
+      ${(sk => `<div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(sk.icon)}<div><div class="dim" style="font-size:12px">Способность · ${effOf(sk.eff)[1]}</div><b>${esc(sk.name)}</b><div class="dim">${esc(effOf(sk.eff)[2])}</div></div></div>`)(skillOf(one.name, one.abil))}
+      <div class="abrow" style="margin-top:10px;align-items:center">${abilIcon(one.abil.icon)}<div><div class="dim" style="font-size:12px">Разрушительная</div><b>${esc(one.abil.name)}</b><div class="dim">${esc(one.abil.desc)}</div></div></div>
       <div style="margin-top:10px">${one.bio ? esc(one.bio) : '<span class="dim">Досье пока не заполнено.</span>'}</div>
       <button class="btn" data-a="dsel" data-v="-1">К списку</button></div>`;
   } else {
@@ -3751,15 +3852,16 @@ function viewFlight() {
     ${REGIONS.map((r, i) => `<button class="btn" data-a="fly" data-v="${i}" ${i === S.region ? 'disabled' : ''}>${r.name}</button>`).join('')}
     </div>${back}`);
 }
-let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0, setupFace = 0;
+let setupNick = '', setupFlag = 'RU', setupErr = '', setupAName = '', setupADesc = '', setupIcon = 0, setupFace = 0, setupSName = '', setupSIcon = 0, setupEff = 'stun';
 const setupRandom = () => {   // кнопка «Случайно»: ник, флаг, способность и иконка
   const used = new Set((SETUP ? SETUP.made : []).map(H => H.nick.toLowerCase())), pool = GEN_NAMES.filter(n => !used.has(n.toLowerCase()) && n.toLowerCase() !== setupNick.toLowerCase());
   setupNick = pool[rnd(0, pool.length - 1)];
   const fl = Object.keys(COUNTRIES); setupFlag = fl[rnd(0, fl.length - 1)];
   const ab = ABIL_LIST.filter(x => x[0] !== setupAName), a = ab[rnd(0, ab.length - 1)];
   setupAName = a[0]; setupADesc = a[1]; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupErr = '';
+  { const e = EFFECTS[rnd(0, EFFECTS.length - 1)][0], ns = SKILL_NAMES[e]; setupEff = e; setupSName = ns[rnd(0, ns.length - 1)]; setupSIcon = rnd(0, ABIL_ICON_COUNT - 1); }
 };
-const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupFace = rnd(0, FACE_COUNT - 1); };
+const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupFace = rnd(0, FACE_COUNT - 1); setupSName = ''; setupSIcon = rnd(0, ABIL_ICON_COUNT - 1); setupEff = 'stun'; };
 function viewMenu() {
   const solo = loadGame('solo'), coop = loadGame('coop');
   return `<div class="mlogo"><img src="img/logo_main.webp" alt="SPECTRE"></div>
@@ -3809,6 +3911,24 @@ function viewIntro() {   // вступление после создания г�
     <div class="inbanner"><div><b>ВСТУПИТЕЛЬНЫЙ ТУРНИР</b><i>Первый шаг в большую лигу · ${esc(REGIONS[S.region].city)} · 8 новичков</i></div></div>
     <button class="ingo" data-a="igo">ОТПРАВИТЬСЯ НА ТУРНИР</button></div>`;
 }
+function skillEditor(name, icon, eff, pre) {   // обычная способность: название, иконка, один из 10 эффектов
+  return `<div class="skh">Способность</div>
+    <div class="abrow">
+      <button class="iconone" data-a="${pre}icon" data-v="1" aria-label="Сменить иконку">${abilIcon(icon)}</button>
+      <div style="flex:1;min-width:0"><div class="dim">Название</div><input id="${pre}name" maxlength="28" placeholder="Например: Песчаный шторм" value="${esc(name)}">
+        <div class="facenav" style="max-width:200px"><button data-a="${pre}icon" data-v="-1" aria-label="Предыдущая иконка">‹</button><span>Иконка ${icon + 1} / ${ABIL_ICON_COUNT}</span><button data-a="${pre}icon" data-v="1" aria-label="Следующая иконка">›</button></div></div>
+    </div>
+    <div class="dim" style="margin-top:10px">Эффект — тратит ${TB.qiAbil} Цы, можно применять каждый ход:</div>
+    <div class="skfx">${EFFECTS.map(e => `<button class="${e[0] === eff ? 'on' : ''}" data-a="${pre}eff" data-v="${e[0]}"><b>${e[1]}</b>${e[2]}</button>`).join('')}</div>`;
+}
+function viewSkill() {   // настройка способности (старые сохранения и смена в профиле)
+  const k = S.skEdit || (S.skEdit = { ...S.skill });
+  return wrap(`<div class="card"><h2>Способности</h2>${S.skillNew ? '<div class="dim" style="margin-bottom:8px">В игре новая пошаговая система боя. Теперь у тебя две способности: обычная с эффектом и разрушительная. Твой прежний коронный удар стал разрушительным. Придумай обычную способность.</div>' : ''}
+    ${skillEditor(k.name, k.icon, k.eff, 'ke')}
+    <div class="sksep"></div><div class="skh">Разрушительная</div><div class="abrow" style="align-items:center">${abilIcon(S.ability.icon)}<div><b>${esc(S.ability.name)}</b><div class="dim">${esc(S.ability.desc || '')}</div></div></div>
+    <div class="minus" style="margin-top:8px">${esc(S.skErr || '')}</div>
+    <button class="btn gold" data-a="kesave" style="text-align:center">Сохранить</button></div>`);
+}
 function viewSetup() {
   const who = SETUP && SETUP.mode === 'coop' ? `<div class="dim">Игрок ${SETUP.made.length + 1} из ${SETUP.n}</div>` : '';
   return `<img class="crhead" src="img/nav/cr_head.webp" alt="Создание персонажа"><div class="card" style="margin-top:10px">${who}<div class="row" style="align-items:center;flex-wrap:nowrap;margin-bottom:10px;justify-content:flex-end"><button class="btn gold" data-a="srnd" style="width:auto;flex:0 0 auto;padding:8px 14px">🎲 Случайно</button></div>
@@ -3819,135 +3939,110 @@ function viewSetup() {
     <div class="dim" style="margin-top:14px">Флаг</div>
     <div class="flagnav"><button data-a="sflag" data-v="-1" aria-label="Предыдущий флаг">‹</button><span><b>${flagOf(setupFlag)}</b>${COUNTRIES[setupFlag]}</span><button data-a="sflag" data-v="1" aria-label="Следующий флаг">›</button></div>
     <img class="crabil" src="img/nav/cr_abil.webp" alt="Придумай себе суперспособность">
+    ${skillEditor(setupSName, setupSIcon, setupEff, 'sk')}
+    <div class="sksep"></div>
+    <div class="skh">Разрушительная способность</div>
     <div class="abrow">
       <button class="iconone" data-a="sicon" aria-label="Сменить иконку">${abilIcon(setupIcon)}</button>
-      <div style="flex:1;min-width:0"><div class="dim">Название способности</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
+      <div style="flex:1;min-width:0"><div class="dim">Название</div><input id="aname" maxlength="28" placeholder="Например: Громовой разлом" value="${esc(setupAName)}">
         <div class="facenav" style="max-width:200px"><button data-a="siprev" aria-label="Предыдущая иконка">‹</button><span>Иконка ${setupIcon + 1} / ${ABIL_ICON_COUNT}</span><button data-a="sicon" aria-label="Следующая иконка">›</button></div></div>
     </div>
     <div class="dim" style="margin-top:10px">Что делает твой сильнейший удар?</div><textarea id="adesc" maxlength="120" rows="2" placeholder="Например: обрушивает на врага огненный молот">${esc(setupADesc)}</textarea>
-    <div class="dim" style="margin-top:4px">Эта фраза появится в журнале боя, когда ты применишь удар.</div>
-    <div class="dim" style="margin-top:6px">Способность — твой коронный удар: мощная серия одним броском. Применяется сама, когда накопится.</div>
+    <div class="dim" style="margin-top:6px">Самый сильный удар без эффектов: тратит ${TB.qiUlt} Цы и применяется один раз за бой. Фраза появится в журнале боя.</div>
     <button class="imgbtn" data-a="start" aria-label="Создать персонажа" style="margin-top:16px"><img src="img/nav/cr_go.webp" alt=""></button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
     <button class="btn" data-a="mback">Главное меню</button>
   </div>`;
 }
 
-// экран боя: фон img/fight_bg.webp (908×1536), элементы по координатам макета
-const FW = 908, FH = 906;   // верхняя часть макета 908×1536: до панелей HP/Цы включительно
-const fpos = (x0, y0, x1, y1) => `left:${pc(x0, FW)};top:${pc(y0, FH)};width:${pc(x1 - x0, FW)};height:${pc(y1 - y0, FH)}`;
-const FL = {   // левый и правый боец: портрет, плашка имени, полосы HP/Цы, квадрат иконки, поле названия
-  fa: { pic: [19, 225, 436, 630], face: [40, 250, 415, 615], plate: [22, 632, 432, 762], hp: [102, 801, 424, 832], qi: [102, 855, 424, 886], icon: [33, 933, 121, 1022], name: [140, 925, 432, 1030] },
-  fb: { pic: [477, 225, 894, 630], face: [498, 250, 873, 615], plate: [480, 632, 890, 762], hp: [558, 801, 880, 832], qi: [558, 855, 880, 886], icon: [481, 933, 569, 1022], name: [588, 925, 880, 1030] }
-};
-function fside(x, id) {
-  const L = FL[id];
-  return `<div class="ff-face" style="${fpos(...L.pic)}">${faceImg(x.face)}</div>
-    <div class="ff-fx" id="${id}-fx" style="${fpos(...L.face)}"></div><div class="ff-fx ff-fx2" id="${id}-fx2" style="${fpos(...L.face)}"></div>
-    <div class="ff-plate" style="${fpos(...L.plate)}"><b${x.beast ? ' style="font-size:.82em"' : ''}>${esc(x.name)}</b>${x.beast ? `<span class="beastmark">${abilIcon(30)}</span>` : rateHtml(x.rating, 'rf')}</div>
-    <div class="ff-bar hp" style="${fpos(...L.hp)}"><i id="${id}-hp"></i></div>
-    <div class="ff-bar qi" style="${fpos(...L.qi)}"><i id="${id}-qi"></i></div>
-`;
-}
-// способность бойца: кнопка на всю ширину, иконка вдвое больше, описание в 2 строки
-const fabRow = (x, id) => `<button class="ff-ab" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">
-  ${abilIcon(x.abil.icon)}<span class="ff-abt"><em>${esc(x.name)}</em><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i><span id="${id}-acd"></span></span></button>`;
-// экран боя по макету: шапка SPECTRE / ПОЕДИНОК, две карточки бойцов, журнал и скорость; в альбомном — журнал справа
+// ---------- экран пошагового боя ----------
 const fCountry = x => x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '';
-function fzCard(x, id) {   // карточка бойца по макету: портрет с рамкой стороны, ник+флаг, ранг|рейтинг|лига, команда, HP, Цы; способность — отдельно
-  const lg = leagueOf(x.rating), cc = x.country || (x.me && G ? (G.players.find(H => H.nick === x.name) || {}).country : '') || '';
+function tbStatus(x) {
+  const s = [];
+  if (x.defend) s.push(['🛡 Защита', 'good']); if (x.conc) s.push(['🧘 Концентрация', '']); if (x.exhausted) s.push(['😵 Истощение', 'bad']);
+  if (x.st.barrier) s.push([`🔰 Щит ${x.st.barrier}`, 'good']); if (x.st.reflect) s.push(['🪞 Отражение', 'good']); if (x.st.smoke) s.push(['💨 В дыму', 'good']);
+  if (x.st.stun) s.push(['💫 Оглушён', 'bad']); if (x.st.wound) s.push([`🩸 Рана ×${x.st.wound}`, 'bad']); if (x.st.mark) s.push([`🎯 Метка ×${x.st.mark}`, 'bad']);
+  if (x.st.weak) s.push([`⬇ Ослаблен ×${x.st.weak}`, 'bad']); if (x.st.seal) s.push([`🔒 Печать ×${x.st.seal}`, 'bad']); if (x.st.rageItem) s.push(['😡 Сыворотка', '']);
+  if (x.ultUsed) s.push(['💥 Ульта потрачена', '']);
+  return s.map(([t, c]) => `<span class="${c}">${t}</span>`).join('');
+}
+function fzCard(x, id) {   // карточка бойца: портрет с рамкой стороны, флаг+ник, ранг|рейтинг, команда, HP, Цы, статусы
+  const lg = leagueOf(x.rating), cc = fCountry(x), S0 = STANCES.find(s => s[0] === x.stance), c = id === 'fa' ? 'a' : 'b';
   const team = x.beast ? `<span class="fyteam wild">${abilIcon(30)}<b>Дикий зверь</b></span>`
     : x.team && x.team.logo ? `<span class="fyteam"><img src="img/team/${x.team.logo}.webp" alt=""><b>${esc(x.team.name)}</b></span>` : '<span class="fyteam fa"><b>FREE AGENT</b></span>';
-  return `<div class="fyc ${id}">
-    <div class="fyp" id="${id}-pic">${faceImg(x.face)}<div class="ff-fx" id="${id}-fx"></div><div class="ff-fx ff-fx2" id="${id}-fx2"></div></div>
+  return `<div class="fyc ${id} ${F.done ? (F.won === (c === 'a') ? 'won' : 'lost') : ''} ${F.cur === c && !F.done ? 'pr-turn' : ''}">
+    <div class="fyp" id="${id}-pic">${faceImg(x.face)}<span class="pr-stance">${S0[1]} ${S0[2]}</span></div>
     <div class="fyi">
       <div class="fyhd"><div class="fynr"><div class="fyn">${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}<b>${esc(x.name)}</b></div>
       <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div></div></div>
       ${team}
     </div>
     <div class="fybars">
-      <div class="fyb"><span>HP</span><div class="fzbar hp"><i id="${id}-hp"></i></div><em id="${id}-hpt"></em></div>
-      <div class="fyb"><span>ЦЫ</span><div class="fzbar qi"><i id="${id}-qi"></i></div><em id="${id}-qit"></em></div>
+      <div class="fyb"><span>HP</span><div class="fzbar hp"><i style="width:${x.hp / x.hpMax * 100}%"></i></div><em>${x.hp}/${x.hpMax}</em></div>
+      <div class="fyb"><span>ЦЫ</span><div class="fzbar qi"><i style="width:${x.qi}%"></i></div><em>${x.qi}/100</em></div>
     </div>
-    ${fyAb(x, id).replace(/id="(f[ab])-(ab|acd)"/g, 'data-id="$1-$2"')}
+    <div class="pr-st">${tbStatus(x)}</div>
   </div>`;
 }
-const fyAb = (x, id) => { const ab = `<span class="fyico">${abilIcon(x.abil.icon)}<em id="${id}-acd"></em></span><span class="fyat"><small>${esc(x.name)} · способность</small><b>${esc(x.abil.name)}</b><i>${esc(x.abil.desc || 'наносит серию из пяти ударов')}</i></span>`;
-  return x.me ? `<button class="fya ${id}" id="${id}-ab" data-a="fabil" data-v="${id}" aria-label="${esc(x.abil.name)}">${ab}</button>` : `<div class="fya ${id} opp" id="${id}-ab">${ab}</div>`; };
+function tbRange(x, y, n, base, opt = {}) { const m = dealtMul(x) * takenMul(y, opt.pierce) * (opt.k || 1) * base * n; return `${Math.round(m * (1 - TB.spread) * (opt.sure ? 1 : 0.9))}–${Math.round(m * (1 + TB.spread))}`; }
+const MENU = { open: true };
+function tbMenu() {   // всплывающее меню хода: стойки, все действия с описанием и уроном, все расходники с описанием
+  const x = F[F.cur], y = tbOpp(x), ef = effOf(x.skill.eff), its = tbItems(x);
+  const acts = [
+    ['series', '<span class="pr-emo">👊</span>', 'Серия ударов', '5 ударов подряд, любой может промахнуться или стать критом.', `≈ ${tbRange(x, y, TB.series, TB.hit(x.p))}`, `+${TB.qiSeries}`, true],
+    ['abil', abilIcon(x.skill.icon), x.skill.name, `${ef[1]}: ${ef[2].charAt(0).toLowerCase() + ef[2].slice(1)}.${x.st.seal ? ' Сейчас под печатью.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.abilHits, { pierce: x.skill.eff === 'pierce', k: x.skill.eff === 'pierce' ? TB.e.pierce : 1, sure: true })}`, `−${TB.qiAbil}`, canAbil(x)],
+    ['ult', abilIcon(x.abil.icon), x.abil.name, `Разрушительная: самый сильный удар, один раз за бой.${x.ultUsed ? ' Уже использована.' : x.qi < TB.qiUlt ? ' Цы не хватает — после удара истощение и пропуск хода.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.ultHits, { sure: true })}`, `−${TB.qiUlt}`, canUlt(x)],
+    ['def', '<span class="pr-emo">🛡</span>', 'Защита', `Блокирует ${Math.round(TB.defBlock * 100)}% урона следующего хода соперника.`, '', `−${TB.qiDef}`, x.qi >= TB.qiDef],
+    ['conc', '<span class="pr-emo">🧘</span>', 'Концентрация Цы', 'Восстанавливает Цы, но в этот ход получаешь +15% урона.', '', `+${TB.qiConc}`, true],
+  ];
+  return `<div class="pr-menu ${MENU.open ? '' : 'min'}">
+    <div class="pr-mh"><div><small>${F.a.me && F.b.me ? 'Ход игрока' : 'Твой ход'}</small><b>Ходит ${esc(x.name)}</b></div>
+      <div class="pr-mini">${[[x, x === F.a ? 'a' : 'b'], [y, y === F.a ? 'a' : 'b']].map(([f, c]) => `<div class="${c}"><span>${esc(f.name)}</span><i class="h"><u style="width:${f.hp / f.hpMax * 100}%"></u></i><i class="q"><u style="width:${f.qi}%"></u></i></div>`).join('')}</div>
+      <button class="pr-tog" data-a="fmenu">${MENU.open ? 'Свернуть ▾' : 'Меню ▴'}</button></div>
+    <button class="pr-autob" data-a="fauto">🤖 Автоход <small>— ход сделает автоматика</small></button>
+    <div class="pr-mb">
+      <h4>Стойка <small>— бесплатно, держится, пока не сменишь</small></h4>
+      <div class="pr-seg">${STANCES.map(s => `<button class="${x.stance === s[0] ? 'on' : ''}" data-a="fst" data-v="${s[0]}">${s[1]} ${s[2]}<small>наносишь / получаешь<br>${s[3]}</small></button>`).join('')}</div>
+      <h4>Действие <small>— заканчивает ход</small></h4>
+      <div class="pr-acts">${acts.map(([k, ic, n, d, dmg, c, ok]) => `<button class="pr-act ${ok ? '' : 'dis'} ${k === 'ult' ? 'ult' : ''}" data-a="fact" data-v="${k}" ${ok ? '' : 'disabled'}><span class="pr-ic">${ic}</span><span class="pr-tx"><b>${esc(n)}</b><small>${d}</small>${dmg ? `<em>Урон ${dmg}</em>` : ''}</span><span class="pr-cost"><b>${c}</b>Цы</span></button>`).join('')}</div>
+      <h4>Расходники <small>— один за ход, ход не заканчивает</small></h4>
+      <div class="pr-itl">${its.length ? its.map(k => { const c = CONS.find(q => q.k === k), off = x.used[k] || x.itemTurn || (x.H && consOf(x.H, k) <= 0);
+        return `<button class="pr-it ${off ? 'off' : ''}" data-a="fitem" data-v="${k}" ${off ? 'disabled' : ''}><img src="img/shop/${k}.webp" alt=""><span><b>${esc(c.n)}${x.H ? ` ×${consOf(x.H, k)}` : ''}</b><small>${x.used[k] ? 'Уже использован в этом бою' : ITEM_TB[k]}</small></span></button>`; }).join('') : '<div class="dim">Расходников нет — их можно купить в магазине.</div>'}</div>
+    </div>
+  </div>`;
+}
 function viewFight() {
   if (!F) { S.view = S.trun ? 'trun' : 'main'; return S.trun ? viewTRun() : viewMain(); }
+  const x = F[F.cur], mine = !F.done && F.await && x.me;
   return `<div class="fy ${F.logFull ? 'logfull' : ''}">
     <div class="fyh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><div class="fyht"><div><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b></div><span class="fzst">${esc(F.title)}</span></div></div>
     <div class="fyf">${fzCard(F.a, 'fa')}<div class="fyvs">VS</div>${fzCard(F.b, 'fb')}</div>
-    <div class="fyabs">${fyAb(F.a, 'fa')}${fyAb(F.b, 'fb')}</div>
-    <div class="fyitr">${fItemsHtml(F.a, 'fa')}${fItemsHtml(F.b, 'fb')}</div>
+    <div class="pr-turnb ${F.done ? '' : mine ? 'me' : 'op'}">${F.done ? 'Бой окончен' : mine ? `Ход ${esc(x.name)}` : `Ходит ${esc(x.name)}…`}</div>
     <div class="fyl"><div class="fylh"><h3>Журнал боя</h3><button class="fyall" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button></div>
-      <div class="flog" id="flog" onscroll="const f=document.getElementById('flast');if(f)f.hidden=this.scrollHeight-this.scrollTop-this.clientHeight<24"></div><button class="fzlast" id="flast" data-a="flast" hidden>К последнему ↓</button><div id="fend"></div>
-      <div class="fyk" id="fctl"><button class="fyall fyall2" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button><button class="fysp" data-a="fspc"><span>▶</span><b id="fspl">×${F.speed || 1}</b></button><button class="fyskip" data-a="fskip">Пропустить »</button></div></div>
-  </div>`;
+      <div class="flog" id="flog">${F.ev.map(e => `<div class="${e.c || ''}">${esc(e.t || e)}</div>`).join('')}</div>
+      <div id="fend">${F.done ? `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>` : ''}</div></div>
+    ${F.done ? '' : '<button class="btn pr-ff" data-a="fskip" style="text-align:center">⏩ Досчитать бой</button><div class="dim" style="text-align:center;font-size:13px;margin-top:-6px">Оставшиеся ходы за обоих сыграет автоматика — сразу к результату.</div>'}
+    ${mine ? `<div style="height:${MENU.open ? 56 : 14}vh"></div>` : ''}
+  </div>${mine ? tbMenu() : ''}`;
 }
-function fightPaint() {
-  if (!F) return;
-  if (F.itemsDirty || (F.done && !F.itemsFinal)) { F.itemsDirty = false; if (F.done) F.itemsFinal = true; for (const [x, id] of [[F.a, 'fa'], [F.b, 'fb']]) { const el = document.getElementById(id + '-it'); if (el) el.outerHTML = fItemsHtml(x, id); } }
-  for (const [x, id] of [[F.a, 'fa'], [F.b, 'fb']]) {
-    const hp = document.getElementById(id + '-hp');
-    if (!hp) return;
-    hp.style.width = (x.hp / x.hpMax * 100) + '%';
-    document.getElementById(id + '-qi').style.width = (x.qi / x.qiMax * 100) + '%';
-    document.getElementById(id + '-hpt').textContent = Math.max(0, Math.round(x.hp)) + '/' + x.hpMax;
-    document.getElementById(id + '-qit').textContent = Math.round(x.qi / x.qiMax * 100) + '/100';
-    const ready = !F.done && x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct;
-    const st = document.getElementById(id + '-acd');
-    const active = x.abT != null && F.t - x.abT < 0.8;
-    st.textContent = active ? '' : x.rest > 0 ? Math.ceil(x.rest) : x.acd > 0 ? Math.ceil(x.acd) : '';   // как в WoW: секунды до отката поверх иконки
-    st.className = active ? 'act' : ready ? 'ok' : x.rest > 0 || x.acd > 0 ? 'cd' : 'noqi';
-    st.title = active ? 'Активна' : x.rest > 0 ? 'Передышка' : x.acd > 0 ? 'Перезарядка' : ready ? 'Готово' : 'Недостаточно Цы';
-    const sq = document.getElementById(id + '-sq');
-    if (sq) { sq.classList.toggle('cd', !ready && !active); sq.classList.toggle('ready', ready); sq.classList.toggle('act', active); const t = document.getElementById(id + '-sqst'); t.textContent = st.textContent; }
-    document.getElementById(id + '-ab').classList.toggle('cd', !ready);
-  }
-  for (const e of F.fx) {
-    const el = document.getElementById(e.who + (e.layer === 2 ? '-fx2' : '-fx'));
-    el.textContent = e.text; el.className = 'ff-fx' + (e.layer === 2 ? ' ff-fx2 ' : ' ') + e.cls; void el.offsetWidth; el.classList.add('go');
-    if (e.layer === 1 && e.cls === 'minus' || e.cls === 'rand' && e.layer === 1) { const pic = document.getElementById(e.who + '-pic'); if (pic) { pic.classList.remove('hit'); void pic.offsetWidth; pic.classList.add('hit'); } }
-  }
+const fightPaint = () => { if (F && !F.sim) render(); };
+function fightLoop() {   // после отрисовки: старт боя, всплывающие цифры, окно победителя
+  if (!F || F.sim || !document.getElementById('flog')) return;
+  const lg = document.getElementById('flog'); lg.scrollTop = lg.scrollHeight;
+  if (!F.started) { F.started = true; const f0 = F; setTimeout(() => { if (F === f0 && !F.done) tbStart(); }, 500); }
+  for (const f of F.fx || []) { const el = document.getElementById(f.id + '-pic'); if (!el) continue; const d = document.createElement('div'); d.className = 'pr-float ' + f.c; d.textContent = f.t; el.appendChild(d); setTimeout(() => d.remove(), 1200); }
   F.fx = [];
-  const spl = document.getElementById('fspl'); if (spl) spl.textContent = '×' + (F.speed || 1);
-  for (const id of ['fa', 'fb']) { const o = document.getElementById(id + '-ab'), st = document.getElementById(id + '-acd');   // копия способности внутри карточки (альбомный вид)
-    document.querySelectorAll(`[data-id="${id}-ab"]`).forEach(c => c.className = o.className);
-    document.querySelectorAll(`[data-id="${id}-acd"]`).forEach(c => { c.textContent = st.textContent; c.className = st.className; }); }
-  const lg = document.getElementById('flog'), total = (F.evCut || 0) + F.ev.length;
-  if (lg && lg.dataset.n != total) {   // дописываем новые строки; автопрокрутка, только если игрок внизу
-    const atEnd = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 24;
-    lg.innerHTML = F.ev.map(e => `<div class="${e.c || ''}">${esc(e.t || e)}</div>`).join(''); lg.dataset.n = total;
-    if (atEnd || !F.evSeen) { lg.scrollTop = lg.scrollHeight; F.evSeen = true; }
-    const fl = document.getElementById('flast'); if (fl) fl.hidden = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 24;
-  }
-  if (F.done && !document.getElementById('fend').innerHTML) {
-    const W = F.won ? F.a : F.b, Lz = F.won ? 'fb' : 'fa';
-    document.querySelectorAll('.fyc.' + Lz).forEach(c => c.classList.add('lost')); document.querySelectorAll('.fyc.' + (Lz === 'fa' ? 'fb' : 'fa')).forEach(c => c.classList.add('won'));
-    const wc = fCountry(W), lg = leagueOf(W.rating), mine = F.a.me && F.b.me ? '' : F.won ? '<div class="fwres plus">Победа!</div>' : '<div class="fwres minus">Поражение</div>';
+  if (F.done && !F.ovShown) {
+    F.ovShown = true;
+    const W = F.won ? F.a : F.b, wc = fCountry(W), lg2 = leagueOf(W.rating), mine = F.a.me && F.b.me ? '' : F.won ? '<div class="fwres plus">Победа!</div>' : '<div class="fwres minus">Поражение</div>';
     const ov = document.createElement('div'); ov.className = 'fwin'; ov.innerHTML = `<div class="fwbox">${mine}<div class="fwt">ПОБЕДИТЕЛЬ</div>
       <div class="fwpic">${faceImg(W.face)}</div>
       <div class="fwn">${wc ? `<span class="fzfl">${flagOf(wc)}</span>` : ''}<b>${esc(W.name)}</b></div>
       ${wc ? `<div class="dim">${esc(COUNTRIES[wc] || '')}</div>` : ''}
-      ${W.beast ? '<div class="dim">Дикий зверь</div>' : `<div class="fwr"><img src="img/rank_${lg.id}.webp" alt=""><span>${lg.n}</span><b>${W.rating}</b></div>`}
+      ${W.beast ? '<div class="dim">Дикий зверь</div>' : `<div class="fwr"><img src="img/rank_${lg2.id}.webp" alt=""><span>${lg2.n}</span><b>${W.rating}</b></div>`}
       <button class="btn gold" data-a="fend">Продолжить</button></div>`;
     setTimeout(() => { if (F && F.done && !document.querySelector('.fwin')) document.body.appendChild(ov); }, 900);
-    document.getElementById('fend').innerHTML = `<div class="bonus ${F.won || (F.a.me && F.b.me) ? 'plus' : 'minus'}" style="font-size:20px;text-align:center;margin:0">${F.a.me && F.b.me ? 'Победил ' + esc((F.won ? F.a : F.b).name) : F.won ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="fend">Продолжить</button>`;
-    document.getElementById('fctl').style.display = 'none'; document.getElementById('flog').style.display = 'none'; document.getElementById('flast').hidden = true;
   }
-}
-function fightLoop() {
-  clearInterval(FT);
-  if (!F) return;
-  fightPaint();
-  FT = setInterval(() => {
-    if (!F || !document.getElementById('flog')) { clearInterval(FT); return; }
-    for (let i = 0; i < F.speed && !F.done; i++) fightStep(0.1);
-    fightPaint();
-    if (F.done) clearInterval(FT);
-  }, 100);
 }
 function viewTRun() {
   const R = S.trun;
@@ -4120,7 +4215,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button><button class="btn" data-a="lsim">Досчитать матч</button></div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -4150,7 +4245,7 @@ function act(a, v) {
   if (!G) {   // главное меню и создание героев
     if (a === 'sface' && !SETUP) return;
     const inp = document.getElementById('nick');
-    if (SETUP && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; }
+    if (SETUP && inp) { setupNick = inp.value; setupAName = document.getElementById('aname').value; setupADesc = document.getElementById('adesc').value; setupSName = document.getElementById('skname').value; }
     switch (a) {
       case 'mcont': G = loadGame(v); if (G) { S = G.players[G.cur]; ensureLeagues(); } break;
       case 'mnew': SETUP = v === 'solo' ? { mode: 'solo', n: 1, made: [] } : { mode: 'coop', n: +v.slice(4), made: [] }; resetSetup(); break;
@@ -4162,6 +4257,8 @@ function act(a, v) {
       case 'sface': setupFace = (setupFace + 1) % FACE_COUNT; break;
       case 'sflag': { const ks = Object.keys(COUNTRIES); setupFlag = ks[(ks.indexOf(setupFlag) + +v + ks.length) % ks.length]; break; }
       case 'siprev': setupIcon = (setupIcon + ABIL_ICON_COUNT - 1) % ABIL_ICON_COUNT; break;
+      case 'skicon': setupSIcon = (setupSIcon + +v + ABIL_ICON_COUNT) % ABIL_ICON_COUNT; break;
+      case 'skeff': setupEff = v; break;
       case 'sfprev': setupFace = (setupFace + FACE_COUNT - 1) % FACE_COUNT; break;       // нажатие — следующий портрет
       case 'srnd': if (!SETUP) return; setupRandom(); break;
       case 'start': {
@@ -4169,9 +4266,11 @@ function act(a, v) {
         const nick = setupNick.trim();
         if (!nick) { setupErr = 'Введи ник, чтобы начать.'; break; }
         if (SETUP.made.some(H => H.nick.toLowerCase() === nick.toLowerCase())) { setupErr = 'Такой ник уже занят другим игроком.'; break; }
-        if (!setupAName.trim()) { setupErr = 'Придумай название своего удара.'; break; }
+        if (!setupSName.trim()) { setupErr = 'Придумай название способности.'; break; }
+        if (!setupAName.trim()) { setupErr = 'Придумай название разрушительной способности.'; break; }
         if (!setupADesc.trim()) { setupErr = 'Напиши, что делает твой удар.'; break; }
         const H = newHero(nick, setupFlag, { name: setupAName.trim(), desc: setupADesc.trim(), icon: setupIcon }, setupFace);
+        H.skill = { name: setupSName.trim(), icon: setupSIcon, eff: setupEff };
         H.hand = drawHand(H); H.intro = 1; H.introReg = 0;   // вступление: выбор региона и первый турнир
         SETUP.made.push(H);
         if (SETUP.made.length < SETUP.n) { resetSetup(); break; }   // следующий игрок
@@ -4183,6 +4282,7 @@ function act(a, v) {
     }
     render(); return;
   }
+  { const ken = document.getElementById('kename'); if (ken && S && S.skEdit) S.skEdit.name = ken.value; }   // поле названия способности
   switch (a) {
     case 'hgo': G.handoff = false; break;
     case 'tfplay': { const T = G.tq && G.tq[0]; if (!T || beltScore(T).done) return;
@@ -4242,23 +4342,22 @@ function act(a, v) {
     case 'tauto': if (S.trun) tRun(S.trun, true); break;
     case 'tfinish': finishTour(); S.ttab = null; break;
     case 'ttab': S.ttab = v; return render();
-    case 'fspeed': if (F) { F.speed = +v; fightPaint(); } return;
-    case 'fspc': if (F) { F.speed = (F.speed || 1) === 1 ? 3 : 1; fightPaint(); } return;
     case 'flogall': if (F) { F.logFull = !F.logFull; render(); } return;
-    case 'flast': { const lg = document.getElementById('flog'); if (lg) { lg.scrollTop = lg.scrollHeight; document.getElementById('flast').hidden = true; } return; }
-    case 'fskip': if (F) { finishFight(); fightPaint(); } return;
-    case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); fightPaint(); } return;
-    case 'fabil': {   // нажатие на квадрат с иконкой: способность этого бойца, если готова
-      if (!F || F.done) return;
-      const x = v === 'fa' ? F.a : F.b, y = v === 'fa' ? F.b : F.a;
-      if (x.rest <= 0 && x.acd <= 0 && x.qi >= x.qiMax * FIGHT.abilPct) { useAbility(x, y); fightPaint(); }
-      return;
-    }
-    case 'fitem': { const [id, k] = v.split(':'); useFItem(id, k); return; }
+    case 'fskip': if (F && !F.done) finishFight(); return;
+    case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); } return;
+    case 'fmenu': MENU.open = !MENU.open; render(); return;
+    case 'fst': if (F && F.await) { F[F.cur].stance = v; render(); } return;
+    case 'fitem': if (F && F.await && tbUseItem(F[F.cur], v)) { save(); render(); } return;
+    case 'fact': { if (!F || !F.await) return; const x = F[F.cur]; if (v === 'abil' && !canAbil(x) || v === 'def' && x.qi < TB.qiDef || v === 'ult' && !canUlt(x)) return; tbAction(x, v); return; }
+    case 'fauto': if (F && F.await) { tbLog(`${F[F.cur].name}: автоход.`, 'nt'); F.await = false; tbAI(F[F.cur]); } return;
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; useGame(F.a); useGame(F.b); F = null; cb(won); break; }
     case 'bureau': if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // своё жильё: бюро рядом, действие не тратится
     case 'toBureau': S.view = 'bureau'; break;
     case 'inv': S.view = 'inv'; S.renaming = null; break;
+    case 'skopen': S.skEdit = { ...S.skill }; S.skErr = ''; S.view = 'skill'; break;
+    case 'keicon': S.skEdit.icon = (S.skEdit.icon + +v + ABIL_ICON_COUNT) % ABIL_ICON_COUNT; break;
+    case 'keeff': S.skEdit.eff = v; break;
+    case 'kesave': { const n = S.skEdit.name.trim(); if (!n) { S.skErr = 'Придумай название способности.'; break; } S.skill = { name: n, icon: S.skEdit.icon, eff: S.skEdit.eff }; S.skEdit = null; S.skillNew = false; S.skErr = ''; S.view = 'main'; logMsg(`Способность «${n}» готова к бою.`); break; }
     case 'irename': S.renaming = +v; break;
     case 'irencancel': S.renaming = null; break;
     case 'iren': { const i = +v, el = document.getElementById('iname'), t = el ? el.value.trim() : ''; S.iname = S.iname || {}; if (t) S.iname[i] = t; else delete S.iname[i]; S.renaming = null; break; }
