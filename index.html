@@ -3890,6 +3890,39 @@ function setupAbilRandom() {   // кнопка «Придумай себе су�
   setupAName = a[0]; setupADesc = a[1]; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupErr = '';
 }
 const resetSetup = () => { setupNick = ''; setupFlag = 'RU'; setupErr = ''; setupAName = ''; setupADesc = ''; setupIcon = rnd(0, ABIL_ICON_COUNT - 1); setupFace = rnd(0, FACE_COUNT - 1); setupSName = ''; setupSIcon = rnd(0, ABIL_ICON_COUNT - 1); setupEff = 'stun'; };
+// ---------- перенос персонажа кодом ----------
+// Код = «SPK1.» + сжатое (deflate) сохранение в base64url. Переносит всю карьеру: героя, мир, лиги, историю.
+const b64u = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const ub64u = t => { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const s = atob(t), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
+async function zip(str, inv) {
+  const fmt = 'deflate-raw', st = new Blob([str]).stream().pipeThrough(inv ? new DecompressionStream(fmt) : new CompressionStream(fmt));
+  return inv ? await new Response(st).text() : new Uint8Array(await new Response(st).arrayBuffer());
+}
+async function exportCode(mode) { const raw = localStorage.getItem(SKEY[mode]); if (!raw) return ''; return 'SPK1.' + b64u(await zip(raw)); }
+async function importCode(code) {
+  code = String(code || '').replace(/\s+/g, '');
+  if (!/^SPK1\./.test(code)) throw new Error('Это не код сохранения «Спектра». Код начинается с SPK1.');
+  let raw; try { raw = await zip(ub64u(code.slice(5)), true); } catch (e) { throw new Error('Код повреждён или скопирован не полностью.'); }
+  let v; try { v = JSON.parse(raw); } catch (e) { throw new Error('Код повреждён или скопирован не полностью.'); }
+  if (!v || !Array.isArray(v.players) || !v.players.length) throw new Error('В коде нет персонажа.');
+  return { mode: v.mode === 'coop' ? 'coop' : 'solo', raw, v };
+}
+function viewXfer() {
+  const X = window.XFER, back = '<button class="btn" data-a="xclose" style="text-align:center">Назад</button>';
+  if (X.mode === 'exp') return `<div class="card"><h2>Код сохранения</h2>
+    <div class="dim">${X.mode2 === 'coop' ? 'Совместная карьера' : 'Одиночная карьера'} целиком: герой${X.mode2 === 'coop' ? 'и' : ''}, мир, лиги и история. Скопируй код и вставь его в «Импорт» на другом устройстве. Сохрани его в заметках или отправь себе в мессенджер — это ещё и резервная копия.</div>
+    <textarea id="xcode" readonly rows="7" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.code || 'Создаю код…')}</textarea>
+    <div class="dim" style="margin-top:4px">Длина кода: ${(X.code || '').length} символов</div>
+    <button class="btn gold" data-a="xcopy" style="text-align:center">${X.copied ? '✓ Скопировано' : 'Скопировать код'}</button>${back}</div>`;
+  return `<div class="card"><h2>Импорт персонажа</h2>
+    <div class="dim">Вставь код сохранения (начинается с SPK1.). Карьера загрузится в свой слот — одиночный или совместный.</div>
+    <textarea id="xin" rows="7" placeholder="SPK1.…" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.input || '')}</textarea>
+    ${X.err ? `<div class="minus" style="margin-top:6px">${esc(X.err)}</div>` : ''}
+    ${X.ask ? `<div class="card" style="margin-top:10px;border-color:var(--gold)"><b>${X.ask.mode === 'coop' ? 'Совместная' : 'Одиночная'} карьера: ${X.ask.v.players.map(H => esc(H.nick)).join(', ')} · неделя ${X.ask.v.week || 1}</b>
+      <div class="dim" style="margin-top:4px">${X.ask.has ? 'Она заменит текущее сохранение в этом слоте.' : 'Слот свободен.'}</div>
+      <button class="btn gold" data-a="ximpok" style="text-align:center">${X.ask.has ? 'Заменить и загрузить' : 'Загрузить'}</button></div>`
+      : '<button class="btn gold" data-a="ximp" style="text-align:center">Проверить код</button>'}${back}</div>`;
+}
 function viewMenu() {
   const solo = loadGame('solo'), coop = loadGame('coop');
   return `<div class="mlogo"><img src="img/logo_main.webp" alt="SPECTRE"></div>
@@ -3903,6 +3936,10 @@ function viewMenu() {
       <div class="dim" style="margin-top:10px">Новая игра — сколько игроков?</div>
       <div class="nrow">${[2, 3, 4, 5, 6].map(n => `<button class="imgbtn" data-a="mnew" data-v="coop${n}" aria-label="${n} игроков"><img src="img/nav/n${n}.webp" alt=""></button>`).join('')}</div>
       ${coop ? '<div class="dim" style="margin-top:6px">Новая совместная игра заменит сохранённую.</div>' : ''}</div>
+    <div class="card"><h2>Перенос персонажа</h2><div class="dim">Код сохранения переносит карьеру на другой телефон или в другой браузер.</div>
+      ${solo ? '<button class="btn" data-a="xexp" data-v="solo" style="text-align:center">Экспорт одиночной карьеры</button>' : ''}
+      ${coop ? '<button class="btn" data-a="xexp" data-v="coop" style="text-align:center">Экспорт совместной карьеры</button>' : ''}
+      <button class="btn gold" data-a="xin" style="text-align:center">Импорт по коду</button></div>
     <button class="imgbtn" data-a="about" data-v="0" aria-label="О игре" style="margin-bottom:20px"><img src="img/nav/about.webp" alt=""></button>`;
 }
 const ABOUT_BTN = [[613, 1340, 960, 1440], [200, 1355, 825, 1465], [200, 1355, 825, 1465]];   // кнопка «Дальше/Завершить» на слайде (из 1024×1536)
@@ -4250,6 +4287,7 @@ function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
   document.documentElement.classList.toggle('ingame', !!G);
   app.dataset.view = !G ? (SETUP ? 'setup' : 'menu') : G.lq ? (F ? 'fight' : 'lturn') : G.handoff ? 'handoff' : (S.view || 'main');
+  if (window.XFER && !G) { app.dataset.view = 'xfer'; app.innerHTML = viewXfer(); lastView = null; return; }
   if (window.ABOUT != null) { app.dataset.view = 'about'; app.innerHTML = viewAbout(window.ABOUT); window.scrollTo(0, 0); lastView = null; return; }
   if (!G) { app.innerHTML = SETUP ? viewSetup() : viewMenu(); lastView = null; return; }
   if (G.lq) { if (F) { app.innerHTML = viewFight(); fightLoop(); } else { app.innerHTML = viewLTurn(); window.scrollTo(0, 0); stageTop(); } lastView = null; return; }
@@ -4281,6 +4319,12 @@ function act(a, v) {
       case 'mback': SETUP = null; break;
       case 'about': window.ABOUT = +v < 3 ? +v : null; break;
       case 'aboutx': window.ABOUT = null; break;
+      case 'xexp': window.XFER = { mode: 'exp', mode2: v }; exportCode(v).then(c => { if (window.XFER) { window.XFER.code = c; render(); } }); break;
+      case 'xin': window.XFER = { mode: 'imp' }; break;
+      case 'xclose': window.XFER = null; break;
+      case 'xcopy': { const t = document.getElementById('xcode'); if (!t || !window.XFER.code) return; t.select(); (navigator.clipboard ? navigator.clipboard.writeText(window.XFER.code) : Promise.reject()).catch(() => document.execCommand('copy')).finally(() => { window.XFER.copied = true; render(); }); return; }
+      case 'ximp': { const X = window.XFER, t = document.getElementById('xin'); X.input = t ? t.value : ''; X.err = ''; importCode(X.input).then(r => { X.ask = { ...r, has: !!localStorage.getItem(SKEY[r.mode]) }; render(); }).catch(e => { X.err = e.message; render(); }); return; }
+      case 'ximpok': { const X = window.XFER; if (!X.ask) return; localStorage.setItem(SKEY[X.ask.mode], X.ask.raw); const g = loadGame(X.ask.mode); if (!g) { X.err = 'Не удалось загрузить карьеру из кода.'; X.ask = null; break; } window.XFER = null; G = g; S = G.players[G.cur]; ensureLeagues(); break; }
       case 'flag': setupFlag = v; setupErr = ''; break;
       case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
       case 'sface': setupFace = (setupFace + 1) % FACE_COUNT; break;
