@@ -58,7 +58,7 @@ html.rot #orient{right:auto;left:10px;bottom:10px;transform:rotate(90deg)}
 html.land .evtph img.big{width:100%;height:100%;max-height:none}
 .sub{display:flex;align-items:center;gap:10px;margin-top:12px}
 .sub h1{margin:0;font-size:22px;font-weight:700;line-height:1.2}
-.subback{width:44px;height:44px;flex:0 0 auto;border-radius:12px;border:1px solid var(--line);background:var(--nest);color:var(--txt);font-size:20px;cursor:pointer}
+.subback{width:48px;height:48px;flex:0 0 auto;padding:0;border:0;background:none;cursor:pointer;line-height:0;-webkit-tap-highlight-color:transparent}.subback img,.fzback img{width:100%;height:100%;object-fit:contain;display:block}.subback:active,.fzback:active{transform:scale(.92);filter:brightness(1.25)}
 .news>div:nth-child(2){margin-top:4px;line-height:1.4}
 .wk{padding:8px 0;border-bottom:1px solid var(--line);line-height:1.4}
 .wk:last-child{border-bottom:0}
@@ -412,7 +412,7 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 /* ---------- экран боя (макет «SPECTRE / ПОЕДИНОК») ---------- */
 .fz{--fzl:#3A8FD8;max-width:520px;margin:6px auto 0;border:1.5px solid var(--fzl);border-radius:16px;background:linear-gradient(180deg,#0E1830,#0A1122);padding:0 12px 12px;box-shadow:0 0 24px rgba(58,143,216,.18);display:grid;grid-template-columns:1fr;gap:10px;grid-template-areas:"h" "f" "l" "k"}
 .fzh{grid-area:h;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:12px 2px 10px;border-bottom:1px solid rgba(58,143,216,.35)}
-.fzback{width:32px;height:32px;border-radius:8px;border:1px solid #2A3A60;background:#16213A;color:var(--txt);font-size:18px;cursor:pointer}
+.fzback{width:34px;height:34px;padding:0;border:0;background:none;cursor:pointer;line-height:0}
 .fzlogo{font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-weight:900;font-size:24px;letter-spacing:.04em;color:#fff}
 .fzsl{color:#2FD7FF;font-size:24px;font-style:italic;font-weight:300}
 .fzh b{font-size:16px;letter-spacing:.06em}
@@ -1449,7 +1449,7 @@ const SPECIAL = [
 // зверь подстраивается под силу игрока: на 22–30 слабее — игрок проигрывает примерно в 5% боёв
 const BEAST = { gapLo: 20, gapHi: 28, coins: 250 };
 // ---------- очки лиги (ОЛ): криптовалюта для покупок. Рейтинг — только ранг и больше не тратится ----------
-const COIN_SVG = '<svg viewBox="0 0 20 20" class="coin"><circle cx="10" cy="10" r="9" fill="#2A1F05" stroke="#F5C84C" stroke-width="1.6"/><path d="M10 3.6l4.2 6.4L10 16.4 5.8 10z" fill="#32D5E7"/><path d="M10 3.6l4.2 6.4H5.8z" fill="#C9FBFF"/></svg>';
+const COIN_SVG = '<img class="coin" src="img/coin.webp" alt="крипта">';
 const coinHtml = (n, cls = '') => `<span class="coins ${cls}">${COIN_SVG}<b>${(n | 0).toLocaleString('ru-RU')}</b></span>`;
 const addCoins = (H, n, why) => { if (!n) return; H.coins = (H.coins || 0) + n; if (why) logTo(H, `${why}: +${n} крипты.`); };
 const TOUR_COINS = [150, 350, 1100];
@@ -3304,7 +3304,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 const VIEW_TITLE = { mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
-const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
+const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button><h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
   if (c.k === 'm') return '<div class="bonus minus">Эффект и бонус</div>';
@@ -3882,7 +3882,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
   const none = S.actions <= 0, esl = S.power >= ESL_MIN_POWER;
   const svc = (a, v, t, d, dis, why) => `<button class="svc" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''}><span class="svct"><b>${t}</b><em>1 действие</em></span><span class="dim">${dis && why ? why : d}</span></button>`;
   return wrap(`<div class="bgrid"><div class="bleft">
-    <div class="card"><img class="scene" src="img/bureau.webp" alt="Бюро Спектров">
+    <div class="card"><img class="scene" src="img/${['bureau', 'bureau_1', 'bureau_2'][S.bpic | 0]}.webp" alt="Бюро Спектров">
       <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
     <div class="card"><h2>Услуги бюро</h2>
       ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}${none ? '<div class="dim" style="margin-top:4px;font-size:13px">Действия на неделю закончились.</div>' : ''}
@@ -4126,7 +4126,7 @@ function viewFight() {
   if (!F) { S.view = S.trun ? 'trun' : 'main'; return S.trun ? viewTRun() : viewMain(); }
   const x = F[F.cur], mine = !F.done && F.await && x.me;
   return `<div class="fy ${F.logFull ? 'logfull' : ''}">
-    <div class="fyh"><button class="fzback" data-a="fback" aria-label="Назад">←</button><div class="fyht"><div><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b></div><span class="fzst">${esc(F.title)}</span></div></div>
+    <div class="fyh"><button class="fzback" data-a="fback" aria-label="Назад"><img src="img/back.webp" alt=""></button><div class="fyht"><div><span class="fzlogo">SPECTRE</span><span class="fzsl">/</span><b>ПОЕДИНОК</b></div><span class="fzst">${esc(F.title)}</span></div></div>
     <div class="fyf">${fzCard(F.a, 'fa')}<div class="fyvs">VS</div>${fzCard(F.b, 'fb')}</div>
     <div class="pr-turnb ${F.done ? '' : mine ? 'me' : 'op'}">${F.done ? 'Бой окончен' : mine ? `Ход ${esc(x.name)}` : `Ходит ${esc(x.name)}…`}</div>
     <div class="fyl"><div class="fylh"><h3>Журнал боя</h3><button class="fyall" data-a="flogall">${F.logFull ? 'Свернуть' : 'Весь журнал'} ›</button></div>
@@ -4505,7 +4505,7 @@ function act(a, v) {
     case 'fact': { if (!F || !F.await) return; const x = F[F.cur]; if (v === 'abil' && !canAbil(x) || v === 'def' && x.qi < TB.qiDef || v === 'ult' && !canUlt(x)) return; tbAction(x, v); return; }
     case 'fauto': if (F && F.await) { tbLog(`${F[F.cur].name}: автоход.`, 'nt'); F.await = false; tbAI(F[F.cur]); } return;
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; useGame(F.a); useGame(F.b); F = null; cb(won); break; }
-    case 'bureau': if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // своё жильё: бюро рядом, действие не тратится
+    case 'bureau': S.bpic = rnd(0, 2); if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // картинка Бюро — случайная из трёх   // своё жильё: бюро рядом, действие не тратится
     case 'toBureau': S.view = 'bureau'; break;
     case 'inv': S.view = 'inv'; S.renaming = null; break;
     case 'skopen': S.skEdit = { ...S.skill }; S.skErr = ''; S.view = 'skill'; break;
