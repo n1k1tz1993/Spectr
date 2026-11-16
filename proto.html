@@ -1002,6 +1002,7 @@ html.land .fy{margin-left:0;margin-right:0}
 .pr-mini span{grid-row:span 2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}.pr-mini .a span{color:#9FE4FF}.pr-mini .b span{color:#FFB8B0}
 .pr-mini i{display:block;height:5px;border-radius:3px;background:#1A2540;overflow:hidden}.pr-mini u{display:block;height:100%}.pr-mini .h u{background:#5BDB6A}.pr-mini .q u{background:#3FCBF2}
 .pr-mini em{display:none}
+.pr-autob{all:unset;cursor:pointer;display:block;margin:8px 12px 2px;padding:8px;text-align:center;border-radius:10px;border:1px solid rgba(50,200,240,.6);background:#10223A;color:#9FE4FF;font-weight:700;font-size:14px}.pr-autob small{font-weight:400;color:var(--dim)}
 .pr-tog{all:unset;cursor:pointer;font-size:13px;color:var(--gold);padding:6px 10px;border:1px solid rgba(233,196,106,.5);border-radius:10px}
 .pr-mb{overflow:auto;padding:4px 12px 16px}
 .pr-menu.min .pr-mb{display:none}
@@ -1161,8 +1162,8 @@ function effect(x, y) {
   else if (e === 'wound') { y.st.wound = 3; log(`${y.name} ранен на 3 хода.`, 'dim'); }
   else if (e === 'heal') { const h = Math.round(x.hpMax * R.e.heal); x.hp = Math.min(x.hpMax, x.hp + h); log(`${x.name} восстанавливает ${h} HP.`, 'dim'); fl(x, '+' + h, 'heal'); }
   else if (e === 'barrier') { x.st.barrier = Math.round(x.hpMax * R.e.barrier); log(`${x.name}: щит ${x.st.barrier}.`, 'dim'); }
-  else if (e === 'mark') { y.st.mark = 2; log(`${y.name} помечен: +25% урона 2 хода.`, 'dim'); }
-  else if (e === 'weak') { y.st.weak = 2; log(`${y.name} ослаблен: −25% урона 2 хода.`, 'dim'); }
+  else if (e === 'mark') { y.st.mark = 2; log(`${y.name} помечен: +${Math.round((R.e.mark - 1) * 100)}% урона 2 хода.`, 'dim'); }
+  else if (e === 'weak') { y.st.weak = 2; log(`${y.name} ослаблен: −${Math.round((1 - R.e.weak) * 100)}% урона 2 хода.`, 'dim'); }
   else if (e === 'reflect') { x.st.reflect = 1; log(`${x.name} готов отразить удар.`, 'dim'); }
   else if (e === 'seal') { y.st.seal = R.e.seal; log(`${y.name} запечатан на ${R.e.seal} хода.`, 'dim'); }
 }
@@ -1191,7 +1192,7 @@ function startTurn() {
   if (x.exhausted) { x.qi = Math.min(R.qiMax, x.qi + R.exhaustQi); x.exhausted = false; log(`${x.name} восстанавливается после истощения (+${R.exhaustQi} Цы) и пропускает ход.`, nameCls(B, x)); return endTurn(x, true); }
   if (x.st.stun) { delete x.st.stun; x.qi = Math.min(R.qiMax, x.qi + R.qiTurn); log(`${x.name} оглушён и пропускает ход.`, nameCls(B, x)); return endTurn(x, true); }
   x.qi = Math.min(R.qiMax, x.qi + R.qiTurn);
-  if (!x.me) { if (B.sim) aiTurn(x); else { BUSY = true; render(); setTimeout(() => { BUSY = false; aiTurn(x); }, 900); } }
+  if (!x.me || B.fast) { if (B.sim || B.fast) aiTurn(x); else { BUSY = true; render(); setTimeout(() => { BUSY = false; aiTurn(x); }, 900); } }
   else { SEL = null; B.await = true; render(); }   // ждём решения игрока
 }
 function endTurn(x, skipped) {
@@ -1201,7 +1202,7 @@ function endTurn(x, skipped) {
   if (x.st.seal && --x.st.seal <= 0) delete x.st.seal;   // печать: считается в ходах запечатанного
   B.cur = B.cur === 'a' ? 'b' : 'a'; B.round++;
   if (B.round > 60) return finish(x.hp >= y.hp ? x : y);
-  if (B.sim) startTurn(); else { render(); setTimeout(startTurn, 450); }
+  if (B.sim || B.fast) startTurn(); else { render(); setTimeout(startTurn, 450); }
 }
 function finish(w) { if (B.done) return; B.done = true; B.win = w === B.a ? 'a' : 'b'; log(`Победа: ${w.name}!`, 't'); if (!B.sim) render(); }
 
@@ -1330,7 +1331,8 @@ function menuHtml() {   // всплывающее меню хода: стойк�
   ];
   return `<div class="pr-menu ${MENU_OPEN ? '' : 'min'}">
     <div class="pr-mh"><div><small>Твой ход</small><b>Ходит ${esc(x.name)}</b></div>
-      <div class="pr-mini">${[[x, 'a'], [y, 'b']].map(([f, c]) => `<div class="${c}"><span>${esc(f.name)}</span><i class="h"><u style="width:${f.hp / f.hpMax * 100}%"></u></i><i class="q"><u style="width:${f.qi}%"></u></i><em>${f.hp} · ${f.qi} Цы</em></div>`).join('')}</div><button class="pr-tog" data-a="mtog">${MENU_OPEN ? 'Свернуть ▾' : 'Открыть меню ▴'}</button></div>
+      <div class="pr-mini">${[[x, 'a'], [y, 'b']].map(([f, c]) => `<div class="${c}"><span>${esc(f.name)}</span><i class="h"><u style="width:${f.hp / f.hpMax * 100}%"></u></i><i class="q"><u style="width:${f.qi}%"></u></i><em>${f.hp} · ${f.qi} Цы</em></div>`).join('')}</div><button class="pr-tog" data-a="mtog">${MENU_OPEN ? 'Свернуть ▾' : 'Меню ▴'}</button></div>
+    <button class="pr-autob" data-a="auto">🤖 Автоход <small>— ход сделает автоматика</small></button>
     <div class="pr-mb">
       <h4>Стойка <small>— бесплатно, держится, пока не сменишь</small></h4>
       <div class="pr-seg">${STANCES.map(s => `<button class="${x.stance === s[0] ? 'on' : ''}" data-st="${s[0]}">${s[1]} ${s[2]}<small>наносишь / получаешь<br>${s[3]}</small></button>`).join('')}</div>
@@ -1350,6 +1352,7 @@ function viewFight() {
     <div class="pr-turnb ${B.done ? '' : mine ? 'me' : 'op'}">${B.done ? 'Бой окончен' : mine ? `Твой ход · ${esc(a.name)}` : `Ходит ${esc(B[B.cur].name)}…`}</div>
     <div class="fyl"><div class="fylh"><h3>Журнал боя</h3></div>
       <div class="flog" id="flog">${B.log.map(([t, c]) => `<div class="${{ t: 'crit', a: 'qi', b: '', gold: 'ab', dim: 'nt' }[c] || ''}">${esc(t)}</div>`).join('')}</div></div>
+    ${B.done ? '' : '<button class="btn pr-ff" data-a="ff" style="text-align:center">⏩ Досчитать бой</button><div class="dim" style="text-align:center;font-size:13px;margin-top:-6px">Оставшиеся ходы за обоих сыграет автоматика — сразу к результату.</div>'}
     ${mine ? '<div style="height:52vh"></div>' : ''}
   </div>${mine ? menuHtml() : ''}`;
 }
@@ -1408,6 +1411,8 @@ document.addEventListener('click', e => {
   }
   if (d.a === 'back') { VIEW = 'setup'; B = null; render(); return; }
   if (d.a === 'mtog') { MENU_OPEN = !MENU_OPEN; render(); return; }
+  if (d.a === 'ff') { if (!B || B.done) return; B.fast = true; log('⏩ Бой досчитан автоматически.', 't'); if (B.await) { B.await = false; aiTurn(B.a); } render(); return; }   // если сейчас ход бота — его таймер доиграет бой мгновенно
+  if (d.a === 'auto') { if (!B || B.done || !B.await) return; log(`${B.a.name}: автоход.`, 'dim'); aiTurn(B.a); return; }
   if (!B || B.done || !B.await) return;
   const a = B.a;
   if (d.st) { a.stance = d.st; render(); }
