@@ -3384,8 +3384,8 @@ function viewMore() {   // «Ещё»: библиотека, магазин, и�
       ${['inv', 'fame', 'coll', 'weeks'].map(k => `<button class="imgbtn" data-a="${k}" aria-label="${{ inv: 'Инвентарь', fame: 'Зал славы', coll: 'Коллекция', weeks: 'История недель' }[k]}"><img src="img/nav/${k}.webp" alt=""></button>`).join('')}
     </div>
     <div class="card"><h2>Настройки</h2>
-      ${it('orient', 'Повернуть экран', ORIENT === 'land' ? 'Сейчас: альбомный формат' : 'Сейчас: книжный формат')}
-      ${it('menu', 'Главное меню', 'Игра сохраняется автоматически')}
+      ${ibtn('orient', 'orient', '', 'Повернуть экран')}<div class="dim" style="text-align:center;margin-top:4px">${ORIENT === 'land' ? 'Сейчас: альбомный формат' : 'Сейчас: книжный формат'}</div>
+      ${ibtn('menuset', 'menu', '', 'Главное меню')}
     </div>`) + navBar();
 }
 function viewColl() { return wrap(`<div class="card">${trophiesHtml() || '<div class="dim">Пока нет ни одного трофея.</div>'}</div>`) + navBar(); }
@@ -3937,8 +3937,8 @@ function viewXfer() {
     <div class="dim">Вставь код персонажа (начинается с SPH1.). ${SETUP && SETUP.mode === 'coop' ? `Герой займёт место игрока ${SETUP.made.length + 1} из ${SETUP.n}.` : 'С этим героем начнётся новая карьера.'}</div>
     <textarea id="xin" rows="6" placeholder="SPH1.…" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.input || '')}</textarea>
     ${X.err ? `<div class="minus" style="margin-top:6px">${esc(X.err)}</div>` : ''}
-    ${X.H ? `<div class="card" style="margin-top:10px;border-color:var(--gold)">${heroLine(X.H)}<button class="btn gold" data-a="ximpok" style="text-align:center">Взять этого героя</button></div>`
-      : '<button class="btn gold" data-a="ximp" style="text-align:center">Проверить код</button>'}${back}</div>`;
+    ${X.H ? `<div class="card" style="margin-top:10px;border-color:var(--gold)">${heroLine(X.H)}${ibtn('xtake', 'ximpok', '', 'Взять этого героя')}</div>`
+      : ibtn('xcheck', 'ximp', '', 'Проверить код')}${back}</div>`;
 }
 function viewMenu() {
   const solo = loadGame('solo'), coop = loadGame('coop');
@@ -4218,7 +4218,7 @@ function wcCardHtml() {   // карточка Wild Card в бюро
     return `<div class="card"><img class="evlogo sm" src="img/wc_logo.webp" alt=""><h3>Wild Card</h3>
       <div class="dim">${G.wcLast ? `Прошлый Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}). ` : ''}Следующий Wild Card начнётся, когда все лиги доиграют сезон. Записаться в первый этап (отбор из ${WC_S1} бойцов) может любой Спектр — регистрация бесплатная и не тратит действие.${S.league != null ? ' Бойцы лиги попадают в Wild Card и сами, если не войдут в тройку лучших; регистрация — запасной путь.' : ''}</div>
       ${reg ? '<div class="bonus nt" style="margin-top:8px">✓ Ты записан в Wild Card</div>' : ''}
-      <button class="btn ${reg ? '' : 'gold'}" data-a="wcreg" style="text-align:center">${reg ? 'Отменить регистрацию' : 'Записаться на Wild Card'}</button>${wcPrevBtn()}</div>`;
+      ${ibtn(reg ? 'wcunreg' : 'wcreg', 'wcreg', '', reg ? 'Отменить регистрацию' : 'Записаться на Wild Card')}${wcPrevBtn()}</div>`;
   }
   if (!G.wc) return G.wcPrev ? `<div class="card"><img class="evlogo sm" src="img/wc_logo.webp" alt=""><h3>Wild Card</h3><div class="dim">Wild Card выиграл ${esc(G.wcLast.champ)} (${esc(G.wcLast.team)}). Он сейчас на чемпионате мира.</div>${wcPrevBtn()}</div>` : '';
   const L = G.wc, hi = heroIdx(S), me = L && L.teams.some(T => T.h === hi);
