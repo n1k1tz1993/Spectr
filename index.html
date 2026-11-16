@@ -3398,7 +3398,7 @@ function viewCard() {   // до выполнения: картинка, опис
       <div><div class="dim">Событие недели</div><h2>${esc(c.t)}</h2>
         ${S.jetlag ? '<div class="dim">Действие снимет джетлаг.</div>' : ''}
         ${G.mode === 'coop' && G.players.length > 1 && SHARE_K.includes(c.k) ? `<div class="invbox"><div class="dim">${c.k === 'fest' ? 'Позвать с собой одного игрока — он сыграет в той же сетке фестиваля, а действие потратишь только ты:' : 'Позвать с собой одного игрока — он получит тот же бонус, а действие потратишь только ты:'}</div><div class="invrow">${G.players.map((H, h) => h === G.cur ? '' : `<button class="invp ${(S.invite || []).includes(h) ? 'on' : ''}" data-a="invt" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}</button>`).join('')}</div></div>` : ''}
-        ${c.k === 'duel' || c.k === 'spar' || isIv(c) ? `<button class="btn gold evtgo" data-a="use" ${none ? 'disabled' : ''}>${c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : 'Начать интервью'} · 1 действие</button>` : ibtn('apply', 'use', '', 'Применить', '', none)}
+        ${c.k === 'duel' || c.k === 'spar' || isIv(c) ? ibtn(c.k === 'duel' ? 'duelgo' : c.k === 'spar' ? 'spargo' : isPod(c) ? 'podgo' : 'ivgo', 'use', '', (c.k === 'duel' ? 'Начать дуэль' : c.k === 'spar' ? 'Начать спарринг' : isPod(c) ? 'Начать запись' : 'Начать интервью') + ' · 1 действие', '', none) : ibtn('apply', 'use', '', 'Применить', '', none)}
         ${none ? '<div class="dim">Действия на эту неделю закончились.</div>' : ''}</div>
     </div>`);
 }
