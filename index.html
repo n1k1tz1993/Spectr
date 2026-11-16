@@ -405,6 +405,8 @@ html.land .fyit button,html.land .fyit span{width:24px;height:24px}.fynr{flex:1;
 .gph b{font-size:56px}
 .rtag{position:absolute;left:8px;bottom:8px;line-height:1.3;font-size:12px;background:rgba(0,0,0,.55);color:#fff;padding:3px 8px;border-radius:8px}
 .item.prestige{background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(140,60,220,.14))}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left}.mrow .aic{width:48px;height:48px;border-radius:9px}.mrow.on{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}.mchk{margin-left:auto;font-size:20px;color:var(--gold)}
+.mcoin{display:flex;align-items:center;gap:8px;margin-top:6px}.mcoin input{flex:1;text-align:center;font-size:18px}.mcoin button{width:auto;flex:0 0 auto;padding:10px 12px;margin:0}
 .item .aic{width:64px;height:64px;border-radius:10px;flex:0 0 auto}
 
 /* ---------- экран боя (макет «SPECTRE / ПОЕДИНОК») ---------- */
@@ -3185,6 +3187,34 @@ function viewOffer() {
       <li>Условие: за ${SEMI_CT_WEEKS} недели сыграть за команду хотя бы один полупрофессиональный турнир. Иначе бонус за подписание вернётся команде</li><li>Через ${SEMI_CT_WEEKS} недели контракт расторгается</li></ul>
     ${ibtn('sign', 'offyes', '', 'Подписать')}${ibtn('refuse', 'offno', '', 'Отказаться')}</div>`);
 }
+// ---------- Почта Спектров: посылки между игроками (крипта и артефакты; машины и жильё не передаются) ----------
+const postFor = hi => (G.post || []).filter(P => P.to === hi);
+function viewMail() {
+  const D = S.mailD, others = G.players.map((H, i) => i).filter(i => i !== G.cur), T = G.players[D.to];
+  const own = (S.items || []).slice().sort((a, b) => b - a);
+  const has = i => (T.items || []).includes(i) || postFor(D.to).some(P => P.items.some(x => x.i === i));
+  return wrap(`<div class="card"><img src="img/post.webp" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block">
+    <h2 style="margin-top:10px">Почта Спектров</h2><div class="dim">Собери посылку: крипта и артефакты. Машины и жильё переслать нельзя. Получатель откроет посылку в начале своего хода. Отправка тратит 1 действие.</div></div>
+    <div class="card"><h3>Кому</h3><div class="row" style="gap:6px">${others.map(i => `<button class="btn ${i === D.to ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="mto" data-v="${i}">${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}</button>`).join('')}</div></div>
+    <div class="card"><h3>Крипта</h3><div class="dim">На счету: ${coinHtml(S.coins)}</div>
+      <div class="mcoin"><button class="btn" data-a="mcoin" data-v="-100">−100</button><input id="mcoins" type="number" inputmode="numeric" min="0" max="${S.coins | 0}" value="${D.coins | 0}" oninput="S.mailD.coins=Math.max(0,Math.min(${S.coins | 0},parseInt(this.value)||0))"><button class="btn" data-a="mcoin" data-v="100">+100</button></div>
+      <div class="row" style="gap:6px;margin-top:6px"><button class="btn" style="width:auto;flex:1;text-align:center;padding:8px" data-a="mcoin" data-v="half">Половину</button><button class="btn" style="width:auto;flex:1;text-align:center;padding:8px" data-a="mcoin" data-v="all">Всё</button><button class="btn" style="width:auto;flex:1;text-align:center;padding:8px" data-a="mcoin" data-v="0">Сбросить</button></div></div>
+    <div class="card"><h3>Артефакты</h3>${own.length ? own.map(i => { const dup = has(i), on = D.items.includes(i);
+      return `<button class="btn mrow ${on ? 'on' : ''}" data-a="mitem" data-v="${i}" ${dup ? 'disabled' : ''} style="margin-top:6px">${artImg(i)}<span><b>${esc(itemName(S, i))}</b><br><span class="dim" style="font-size:12px">${dup ? 'Уже есть у ' + esc(T.nick) : S.equip === i ? 'Надет — будет снят' : 'В инвентаре'}</span></span><span class="mchk">${on ? '✓' : ''}</span></button>`; }).join('') : '<div class="dim">Артефактов пока нет.</div>'}</div>
+    <div class="card"><div class="dim">В посылке: ${coinHtml(D.coins)}${D.items.length ? ' · артефакты: ' + D.items.length : ''} → <b>${esc(T.nick)}</b></div>
+      <div class="minus">${esc(D.err || '')}</div>
+      ${ibtn('send', 'msend', '', 'Отправить посылку · 1 действие', '', S.actions <= 0 || (!(D.coins > 0) && !D.items.length))}</div>${back}`);
+}
+function viewParcel() {
+  const P = postFor(G.cur)[0];
+  if (!P) { S.view = 'main'; return viewMain(); }
+  const F0 = G.players[P.from];
+  return wrap(`<div class="card" style="text-align:center"><img src="img/parcel.webp" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block">
+    <h2 style="margin-top:10px">Вам посылка!</h2><div class="dim">Почта Спектров доставила посылку от <b>${F0 ? flagOf(F0.country) + ' ' + esc(F0.nick) : 'другого Спектра'}</b>.</div>
+    <div style="text-align:left;margin-top:10px">${P.coins ? `<div class="mrow" style="margin-top:6px">${COIN_SVG.replace('class="coin"', 'class="coin" style="width:48px;height:48px"')}<b>${(P.coins | 0).toLocaleString('ru-RU')} крипты</b></div>` : ''}
+      ${P.items.map(x => `<div class="mrow" style="margin-top:6px">${artImg(x.i)}<b>${esc(x.n || ITEMS[x.i].n)}</b></div>`).join('')}</div>
+    ${ibtn('receive', 'mget', '', 'Получить')}${postFor(G.cur).length > 1 ? `<div class="dim" style="margin-top:6px">Ещё посылок: ${postFor(G.cur).length - 1}</div>` : ''}</div>`);
+}
 function viewNotice() {
   const N = S.notice;
   return wrap(`<div class="card offer">${N.team != null ? `<img class="offlogo" src="img/team/${SEMI[N.team][1]}.webp" alt="">` : ''}<h2>${esc(N.t)}</h2><p style="text-align:left">${esc(N.d)}</p>
@@ -3271,7 +3301,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад">←</button><h1>${t[0]}</h1></div>` : ''; };
@@ -3373,6 +3403,7 @@ function viewMain() {
       <button class="imgbtn" data-a="lib" ${done ? 'disabled' : ''} aria-label="Библиотека · 1 действие"><img src="img/nav/lib.webp" alt=""></button>
       <button class="imgbtn" data-a="rest" ${done ? 'disabled' : ''} aria-label="Отдых · 1 действие" title="Снимает все бонусы и штрафы"><img src="img/nav/rest.webp" alt=""></button>
       <button class="imgbtn" data-a="flight" ${done ? 'disabled' : ''} aria-label="Перелёт в другой регион · 1 действие"><img src="img/nav/flight.webp" alt=""></button>
+      ${G.players.length > 1 ? `<button class="imgbtn" data-a="mail" ${done ? 'disabled' : ''} aria-label="Почта Спектров · 1 действие"><img src="img/nav/mail.webp" alt=""></button>` : ''}
     </div>`;
   const news = S.log.length ? `<div class="card news"><div class="dim">Последнее</div><div>${esc(S.log[0])}</div></div>` : '';
   return wrap(ORIENT === 'land' ? `${skn}<div class="mgrid land2"><div class="mcol">${map}${events}</div><div class="mcol">${week}${daily}${news}</div></div>` : `${skn}<div class="mgrid">${week}${map}${events}${daily}${news}</div>`) + navBar();
@@ -4303,7 +4334,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${ibtn('lgsim', 'lsim', '', 'Досчитать матч')}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -4319,6 +4350,7 @@ function render() {
   if (S.intro && !F) { app.dataset.view = 'intro'; app.innerHTML = viewIntro(); if (lastView !== 'intro' + S.intro) { window.scrollTo(0, 0); lastView = 'intro' + S.intro; } return; }
   if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';
   else if (S.notice && !F && (S.view === 'main' || !S.view)) S.view = 'notice';
+  else if (!F && (S.view === 'main' || !S.view) && postFor(G.cur).length) S.view = 'parcel';   // при входе в ход — открыть посылку
   else if (S.offer != null && !F && (S.view === 'main' || S.view === 'tour' || S.view === 'bureau' || !S.view)) S.view = 'offer';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
   app.innerHTML = v();
@@ -4423,6 +4455,26 @@ function act(a, v) {
     case 'offyes': if (S.offer != null) { const t = S.offer; S.offer = null; S.semi = { team: t, from: S.turn, until: S.turn + SEMI_CT_WEEKS - 1, worked: false }; S.coins = (S.coins || 0) + SIGN_COINS; logMsg(`Подписан контракт с ${SEMI_TEAMS[t]} на ${SEMI_CT_WEEKS} недели: +${SIGN_COINS} крипты.`); S.view = 'main'; } break;
     case 'offno': if (S.offer != null) { logMsg(`Ты отказался от контракта с ${SEMI_TEAMS[S.offer]}.`); S.offer = null; S.view = 'main'; } break;
     case 'noteok': S.notice = null; S.view = 'main'; break;
+    case 'mail': if (G.players.length < 2) return; S.mailD = { to: G.players.findIndex((H, i) => i !== G.cur), coins: 0, items: [] }; S.view = 'mail'; break;
+    case 'mto': S.mailD.to = +v; S.mailD.items = []; S.mailD.err = ''; break;
+    case 'mcoin': { const D = S.mailD, el = document.getElementById('mcoins'), cur = Math.max(0, parseInt(el && el.value) || 0), max = S.coins | 0;
+      D.coins = Math.min(max, Math.max(0, v === 'all' ? max : v === 'half' ? Math.floor(max / 2) : v === '0' ? 0 : cur + +v)); D.err = ''; break; }
+    case 'mitem': { const D = S.mailD, i = +v, k = D.items.indexOf(i); if (k >= 0) D.items.splice(k, 1); else D.items.push(i); break; }
+    case 'msend': { const D = S.mailD, el = document.getElementById('mcoins'); if (el) D.coins = Math.max(0, parseInt(el.value) || 0);
+      if (D.coins > (S.coins | 0)) { D.err = 'Столько крипты нет на счету.'; break; }
+      if (!(D.coins > 0) && !D.items.length) { D.err = 'Посылка пуста.'; break; }
+      if (!spend()) return;
+      const T = G.players[D.to], items = D.items.filter(i => (S.items || []).includes(i)).map(i => ({ i, n: S.iname && S.iname[i] || null }));
+      S.coins -= D.coins; S.items = (S.items || []).filter(i => !D.items.includes(i)); if (D.items.includes(S.equip)) S.equip = null; items.forEach(x => { if (S.iname) delete S.iname[x.i]; });
+      (G.post = G.post || []).push({ to: D.to, from: G.cur, coins: D.coins, items, week: G.week });
+      logMsg(`Почта Спектров: посылка для ${T.nick} отправлена${D.coins ? ' · ' + D.coins + ' крипты' : ''}${items.length ? ' · артефактов: ' + items.length : ''}.`);
+      S.mailD = null; S.notice = { t: 'Посылка отправлена', d: `${T.nick} получит её в начале своего хода.` }; S.view = 'notice'; break; }
+    case 'mget': { const k = (G.post || []).findIndex(P => P.to === G.cur); if (k < 0) return; const P = G.post.splice(k, 1)[0], F0 = G.players[P.from];
+      if (P.coins) S.coins = (S.coins || 0) + P.coins;
+      P.items.forEach(x => { if ((S.items || []).includes(x.i)) S.coins = (S.coins || 0) + ITEMS[x.i].cost;   // такой артефакт уже купили — Почта возвращает его стоимость
+        else { S.items = (S.items || []).concat(x.i); if (x.n) { S.iname = S.iname || {}; S.iname[x.i] = x.n; } } });
+      logMsg(`Получена посылка от ${F0 ? F0.nick : 'Спектра'}${P.coins ? ': +' + P.coins + ' крипты' : ''}${P.items.length ? ', артефактов: ' + P.items.length : ''}.`);
+      S.view = postFor(G.cur).length ? 'parcel' : 'main'; break; }
     case 'vicok': S.vic = null; S.view = 'main'; break;
     case 'ivans': if (S.iv) { if (++S.iv.n >= 3) useCard(S.iv.sel, true); } break;
     case 'nav': S.inRoom = v === 'room'; S.view = v === 'more' ? 'more' : 'main'; break;
