@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Спектр · прототип пошагового боя</title>
+<style>
+:root{--bg:#0B1020;--panel:#151E32;--nest:#202B43;--line:#2A3858;--txt:#F2F5FA;--dim:#B6C1D2;--cyan:#32D5E7;--gold:#F5C84C;--good:#65D979;--bad:#FF8B7B;--a:#32C8F0;--b:#F0605A;--qi:#5AD8FF;--pur:#B98CFF}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.35}
+#app{max-width:560px;margin:0 auto;padding:12px 14px 40px}
+h1{font-size:20px;margin:6px 0 4px}h2{font-size:17px;margin:0 0 8px}
+.dim{color:var(--dim)}.gold{color:var(--gold)}.small{font-size:12.5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+label{display:block;margin:8px 0 4px;color:var(--dim);font-size:13px}
+input[type=text],select{width:100%;background:var(--nest);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px}
+input[type=range]{width:100%}
+.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{display:block;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--nest);font-weight:700;text-align:center;margin-top:8px}
+.btn.gold{background:linear-gradient(180deg,#F8D46A,#D9A933);color:#1B1300;border-color:#F5C84C}
+.btn:disabled{opacity:.4;cursor:default}
+.icons{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;max-height:132px;overflow:auto;padding:2px}
+.icons button{all:unset;cursor:pointer;aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:2px solid transparent;background:#0E1730}
+.icons button.on{border-color:var(--gold)}.icons img{width:100%;height:100%;display:block}
+.fx{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fx button{all:unset;cursor:pointer;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--nest);font-size:12.5px}
+.fx button b{display:block;font-size:14px}.fx button.on{border-color:var(--gold);background:#2A2A1C}
+/* бой */
+.arena{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fc{border:2px solid var(--a);border-radius:14px;padding:8px;background:linear-gradient(160deg,rgba(50,200,240,.10),#0C1428 60%);position:relative}
+.fc.b{border-color:var(--b);background:linear-gradient(200deg,rgba(240,96,90,.12),#0C1428 60%)}
+.fc.turn{box-shadow:0 0 0 2px #fff3,0 0 18px rgba(255,255,255,.18)}
+.fc .pic{aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#1B2A55,#0C1428);position:relative}
+.fc .pic img{width:100%;height:100%;object-fit:cover;object-position:50% 10%;display:block}
+.fc .nm{font-weight:800;margin:6px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:10px;border-radius:6px;background:#0B1226;border:1px solid #2A3858;overflow:hidden;margin:3px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#3BD16F,#8BF0A0);transition:width .35s}
+.bar.qi i{background:linear-gradient(90deg,#2C9CFF,var(--qi))}.bar.sh i{background:#E8F0FF}
+.bl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim)}
+.st{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;min-height:22px}
+.st span{font-size:11.5px;padding:2px 6px;border-radius:8px;background:#22304F;border:1px solid #37507E;white-space:nowrap}
+.st span.bad{background:#3A1E26;border-color:#7A3A46}.st span.good{background:#1C3A2A;border-color:#3A7A55}
+.stance{position:absolute;top:12px;left:12px;font-size:12px;font-weight:800;padding:3px 7px;border-radius:8px;background:rgba(10,16,32,.85);border:1px solid #fff3}
+.float{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-size:26px;font-weight:900;text-shadow:0 2px 6px #000;pointer-events:none;animation:fl 1.1s ease-out forwards}
+.float.heal{color:#8BF0A0}.float.dmg{color:#FFB3A8}.float.info{color:#FFE7A3;font-size:18px}
+@keyframes fl{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
+.log{height:150px;overflow:auto;background:#0C1428;border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:13.5px}
+.log div{padding:4px 0;border-bottom:1px solid rgba(58,143,216,.15)}
+.log .t{color:var(--gold);font-weight:700}.log .a{color:#9FE4FF}.log .b{color:#FFB8B0}
+.menu h3{margin:4px 0 6px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--nest);font-size:13px;font-weight:700}
+.seg button small{display:block;font-weight:400;color:var(--dim);font-size:11px}
+.seg button.on{border-color:var(--gold);background:#2E2A18}
+.acts{display:grid;gap:6px}
+.act{all:unset;cursor:pointer;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--nest)}
+.act .ic{width:40px;height:40px;border-radius:8px;overflow:hidden;display:grid;place-items:center;font-size:24px;background:#0E1730}
+.act .ic img{width:100%;height:100%}
+.act b{display:block}.act small{color:var(--dim);font-size:12px;display:block}
+.act .cost{text-align:right;font-size:12px;color:var(--dim);white-space:nowrap}.act .cost b{color:var(--qi)}
+.act.dis{opacity:.35;cursor:default}.act.ult{border-color:#A0702A;background:linear-gradient(90deg,#2E2412,#202B43)}
+.items{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.items button{all:unset;cursor:pointer;aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1.5px solid var(--gold);background:#0E1730;position:relative}
+.items button img{width:100%;height:100%;display:block}
+.items button.used{opacity:.2;cursor:default;border-color:#555}
+.items button.sel{box-shadow:0 0 0 2px #fff}
+.tip{font-size:12.5px;color:var(--dim);min-height:34px;margin-top:6px}
+.res{text-align:center;font-size:22px;font-weight:900;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+// ===================== ПРАВИЛА (все цифры здесь — удобно подкручивать) =====================
+const R = {
+  hp: p => Math.round(1300 * Math.exp(0.003 * (p - 50))),   // запас HP от силы
+  hit: p => 40 * Math.exp(0.006 * (p - 50)),                // урон одного удара серии от силы
+  series: 5, miss: 0.10, crit: 0.12, critK: 1.6, spread: 0.15,
+  abilHits: 4.2,          // способность ≈ 4.2 удара (≈13%)
+  ultHits: 12,            // разрушительная ≈ 12 ударов (≈37%)
+  qiStart: 50, qiTurn: 10, qiMax: 100,
+  qiSeries: 5, qiAbil: 25, qiUlt: 70, qiDef: 20, qiConc: 40, qiCritDodge: 5,
+  defBlock: 0.60,          // Защита: блок 60% следующего хода соперника
+  concTaken: 1.15,         // Концентрация: в этот круг получаешь +15%
+  exhaustTaken: 1.20, exhaustQi: 20,
+  stance: { bal: { d: 1, t: 1 }, rage: { d: 1.3, t: 1.3 }, def: { d: 0.75, t: 0.75 } },
+  fatigueFrom: 8, fatigue: 0.05, init: 40,
+  e: { stun: 0.4, drain: 25, drainSelf: 10, wound: 0.03, heal: 0.075, barrier: 0.09, mark: 1.35, weak: 0.70, reflect: 0.4, pierce: 1.3, seal: 2 },   // сила эффектов
+};
+const STANCES = [['bal', '⚖', 'Баланс', '100% / 100%'], ['rage', '🔥', 'Ярость', '+30% / +30%'], ['def', '🛡', 'Защитная', '−25% / −25%']];
+const EFFECTS = [
+  ['stun', 'Оглушение', '40% шанс, что соперник пропустит следующий ход'],
+  ['pierce', 'Пробой', 'Игнорирует Защиту и Защитную стойку, урон +30%'],
+  ['drain', 'Иссушение', '−25 Цы у соперника, +10 Цы себе'],
+  ['wound', 'Рана', 'Соперник 3 хода теряет по 3% HP'],
+  ['heal', 'Восстановление', 'Лечит 7.5% HP'],
+  ['barrier', 'Барьер', 'Щит 9% HP до конца хода соперника'],
+  ['mark', 'Метка', 'Соперник 2 хода получает +35% урона'],
+  ['weak', 'Ослабление', 'Соперник 2 хода наносит −30% урона'],
+  ['reflect', 'Отражение', '40% урона следующей атаки соперника возвращается ему'],
+  ['seal', 'Печать', 'Соперник 2 хода не может применять способности и разрушительную'],
+];
+const ITEMS = [
+  ['ins', 'Инсайдерские данные', 'Следующее действие: удары не промахиваются и +8% урона'],
+  ['stim', 'Стимулятор', 'Лечит 7% HP'],
+  ['smoke', 'Дымовая шашка', 'Следующий ход соперника: каждый удар промахивается с шансом +35%'],
+  ['gren', 'Граната «Разлом»', 'Мгновенно наносит 4.5% HP соперника'],
+  ['batt', 'Рудная батарея', '+15 Цы'],
+  ['rage', 'Сыворотка «Ярость»', 'До твоего следующего хода: наносишь +15%, получаешь +10%'],
+  ['vamp', 'Кровавый кристалл', 'Этот ход: лечишь 20% нанесённого урона'],
+  ['crit', 'Линза фокуса', 'Этот ход: шанс крита 60%'],
+];
+const PERS = { agr: 'Агрессор', tac: 'Тактик', cau: 'Осторожный' };
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ===================== СОСТОЯНИЕ =====================
+let CFG = {
+  me: { name: 'N1K', face: 5, p: 70, abName: 'Песчаный шторм', abIcon: 12, eff: 'mark', ultName: 'Разрыв реальности', ultIcon: 40, items: ITEMS.map(i => i[0]) },
+  op: { name: 'Fak3r', face: 23, p: 76, eff: 'stun', pers: 'tac', skill: 0.8, items: ['stim', 'gren', 'batt'] },
+};
+let B = null, VIEW = 'setup', BUSY = false, SEL = null;
+
+function mkF(c, me) {
+  const hp = R.hp(c.p);
+  return { me, name: c.name, face: c.face, p: c.p, hpMax: hp, hp, qi: R.qiStart, stance: me ? 'bal' : (c.pers === 'agr' ? 'rage' : c.pers === 'cau' ? 'def' : 'bal'),
+    eff: c.eff, abName: c.abName || EFFECTS.find(e => e[0] === c.eff)[1], abIcon: c.abIcon ?? 7, ultName: c.ultName || 'Разрушительный удар', ultIcon: c.ultIcon ?? 33,
+    pers: c.pers || 'tac', skill: c.skill ?? 0.7, items: [...(c.items || [])], used: {}, ultUsed: false, turns: 0,
+    st: {}, defend: false, conc: false, exhausted: false, itemTurn: false, tmp: {} };
+}
+function newBattle(sim) {
+  const a = mkF(CFG.me, true), b = mkF(CFG.op, false);
+  if (sim) { a.me = false; a.pers = CFG.simPers || 'tac'; a.skill = 0.7; }
+  const sa = a.p + Math.random() * R.init, sb = b.p + Math.random() * R.init;   // кто ходит первым: сила + случай
+  return { a, b, cur: sa >= sb ? 'a' : 'b', round: 0, log: [], done: false, win: null, sim: !!sim };
+}
+const opp = (B, x) => x === B.a ? B.b : B.a;
+const nameCls = (B, x) => x === B.a ? 'a' : 'b';
+
+// ===================== МЕХАНИКА =====================
+function log(t, cls = '') { if (!B.sim) B.log.push([t, cls]); }
+function fl(x, txt, cls) { if (B.sim) return; const el = document.getElementById('pic-' + nameCls(B, x)); if (!el) return; const d = document.createElement('div'); d.className = 'float ' + cls; d.textContent = txt; el.appendChild(d); setTimeout(() => d.remove(), 1100); }
+function dealtMul(x) { let m = R.stance[x.stance].d; if (x.st.weak) m *= R.e.weak; if (x.tmp.rage || x.st.rageItem) m *= 1.15; if (x.tmp.ins) m *= 1.08; return m; }
+function takenMul(y, pierce) {
+  let m = pierce ? Math.max(1, R.stance[y.stance].t) : R.stance[y.stance].t;
+  if (y.st.mark) m *= R.e.mark; if (y.conc) m *= R.concTaken; if (y.exhausted) m *= R.exhaustTaken; if (y.st.rageItem) m *= 1.1;
+  if (y.defend && !pierce) m *= 1 - R.defBlock;
+  return m;
+}
+function applyDmg(x, y, raw) {   // raw уже с множителями; щит, отражение, вампиризм
+  let d = Math.max(1, Math.round(raw));
+  if (y.st.barrier > 0) { const ab = Math.min(y.st.barrier, d); y.st.barrier -= ab; d -= ab; if (y.st.barrier <= 0) delete y.st.barrier; if (ab) log(`${y.name}: щит поглотил ${ab}.`, 'dim'); }
+  y.hp = Math.max(0, y.hp - d);
+  if (x.tmp.vamp && d > 0) { const h = Math.round(d * 0.2); x.hp = Math.min(x.hpMax, x.hp + h); x.tmp.vampSum = (x.tmp.vampSum || 0) + h; }
+  return d;
+}
+function strikes(x, y, n, base, opt = {}) {   // серия ударов / способность / разрушительная
+  let total = 0, crits = 0, misses = 0;
+  const mul = dealtMul(x) * takenMul(y, opt.pierce) * (opt.k || 1);
+  for (let i = 0; i < n; i++) {
+    const missP = x.tmp.ins ? 0 : R.miss + (y.st.smoke ? 0.35 : 0);
+    if (!opt.sure && Math.random() < missP) { misses++; y.qi = Math.min(R.qiMax, y.qi + R.qiCritDodge); continue; }
+    let h = base * (1 - R.spread + Math.random() * 2 * R.spread) * mul;
+    if (Math.random() < (x.tmp.crit ? 0.6 : R.crit)) { h *= R.critK; crits++; x.qi = Math.min(R.qiMax, x.qi + R.qiCritDodge); }
+    total += applyDmg(x, y, h);
+  }
+  return { total, crits, misses };
+}
+function reflectBack(x, y, d) {   // отражение срабатывает на атаку
+  if (y.st.reflect && d > 0) { const r = Math.round(d * R.e.reflect); x.hp = Math.max(0, x.hp - r); delete y.st.reflect; log(`Отражение: ${x.name} получает ${r} обратно.`, 'gold'); fl(x, '−' + r, 'dmg'); }
+}
+function spend(x, q) { x.qi -= q; if (x.qi <= 0) { x.qi = 0; x.exhausted = true; log(`${x.name} истощён: Цы на нуле — следующий ход пропущен.`, 't'); } }
+
+function doAction(x, act) {
+  const y = opp(B, x), c = nameCls(B, x);
+  x.conc = false; x.defend = false;
+  if (act === 'series') {
+    const r = strikes(x, y, R.series, R.hit(x.p)); x.qi = Math.min(R.qiMax, x.qi + R.qiSeries);
+    log(`${x.name}: серия ударов — ${r.total} урона${r.crits ? `, критов: ${r.crits}` : ''}${r.misses ? `, мимо: ${r.misses}` : ''}.`, c); fl(y, '−' + r.total, 'dmg'); reflectBack(x, y, r.total);
+  } else if (act === 'abil') {
+    spend(x, R.qiAbil);
+    const pierce = x.eff === 'pierce', r = strikes(x, y, 1, R.hit(x.p) * R.abilHits, { pierce, k: pierce ? R.e.pierce : 1, sure: true });
+    log(`${x.name}: «${x.abName}» — ${r.total} урона.`, c); fl(y, '−' + r.total, 'dmg');
+    effect(x, y); reflectBack(x, y, r.total);
+  } else if (act === 'ult') {
+    x.ultUsed = true; spend(x, R.qiUlt);
+    const r = strikes(x, y, 1, R.hit(x.p) * R.ultHits, { sure: true });
+    log(`💥 ${x.name}: «${x.ultName}» — ${r.total} урона!`, 't'); fl(y, '−' + r.total, 'dmg'); reflectBack(x, y, r.total);
+  } else if (act === 'def') {
+    spend(x, R.qiDef); if (x.hp > 0) { x.defend = true; log(`${x.name}: Защита — следующий ход соперника ослаблен на ${Math.round(R.defBlock * 100)}%.`, c); fl(x, 'Защита', 'info'); }
+  } else if (act === 'conc') {
+    x.conc = true; x.qi = Math.min(R.qiMax, x.qi + R.qiConc); log(`${x.name}: Концентрация Цы (+${R.qiConc}).`, c); fl(x, '+' + R.qiConc + ' Цы', 'info');
+  }
+  if (x.tmp.vampSum) log(`${x.name}: кристалл вернул ${x.tmp.vampSum} HP.`, 'dim');
+  x.tmp = {};
+  if (y.st.smoke) delete y.st.smoke;
+  endTurn(x);
+}
+function effect(x, y) {
+  const e = x.eff;
+  if (e === 'stun') { if (Math.random() < R.e.stun) { y.st.stun = 1; log(`${y.name} оглушён!`, 't'); fl(y, 'Оглушён', 'info'); } else log('Оглушение не сработало.', 'dim'); }
+  else if (e === 'drain') { const d = Math.min(R.e.drain, y.qi); y.qi -= d; x.qi = Math.min(R.qiMax, x.qi + R.e.drainSelf); log(`${y.name} теряет ${d} Цы.`, 'dim'); if (y.qi <= 0 && d > 0) { y.exhausted = true; log(`${y.name} истощён!`, 't'); } }
+  else if (e === 'wound') { y.st.wound = 3; log(`${y.name} ранен на 3 хода.`, 'dim'); }
+  else if (e === 'heal') { const h = Math.round(x.hpMax * R.e.heal); x.hp = Math.min(x.hpMax, x.hp + h); log(`${x.name} восстанавливает ${h} HP.`, 'dim'); fl(x, '+' + h, 'heal'); }
+  else if (e === 'barrier') { x.st.barrier = Math.round(x.hpMax * R.e.barrier); log(`${x.name}: щит ${x.st.barrier}.`, 'dim'); }
+  else if (e === 'mark') { y.st.mark = 2; log(`${y.name} помечен: +25% урона 2 хода.`, 'dim'); }
+  else if (e === 'weak') { y.st.weak = 2; log(`${y.name} ослаблен: −25% урона 2 хода.`, 'dim'); }
+  else if (e === 'reflect') { x.st.reflect = 1; log(`${x.name} готов отразить удар.`, 'dim'); }
+  else if (e === 'seal') { y.st.seal = R.e.seal; log(`${y.name} запечатан на ${R.e.seal} хода.`, 'dim'); }
+}
+function useItem(x, k) {
+  if (x.used[k] || x.itemTurn || !x.items.includes(k)) return false;
+  const y = opp(B, x); x.used[k] = true; x.itemTurn = true; const it = ITEMS.find(i => i[0] === k);
+  if (k === 'stim') { const h = Math.round(x.hpMax * 0.07); x.hp = Math.min(x.hpMax, x.hp + h); fl(x, '+' + h, 'heal'); }
+  else if (k === 'gren') { const d = applyDmg(x, y, y.hpMax * 0.045); fl(y, '−' + d, 'dmg'); }
+  else if (k === 'batt') { x.qi = Math.min(R.qiMax, x.qi + 15); fl(x, '+15 Цы', 'info'); }
+  else if (k === 'smoke') x.st.smoke = 1;   // ты в дыму — соперник мажет
+  else if (k === 'rage') x.st.rageItem = 1;
+  else x.tmp[k] = true;   // ins, vamp, crit — на это действие
+  log(`${x.name} применяет «${it[1]}».`, 'gold');
+  if (y.hp <= 0) finish(x);
+  return true;
+}
+function startTurn() {
+  if (B.done) return;
+  const x = B[B.cur], y = opp(B, x);
+  x.turns++; x.itemTurn = false; x.defend = false; x.conc = false;
+  if (x.st.rageItem) delete x.st.rageItem;
+  if (x.turns >= R.fatigueFrom) { const d = Math.round(x.hpMax * R.fatigue); x.hp = Math.max(0, x.hp - d); log(`${x.name}: усталость −${d}.`, 'dim'); if (x.hp <= 0) return finish(y); }
+  if (x.st.wound) { const d = Math.round(x.hpMax * R.e.wound); x.hp = Math.max(0, x.hp - d); log(`${x.name}: рана −${d}.`, 'dim'); fl(x, '−' + d, 'dmg'); if (--x.st.wound <= 0) delete x.st.wound; if (x.hp <= 0) return finish(y); }
+  for (const k of ['mark', 'weak']) if (x.st[k] && --x.st[k] <= 0) delete x.st[k];
+  if (x.st.barrier) delete x.st.barrier;
+  if (x.exhausted) { x.qi = Math.min(R.qiMax, x.qi + R.exhaustQi); x.exhausted = false; log(`${x.name} восстанавливается после истощения (+${R.exhaustQi} Цы) и пропускает ход.`, nameCls(B, x)); return endTurn(x, true); }
+  if (x.st.stun) { delete x.st.stun; x.qi = Math.min(R.qiMax, x.qi + R.qiTurn); log(`${x.name} оглушён и пропускает ход.`, nameCls(B, x)); return endTurn(x, true); }
+  x.qi = Math.min(R.qiMax, x.qi + R.qiTurn);
+  if (!x.me) { if (B.sim) aiTurn(x); else { BUSY = true; render(); setTimeout(() => { BUSY = false; aiTurn(x); }, 900); } }
+  else { SEL = null; render(); }
+}
+function endTurn(x, skipped) {
+  const y = opp(B, x);
+  if (y.hp <= 0) return finish(x);
+  if (x.hp <= 0) return finish(y);
+  if (x.st.seal && --x.st.seal <= 0) delete x.st.seal;   // печать: считается в ходах запечатанного
+  B.cur = B.cur === 'a' ? 'b' : 'a'; B.round++;
+  if (B.round > 60) return finish(x.hp >= y.hp ? x : y);
+  if (B.sim) startTurn(); else { render(); setTimeout(startTurn, 450); }
+}
+function finish(w) { if (B.done) return; B.done = true; B.win = w === B.a ? 'a' : 'b'; log(`Победа: ${w.name}!`, 't'); if (!B.sim) render(); }
+
+// ===================== ИИ =====================
+function canAbil(x) { return x.qi >= R.qiAbil && !x.st.seal; }
+function canUlt(x) { return !x.ultUsed && !x.st.seal; }
+function estUlt(x, y) { return R.hit(x.p) * R.ultHits * dealtMul(x) * takenMul(y); }
+function estSeries(x, y) { return R.hit(x.p) * R.series * 0.95 * dealtMul(x) * takenMul(y); }
+function aiItems(x, y) {
+  const has = k => x.items.includes(k) && !x.used[k];
+  if (has('stim') && x.hp < x.hpMax * 0.4) return useItem(x, 'stim');
+  if (has('batt') && x.qi < 35) return useItem(x, 'batt');
+  if (has('gren') && (y.hp < y.hpMax * 0.12 || Math.random() < 0.25)) return useItem(x, 'gren');
+  if (has('smoke') && y.qi >= 70 && !y.ultUsed) return useItem(x, 'smoke');
+  if (has('crit') && Math.random() < 0.3) return useItem(x, 'crit');
+  if (has('rage') && x.hp > x.hpMax * 0.5 && Math.random() < 0.3) return useItem(x, 'rage');
+  if (has('vamp') && x.hp < x.hpMax * 0.7 && Math.random() < 0.4) return useItem(x, 'vamp');
+  if (has('ins') && Math.random() < 0.3) return useItem(x, 'ins');
+}
+function aiTurn(x) {
+  if (B.done) return;
+  const y = opp(B, x), sk = x.skill, hpR = x.hp / x.hpMax, oR = y.hp / y.hpMax;
+  // стойка
+  let st = x.pers === 'agr' ? 'rage' : x.pers === 'cau' ? 'def' : 'bal';
+  if (hpR < 0.3 && Math.random() < sk) st = 'def';
+  if (y.exhausted && Math.random() < sk) st = 'rage';
+  if (oR < 0.25 && Math.random() < sk) st = 'rage';
+  x.stance = st;
+  aiItems(x, y); if (B.done) return;
+  // действие
+  const dumb = Math.random() > sk;   // у слабых ботов чаще случайный выбор
+  let act;
+  if (canUlt(x) && estUlt(x, y) >= y.hp && (x.qi >= R.qiUlt || Math.random() < 0.6 + sk * 0.3)) act = 'ult';
+  else if (estSeries(x, y) >= y.hp * 1.1) act = 'series';
+  else if (dumb) act = pick(['series', 'series', canAbil(x) ? 'abil' : 'series', x.qi < 40 ? 'conc' : 'series', canUlt(x) && x.qi >= R.qiUlt ? 'ult' : 'series']);
+  else {
+    const threat = !y.ultUsed && y.qi + R.qiTurn >= R.qiUlt;
+    if (threat && x.qi >= R.qiDef + 5 && hpR < 0.7 && Math.random() < 0.55 + 0.3 * (x.pers === 'cau')) act = 'def';
+    else if (canUlt(x) && x.qi >= R.qiUlt && (x.pers === 'agr' || oR < 0.6 || hpR < 0.45)) act = 'ult';
+    else if (x.qi < 25 && !(canUlt(x) && oR < 0.3)) act = 'conc';
+    else if (canAbil(x)) {
+      const useful = { heal: hpR < 0.65, barrier: threat || hpR < 0.6, drain: y.qi >= 45, mark: !y.st.mark, weak: !y.st.weak, wound: !y.st.wound, stun: true, pierce: y.defend || y.stance === 'def', reflect: threat, seal: threat }[x.eff];
+      act = useful && (x.qi - R.qiAbil >= 15 || x.pers === 'tac') && Math.random() < (x.pers === 'tac' ? 0.8 : 0.5) ? 'abil' : 'series';
+    } else act = 'series';
+  }
+  if (act === 'abil' && !canAbil(x)) act = 'series';
+  if (act === 'def' && x.qi < R.qiDef) act = 'series';
+  if (act === 'ult' && !canUlt(x)) act = 'series';
+  doAction(x, act);
+}
+
+// ===================== СИМУЛЯЦИЯ ДЛЯ БАЛАНСА =====================
+function simulate(n = 2000) {
+  let wins = 0, turns = 0;
+  for (let i = 0; i < n; i++) { B = newBattle(true); startTurn(); if (B.win === 'a') wins++; turns += B.a.turns; }
+  B = null; return { win: wins / n, turns: turns / n };
+}
+
+// ===================== ЭКРАН =====================
+const faceSrc = i => `img/face/${i}.webp`, abSrc = i => `img/abil/${i}.webp`;
+function viewSetup() {
+  const m = CFG.me, o = CFG.op;
+  return `<h1>Пошаговый бой · прототип</h1><div class="dim small">Отдельная страница для проверки правил. В саму игру пока ничего не встроено.</div>
+  <div class="card"><h2>Твой боец</h2>
+    <div class="row"><div><label>Ник</label><input type="text" id="mn" value="${esc(m.name)}"></div><div><label>Сила: <b id="mpv">${m.p}</b></label><input type="range" min="30" max="90" value="${m.p}" id="mp"></div></div>
+    <label>Способность — название</label><input type="text" id="an" value="${esc(m.abName)}">
+    <label>Иконка способности</label><div class="icons">${Array.from({ length: 140 }, (_, i) => `<button class="${i === m.abIcon ? 'on' : ''}" data-ai="${i}"><img loading="lazy" src="${abSrc(i)}"></button>`).join('')}</div>
+    <label>Эффект способности (тратит ${R.qiAbil} Цы)</label><div class="fx">${EFFECTS.map(e => `<button class="${e[0] === m.eff ? 'on' : ''}" data-ef="${e[0]}"><b>${e[1]}</b>${e[2]}</button>`).join('')}</div>
+    <label>Разрушительная — название (самый сильный удар, без эффектов, ${R.qiUlt} Цы, раз за бой)</label><input type="text" id="un" value="${esc(m.ultName)}">
+    <label>Иконка разрушительной</label><div class="icons">${Array.from({ length: 140 }, (_, i) => `<button class="${i === m.ultIcon ? 'on' : ''}" data-ui="${i}"><img loading="lazy" src="${abSrc(i)}"></button>`).join('')}</div>
+    <label>Расходники с собой</label><div class="items">${ITEMS.map(i => `<button class="${m.items.includes(i[0]) ? '' : 'used'}" data-mi="${i[0]}" title="${i[1]}"><img src="img/shop/${i[0]}.webp"></button>`).join('')}</div>
+  </div>
+  <div class="card"><h2>Соперник (бот)</h2>
+    <div class="row"><div><label>Ник</label><input type="text" id="on" value="${esc(o.name)}"></div><div><label>Сила: <b id="opv">${o.p}</b></label><input type="range" min="30" max="90" value="${o.p}" id="op"></div></div>
+    <div class="row"><div><label>Характер</label><select id="ope">${Object.entries(PERS).map(([k, v]) => `<option value="${k}" ${k === o.pers ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+    <div><label>Эффект</label><select id="oef">${EFFECTS.map(e => `<option value="${e[0]}" ${e[0] === o.eff ? 'selected' : ''}>${e[1]}</option>`).join('')}</select></div></div>
+    <label>Мастерство бота: <b id="osv">${Math.round(o.skill * 100)}%</b> (насколько точно читает бой)</label><input type="range" min="0" max="100" value="${Math.round(o.skill * 100)}" id="os">
+    <label>Расходники бота</label><div class="items">${ITEMS.map(i => `<button class="${o.items.includes(i[0]) ? '' : 'used'}" data-oi="${i[0]}" title="${i[1]}"><img src="img/shop/${i[0]}.webp"></button>`).join('')}</div>
+  </div>
+  <button class="btn gold" data-a="start">В бой</button>
+  <div class="card"><h2>Проверка баланса</h2><div class="dim small">2000 боёв бот против бота с текущими настройками (твоего бойца ведёт ИИ-тактик).</div>
+    <button class="btn" data-a="sim">Посчитать</button><div id="simres"></div></div>`;
+}
+function stHtml(x) {
+  const s = [];
+  if (x.defend) s.push(['🛡 Защита', 'good']); if (x.conc) s.push(['🧘 Концентрация', '']); if (x.exhausted) s.push(['😵 Истощение', 'bad']);
+  if (x.st.barrier) s.push([`🔰 Щит ${x.st.barrier}`, 'good']); if (x.st.reflect) s.push(['🪞 Отражение', 'good']);
+  if (x.st.stun) s.push(['💫 Оглушён', 'bad']); if (x.st.wound) s.push([`🩸 Рана ${x.st.wound}`, 'bad']); if (x.st.mark) s.push([`🎯 Метка ${x.st.mark}`, 'bad']);
+  if (x.st.weak) s.push([`⬇ Ослаблен ${x.st.weak}`, 'bad']); if (x.st.seal) s.push(['🔒 Печать', 'bad']); if (x.st.smoke) s.push(['💨 В дыму', 'good']); if (x.st.rageItem) s.push(['😡 Сыворотка', '']);
+  if (x.ultUsed) s.push(['💥 использована', '']);
+  return s.map(([t, c]) => `<span class="${c}">${t}</span>`).join('');
+}
+function fcard(x, c) {
+  const S = STANCES.find(s => s[0] === x.stance);
+  return `<div class="fc ${c} ${B.cur === c && !B.done ? 'turn' : ''}"><div class="pic" id="pic-${c}"><img src="${faceSrc(x.face)}"><span class="stance">${S[1]} ${S[2]}</span></div>
+    <div class="nm">${esc(x.name)} <span class="dim small">· ${x.p}</span></div>
+    <div class="bl"><span>HP</span><span>${x.hp}/${x.hpMax}</span></div><div class="bar"><i style="width:${x.hp / x.hpMax * 100}%"></i></div>
+    <div class="bl"><span>Цы</span><span>${x.qi}/100</span></div><div class="bar qi"><i style="width:${x.qi}%"></i></div>
+    <div class="st">${stHtml(x)}</div></div>`;
+}
+function rng(x, y, n, base, opt = {}) { const m = dealtMul(x) * takenMul(y, opt.pierce) * (opt.k || 1) * base * n; return `${Math.round(m * 0.85 * (opt.sure ? 1 : 0.9))}–${Math.round(m * 1.15)}`; }
+function viewFight() {
+  const a = B.a, b = B.b, mine = B.cur === 'a' && !B.done && !BUSY && a.me;
+  const y = b, x = a;
+  const acts = [
+    ['series', '👊', 'Серия ударов', `5 ударов, каждый может промахнуться или стать критом. ≈ ${rng(x, y, R.series, R.hit(x.p))}`, `+${R.qiSeries}`, true],
+    ['abil', `<img src="${abSrc(x.abIcon)}">`, x.abName, `${EFFECTS.find(e => e[0] === x.eff)[1]}: ${EFFECTS.find(e => e[0] === x.eff)[2].toLowerCase()}. Урон ≈ ${rng(x, y, 1, R.hit(x.p) * R.abilHits, { pierce: x.eff === 'pierce', k: x.eff === 'pierce' ? R.e.pierce : 1, sure: true })}`, `−${R.qiAbil}`, canAbil(x)],
+    ['ult', `<img src="${abSrc(x.ultIcon)}">`, x.ultName, `Самый сильный удар, раз за бой. ≈ ${rng(x, y, 1, R.hit(x.p) * R.ultHits, { sure: true })}${x.qi < R.qiUlt ? ' · Цы не хватает — после удара истощение и пропуск хода' : ''}`, `−${R.qiUlt}`, canUlt(x)],
+    ['def', '🛡', 'Защита', `Блокирует ${Math.round(R.defBlock * 100)}% урона следующего хода соперника`, `−${R.qiDef}`, x.qi >= R.qiDef],
+    ['conc', '🧘', 'Концентрация Цы', `+${R.qiConc} Цы. В этот ход получаешь +15% урона`, `+${R.qiConc}`, true],
+  ];
+  return `<div class="row" style="margin-bottom:6px"><button class="btn" style="margin:0;flex:0 0 auto;width:auto;padding:8px 12px" data-a="back">←</button><div><b>Ход ${Math.floor(B.round / 2) + 1}</b> · <span class="dim small">${B.done ? 'бой окончен' : mine ? 'твой ход' : 'ход соперника…'}</span></div></div>
+  <div class="arena">${fcard(a, 'a')}${fcard(b, 'b')}</div>
+  ${B.done ? `<div class="res ${B.win === 'a' ? 'gold' : ''}">${B.win === 'a' ? 'Победа!' : 'Поражение'}</div><button class="btn gold" data-a="again">Ещё бой</button><button class="btn" data-a="back">Настройки</button>` : ''}
+  <div class="card menu" ${B.done ? 'hidden' : ''}>
+    <h3>Стойка</h3><div class="seg">${STANCES.map(s => `<button class="${a.stance === s[0] ? 'on' : ''}" data-st="${s[0]}" ${mine ? '' : 'disabled'}>${s[1]} ${s[2]}<small>наносишь / получаешь<br>${s[3]}</small></button>`).join('')}</div>
+    <h3 style="margin-top:10px">Действие</h3><div class="acts">${acts.map(([k, ic, n, d, c, ok]) => `<button class="act ${ok && mine ? '' : 'dis'} ${k === 'ult' ? 'ult' : ''}" data-act="${k}" ${ok && mine ? '' : 'disabled'}><span class="ic">${ic}</span><span><b>${esc(n)}</b><small>${d}</small></span><span class="cost"><b>${c}</b><br>Цы</span></button>`).join('')}</div>
+    <h3 style="margin-top:10px">Расходники · один за ход, ход не заканчивает</h3>
+    <div class="items">${a.items.map(k => `<button class="${a.used[k] || a.itemTurn ? 'used' : ''} ${SEL === k ? 'sel' : ''}" data-it="${k}"><img src="img/shop/${k}.webp"></button>`).join('') || '<span class="dim small">нет</span>'}</div>
+    <div class="tip">${SEL ? (() => { const i = ITEMS.find(q => q[0] === SEL); return `<b>${i[1]}</b> — ${i[2]}. Нажми ещё раз, чтобы применить.`; })() : 'Нажми на расходник, чтобы прочитать, что он делает.'}</div>
+  </div>
+  <div class="log" id="log">${B.log.map(([t, c]) => `<div class="${c}">${esc(t)}</div>`).join('')}</div>`;
+}
+function render() {
+  document.getElementById('app').innerHTML = VIEW === 'setup' ? viewSetup() : viewFight();
+  const l = document.getElementById('log'); if (l) l.scrollTop = l.scrollHeight;
+}
+function readSetup() {
+  const v = id => document.getElementById(id);
+  if (!v('mn')) return;
+  Object.assign(CFG.me, { name: v('mn').value || 'Игрок', p: +v('mp').value, abName: v('an').value || 'Способность', ultName: v('un').value || 'Разрушительный удар' });
+  Object.assign(CFG.op, { name: v('on').value || 'Бот', p: +v('op').value, pers: v('ope').value, eff: v('oef').value, skill: +v('os').value / 100 });
+}
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'mp') document.getElementById('mpv').textContent = t.value;
+  if (t.id === 'op') document.getElementById('opv').textContent = t.value;
+  if (t.id === 'os') document.getElementById('osv').textContent = t.value + '%';
+});
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const d = t.dataset;
+  if (VIEW === 'setup') {
+    readSetup();
+    if (d.ai != null) { CFG.me.abIcon = +d.ai; render(); }
+    else if (d.ui != null) { CFG.me.ultIcon = +d.ui; render(); }
+    else if (d.ef) { CFG.me.eff = d.ef; render(); }
+    else if (d.mi) { const a = CFG.me.items; CFG.me.items = a.includes(d.mi) ? a.filter(k => k !== d.mi) : [...a, d.mi]; render(); }
+    else if (d.oi) { const a = CFG.op.items; CFG.op.items = a.includes(d.oi) ? a.filter(k => k !== d.oi) : [...a, d.oi]; render(); }
+    else if (d.a === 'start') { B = newBattle(false); VIEW = 'fight'; render(); setTimeout(startTurn, 300); }
+    else if (d.a === 'sim') {
+      const r = simulate(2000);
+      const out = document.getElementById('simres');
+      out.innerHTML = `<table><tr><th>Победы твоего бойца (ИИ)</th><td><b>${Math.round(r.win * 100)}%</b></td></tr><tr><th>Средняя длина боя</th><td><b>${r.turns.toFixed(1)}</b> ходов каждого</td></tr></table>`;
+    }
+    return;
+  }
+  if (d.a === 'back') { VIEW = 'setup'; B = null; render(); return; }
+  if (d.a === 'again') { B = newBattle(false); render(); setTimeout(startTurn, 300); return; }
+  if (!B || B.done || BUSY || B.cur !== 'a') return;
+  const a = B.a;
+  if (d.st) { a.stance = d.st; render(); }
+  else if (d.it) { if (a.used[d.it] || a.itemTurn) return; if (SEL === d.it) { useItem(a, d.it); SEL = null; } else SEL = d.it; render(); }
+  else if (d.act) {
+    if (d.act === 'abil' && !canAbil(a)) return; if (d.act === 'def' && a.qi < R.qiDef) return; if (d.act === 'ult' && !canUlt(a)) return;
+    SEL = null; doAction(a, d.act);
+  }
+});
+render();
+</script>
+</body>
+</html>
