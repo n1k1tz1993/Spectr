@@ -3805,7 +3805,7 @@ function viewDossier() {
   return wrap(h + back);
 }
 function viewRest() {
-  return wrap(`<div class="card" style="text-align:center"><div class="sq big" style="margin:0 auto">Отдых</div>
+  return wrap(`<div class="card" style="text-align:center"><img src="img/rest.webp" alt="" style="width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:12px;display:block">
     <h2>Отдых</h2><div style="text-align:left">Ты как следует отдохнул и привёл себя в порядок. Всё лишнее ушло — и хорошее, и плохое: теперь ты в обычной форме.</div><div class="bonus nt">Все бонусы и штрафы сняты</div></div>${back}`);
 }
 function invadeHtml() {   // вторжение: любой другой игрок может ворваться в турнир, но пропустит свою неделю
@@ -3898,29 +3898,38 @@ async function zip(str, inv) {
   const fmt = 'deflate-raw', st = new Blob([str]).stream().pipeThrough(inv ? new DecompressionStream(fmt) : new CompressionStream(fmt));
   return inv ? await new Response(st).text() : new Uint8Array(await new Response(st).arrayBuffer());
 }
-async function exportCode(mode) { const raw = localStorage.getItem(SKEY[mode]); if (!raw) return ''; return 'SPK1.' + b64u(await zip(raw)); }
-async function importCode(code) {
+// Переносится только персонаж: внешность, способности, сила, рейтинг, крипта, вещи, жильё, трофеи и история.
+// Мир (лиги, команды, контракты, турниры) остаётся в своей карьере — герой входит в новую карьеру свободным бойцом.
+const HERO_KEEP = ['nick', 'country', 'ability', 'face', 'skill', 'power', 'rating', 'ladderGames', 'coins', 'items', 'equip', 'iname', 'cons', 'cars', 'garage', 'rooms', 'room', 'roomPic', 'troph', 'tiers', 'beltsWon', 'wfWon', 'wcWon', 'eslWins', 'read', 'hist', 'tourCount'];
+const heroPack = H => { const o = {}; HERO_KEEP.forEach(k => { if (H[k] != null) o[k] = H[k]; }); return o; };
+async function heroCode(H) { return 'SPH1.' + b64u(await zip(JSON.stringify({ v: 1, h: heroPack(H) }))); }
+async function heroFromCode(code) {
   code = String(code || '').replace(/\s+/g, '');
-  if (!/^SPK1\./.test(code)) throw new Error('Это не код сохранения «Спектра». Код начинается с SPK1.');
-  let raw; try { raw = await zip(ub64u(code.slice(5)), true); } catch (e) { throw new Error('Код повреждён или скопирован не полностью.'); }
-  let v; try { v = JSON.parse(raw); } catch (e) { throw new Error('Код повреждён или скопирован не полностью.'); }
-  if (!v || !Array.isArray(v.players) || !v.players.length) throw new Error('В коде нет персонажа.');
-  return { mode: v.mode === 'coop' ? 'coop' : 'solo', raw, v };
+  if (!/^SPH1\./.test(code)) throw new Error('Это не код персонажа «Спектра». Код начинается с SPH1.');
+  let v; try { v = JSON.parse(await zip(ub64u(code.slice(5)), true)); } catch (e) { throw new Error('Код повреждён или скопирован не полностью.'); }
+  const h = v && v.h;
+  if (!h || !h.nick || !h.ability) throw new Error('В коде нет персонажа.');
+  const H = newHero(String(h.nick).slice(0, 16), COUNTRIES[h.country] ? h.country : 'RU', h.ability, (h.face | 0) % FACE_COUNT);
+  HERO_KEEP.forEach(k => { if (h[k] != null && !['nick', 'country', 'face'].includes(k)) H[k] = h[k]; });
+  return fixHero(H);
 }
+const savedHeroes = () => ['solo', 'coop'].flatMap(m => { const g = loadGame(m); return g ? g.players.map((H, i) => ({ m, i, H })) : []; });
 function viewXfer() {
-  const X = window.XFER, back = '<button class="btn" data-a="xclose" style="text-align:center">Назад</button>';
-  if (X.mode === 'exp') return `<div class="card"><h2>Код сохранения</h2>
-    <div class="dim">${X.mode2 === 'coop' ? 'Совместная карьера' : 'Одиночная карьера'} целиком: герой${X.mode2 === 'coop' ? 'и' : ''}, мир, лиги и история. Скопируй код и вставь его в «Импорт» на другом устройстве. Сохрани его в заметках или отправь себе в мессенджер — это ещё и резервная копия.</div>
-    <textarea id="xcode" readonly rows="7" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.code || 'Создаю код…')}</textarea>
-    <div class="dim" style="margin-top:4px">Длина кода: ${(X.code || '').length} символов</div>
+  const X = window.XFER, back = ibtn('back', 'xclose', '', 'Назад');
+  const heroLine = H => `<div class="row" style="flex-wrap:nowrap;align-items:center;gap:10px"><div class="ava">${faceImg(H.face)}</div><div style="text-align:left"><b>${flagOf(H.country)} ${esc(H.nick)}</b><div class="dim">Сила ${H.power | 0} · рейтинг ${H.rating | 0} · ${coinHtml(H.coins)}</div></div></div>`;
+  if (X.mode === 'exp') {
+    if (X.code == null) { const list = savedHeroes(); return `<div class="card"><h2>Экспорт персонажа</h2><div class="dim">Выбери героя. Код перенесёт его в любую карьеру — одиночную или совместную, на этом или другом устройстве.</div>
+      ${list.map(o => `<button class="btn" data-a="xhero" data-v="${o.m}:${o.i}" style="margin-top:8px">${heroLine(o.H)}<div class="dim" style="margin-top:4px">${o.m === 'coop' ? 'Совместная карьера' : 'Одиночная карьера'}</div></button>`).join('') || '<div class="dim" style="margin-top:8px">Сохранённых героев пока нет.</div>'}${back}</div>`; }
+    return `<div class="card"><h2>Код персонажа</h2>${heroLine(X.H)}
+    <div class="dim" style="margin-top:8px">Переносятся внешность, способности, сила, рейтинг, крипта, вещи, жильё, трофеи и история. Команда, контракты и турниры остаются в старой карьере — в новой герой начнёт свободным бойцом. Вставь код через «Импорт персонажа» при создании героя.</div>
+    <textarea id="xcode" readonly rows="6" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.code || 'Создаю код…')}</textarea>
     <button class="btn gold" data-a="xcopy" style="text-align:center">${X.copied ? '✓ Скопировано' : 'Скопировать код'}</button>${back}</div>`;
+  }
   return `<div class="card"><h2>Импорт персонажа</h2>
-    <div class="dim">Вставь код сохранения (начинается с SPK1.). Карьера загрузится в свой слот — одиночный или совместный.</div>
-    <textarea id="xin" rows="7" placeholder="SPK1.…" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.input || '')}</textarea>
+    <div class="dim">Вставь код персонажа (начинается с SPH1.). ${SETUP && SETUP.mode === 'coop' ? `Герой займёт место игрока ${SETUP.made.length + 1} из ${SETUP.n}.` : 'С этим героем начнётся новая карьера.'}</div>
+    <textarea id="xin" rows="6" placeholder="SPH1.…" style="margin-top:10px;font-family:monospace;font-size:12px;word-break:break-all">${esc(X.input || '')}</textarea>
     ${X.err ? `<div class="minus" style="margin-top:6px">${esc(X.err)}</div>` : ''}
-    ${X.ask ? `<div class="card" style="margin-top:10px;border-color:var(--gold)"><b>${X.ask.mode === 'coop' ? 'Совместная' : 'Одиночная'} карьера: ${X.ask.v.players.map(H => esc(H.nick)).join(', ')} · неделя ${X.ask.v.week || 1}</b>
-      <div class="dim" style="margin-top:4px">${X.ask.has ? 'Она заменит текущее сохранение в этом слоте.' : 'Слот свободен.'}</div>
-      <button class="btn gold" data-a="ximpok" style="text-align:center">${X.ask.has ? 'Заменить и загрузить' : 'Загрузить'}</button></div>`
+    ${X.H ? `<div class="card" style="margin-top:10px;border-color:var(--gold)">${heroLine(X.H)}<button class="btn gold" data-a="ximpok" style="text-align:center">Взять этого героя</button></div>`
       : '<button class="btn gold" data-a="ximp" style="text-align:center">Проверить код</button>'}${back}</div>`;
 }
 function viewMenu() {
@@ -3936,10 +3945,7 @@ function viewMenu() {
       <div class="dim" style="margin-top:10px">Новая игра — сколько игроков?</div>
       <div class="nrow">${[2, 3, 4, 5, 6].map(n => `<button class="imgbtn" data-a="mnew" data-v="coop${n}" aria-label="${n} игроков"><img src="img/nav/n${n}.webp" alt=""></button>`).join('')}</div>
       ${coop ? '<div class="dim" style="margin-top:6px">Новая совместная игра заменит сохранённую.</div>' : ''}</div>
-    <div class="card"><h2>Перенос персонажа</h2><div class="dim">Код сохранения переносит карьеру на другой телефон или в другой браузер.</div>
-      ${solo ? '<button class="btn" data-a="xexp" data-v="solo" style="text-align:center">Экспорт одиночной карьеры</button>' : ''}
-      ${coop ? '<button class="btn" data-a="xexp" data-v="coop" style="text-align:center">Экспорт совместной карьеры</button>' : ''}
-      <button class="btn gold" data-a="xin" style="text-align:center">Импорт по коду</button></div>
+    ${solo || coop ? '<button class="imgbtn" data-a="xexp" aria-label="Экспорт персонажа"><img src="img/nav/export.webp" alt=""></button>' : ''}
     <button class="imgbtn" data-a="about" data-v="0" aria-label="О игре" style="margin-bottom:20px"><img src="img/nav/about.webp" alt=""></button>`;
 }
 const ABOUT_BTN = [[613, 1340, 960, 1440], [200, 1355, 825, 1465], [200, 1355, 825, 1465]];   // кнопка «Дальше/Завершить» на слайде (из 1024×1536)
@@ -3962,8 +3968,8 @@ function viewIntro() {   // вступление после создания г�
   const sep = '<div class="insep"><i></i><b>✦</b><i></i></div>';
   if (S.intro === 1) return `<div class="intro"><div class="inbrand">СПЕКТР</div><img class="inart" src="img/intro1.webp" alt="">
     <h1>Добро пожаловать<br>в Бюро спектров!</h1>${sep}
-    <p>Твой путь в лиге начинается здесь. Бюро подготовило документы, телефон и ключи от твоей первой квартиры.</p>
-    <p>Впереди — первый вступительный турнир. Покажи, на что способен!</p>
+    ${S.imported ? `<p>С возвращением, ${esc(S.nick)}! Бюро перевело твоё досье: сила, рейтинг, крипта, вещи и трофеи остались при тебе.</p><p>Команды и контракты остались в прошлой карьере — здесь ты начинаешь свободным бойцом.</p>` : `<p>Твой путь в лиге начинается здесь. Бюро подготовило документы, телефон и ключи от твоей первой квартиры.</p>
+    <p>Впереди — первый вступительный турнир. Покажи, на что способен!</p>`}
     <p>Для начала выбери регион, в котором начнётся твоя карьера.</p>
     <div class="inlbl"><i></i><span>РЕГИОН КАРЬЕРЫ</span><i></i></div>
     <div class="inreg">${REGIONS.map((R, r) => `<button class="${r === (S.introReg | 0) ? 'on' : ''}" data-a="ireg" data-v="${r}">${R.name}</button>`).join('')}</div>
@@ -4017,6 +4023,7 @@ function viewSetup() {
     <div class="dim" style="margin-top:6px">Самый сильный удар без эффектов: тратит ${TB.qiUlt} Цы и применяется один раз за бой. Фраза появится в журнале боя.</div>
     <button class="imgbtn" data-a="start" aria-label="Создать персонажа" style="margin-top:16px"><img src="img/nav/cr_go.webp" alt=""></button>
     <div class="minus" style="margin-top:8px">${esc(setupErr)}</div>
+    ${ibtn('import', 'xin', '', 'Импорт персонажа')}
     ${ibtn('menu', 'mback', '', 'Главное меню')}
   </div>`;
 }
@@ -4319,12 +4326,18 @@ function act(a, v) {
       case 'mback': SETUP = null; break;
       case 'about': window.ABOUT = +v < 3 ? +v : null; break;
       case 'aboutx': window.ABOUT = null; break;
-      case 'xexp': window.XFER = { mode: 'exp', mode2: v }; exportCode(v).then(c => { if (window.XFER) { window.XFER.code = c; render(); } }); break;
-      case 'xin': window.XFER = { mode: 'imp' }; break;
-      case 'xclose': window.XFER = null; break;
+      case 'xexp': window.XFER = { mode: 'exp' }; break;
+      case 'xhero': { const [m, k] = v.split(':'), g = loadGame(m), H = g && g.players[+k]; if (!H) return; const X = window.XFER; X.H = H; X.code = ''; heroCode(H).then(c => { if (window.XFER === X) { X.code = c; render(); } }); break; }
+      case 'xin': if (!SETUP) return; window.XFER = { mode: 'imp' }; break;
+      case 'xclose': { const X = window.XFER; window.XFER = X && X.mode === 'exp' && X.code != null ? { mode: 'exp' } : null; break; }
       case 'xcopy': { const t = document.getElementById('xcode'); if (!t || !window.XFER.code) return; t.select(); (navigator.clipboard ? navigator.clipboard.writeText(window.XFER.code) : Promise.reject()).catch(() => document.execCommand('copy')).finally(() => { window.XFER.copied = true; render(); }); return; }
-      case 'ximp': { const X = window.XFER, t = document.getElementById('xin'); X.input = t ? t.value : ''; X.err = ''; importCode(X.input).then(r => { X.ask = { ...r, has: !!localStorage.getItem(SKEY[r.mode]) }; render(); }).catch(e => { X.err = e.message; render(); }); return; }
-      case 'ximpok': { const X = window.XFER; if (!X.ask) return; localStorage.setItem(SKEY[X.ask.mode], X.ask.raw); const g = loadGame(X.ask.mode); if (!g) { X.err = 'Не удалось загрузить карьеру из кода.'; X.ask = null; break; } window.XFER = null; G = g; S = G.players[G.cur]; ensureLeagues(); break; }
+      case 'ximp': { const X = window.XFER, t = document.getElementById('xin'); X.input = t ? t.value : ''; X.err = ''; heroFromCode(X.input).then(H => { if (SETUP.made.some(o => o.nick.toLowerCase() === H.nick.toLowerCase())) throw new Error('Герой с ником ' + H.nick + ' уже есть в этой игре.'); X.H = H; render(); }).catch(e => { X.err = e.message; render(); }); return; }
+      case 'ximpok': { const X = window.XFER; if (!X.H || !SETUP) return; const H = X.H; window.XFER = null;
+        H.hand = drawHand(H); H.intro = 1; H.introReg = 0; H.imported = 1; H.log = ['Персонаж перенесён по коду. Добро пожаловать в новую карьеру.'];   // выбор региона без вступительного турнира
+        SETUP.made.push(H);
+        if (SETUP.made.length < SETUP.n) { resetSetup(); break; }
+        G = { v: 3, mode: SETUP.mode, players: SETUP.made, cur: 0, handoff: SETUP.mode === 'coop', week: 1 };
+        ensureLeagues(); S = G.players[0]; SETUP = null; save(); break; }
       case 'flag': setupFlag = v; setupErr = ''; break;
       case 'sicon': setupIcon = (setupIcon + 1) % ABIL_ICON_COUNT; break;   // нажатие — следующая иконка
       case 'sface': setupFace = (setupFace + 1) % FACE_COUNT; break;
@@ -4369,7 +4382,7 @@ function act(a, v) {
     case 'famebu': S.view = 'fame'; S.fameFrom = 'bureau'; break;
     case 'fameback': S.view = S.fameFrom === 'bureau' ? 'bureau' : 'more'; S.fameFrom = null; break;
     case 'ireg': if (S.intro === 1) S.introReg = +v; break;
-    case 'isign': if (S.intro === 1) { S.region = S.introReg | 0; S.hand = drawHand(S); S.intro = 2; logMsg('Документы подписаны. Карьера начинается: ' + REGIONS[S.region].name + '.'); save(); } break;
+    case 'isign': if (S.intro === 1) { S.region = S.introReg | 0; S.hand = drawHand(S); S.intro = S.imported ? 0 : 2; delete S.imported; logMsg('Документы подписаны. Карьера начинается: ' + REGIONS[S.region].name + '.'); save(); } break;
     case 'igo': if (S.intro === 2) { S.intro = 0; S.tourPass = false; S.tourInv = []; S.view = 'tour'; introTour(); save(); } break;
     case 'hskip': S.skipNext = false; G.handoff = false; logMsg('Неделя пропущена: вторжение на турнир.'); endTurn(); break;
     case 'lgo': G.lann = G.lq[0]; G.lview = 'match'; break;
