@@ -981,7 +981,7 @@ html.land .pr-st{grid-column:1/-1}
 .pr-st span{font-size:11px;padding:2px 6px;border-radius:8px;background:#22304F;border:1px solid #37507E;white-space:nowrap}
 .pr-st span.bad{background:#3A1E26;border-color:#7A3A46}.pr-st span.good{background:#1C3A2A;border-color:#3A7A55}
 .pr-float{position:absolute;left:50%;top:45%;z-index:4;transform:translate(-50%,-50%);font-family:'Exo 2',Rubik,sans-serif;font-style:italic;font-size:30px;font-weight:900;text-shadow:0 2px 6px #000;pointer-events:none;white-space:nowrap;animation:prfl 1.1s ease-out forwards}
-.pr-float.heal{color:#8BF0A0}.pr-float.dmg{color:#FFB3A8}.pr-float.info{color:#FFE7A3;font-size:20px}
+.pr-float.dmg.crit{color:#FFD24A;font-size:34px}.pr-float.heal{color:#8BF0A0}.pr-float.dmg{color:#FFB3A8}.pr-float.info{color:#FFE7A3;font-size:20px}
 @keyframes prfl{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-120%) scale(1)}}
 .pr-turnb{text-align:center;font-weight:800;padding:8px;border-radius:12px;border:1px solid var(--line);background:#0C1428;color:var(--dim)}
 .pr-turnb.me{border-color:var(--cA,#32C8F0);color:#9FE4FF}.pr-turnb.op{border-color:#F0605A;color:#FFB8B0}
@@ -1738,10 +1738,10 @@ const TB = {
   series: 5, miss: 0.10, crit: 0.12, critK: 1.6, spread: 0.15,
   abilHits: 4.2, ultHits: 12,                                // способность ≈ 4 удара + эффект; разрушительная ≈ 12 ударов
   qiStart: 50, qiTurn: 10, qiMax: 100,
-  qiSeries: 5, qiAbil: 25, qiUlt: 70, qiDef: 20, qiConc: 40, qiCritDodge: 5,
+  qiSeries: 5, qiStrike: 20, qiHits: 5.0, qiAbil: 25, qiUlt: 70, qiDef: 20, qiConc: 40, qiCritDodge: 5,
   defBlock: 0.60, concTaken: 1.15, exhaustTaken: 1.20, exhaustQi: 20,
   stance: { bal: { d: 1, t: 1 }, rage: { d: 1.3, t: 1.3 }, def: { d: 0.75, t: 0.75 } },
-  e: { stun: 0.4, drain: 25, drainSelf: 10, wound: 0.03, heal: 0.075, barrier: 0.09, mark: 1.35, weak: 0.70, reflect: 0.4, pierce: 1.3, seal: 2 },
+  e: { stun: 0.4, drain: 25, drainSelf: 10, wound: 0.03, heal: 0.075, barrier: 0.07, barT: 3, mark: 1.35, weak: 0.70, reflect: 0.4, pierce: 1.3, seal: 2 },
   it: { stim: 0.12, gren: 0.08, batt: 25, rage: 0.27, rageIn: 0.18, ins: 0.15, vamp: 0.36, smoke: 0.55, crit: 0.75 },
   fatigueFrom: 8, fatigue: 0.05, init: 40,
 };
@@ -1752,7 +1752,7 @@ const EFFECTS = [   // эффекты обычной способности: и�
   ['drain', 'Иссушение', '−25 Цы у соперника, +10 Цы себе'],
   ['wound', 'Рана', 'Соперник 3 хода теряет по 3% HP'],
   ['heal', 'Восстановление', 'Лечит 7.5% HP'],
-  ['barrier', 'Барьер', 'Щит 9% HP до конца хода соперника'],
+  ['barrier', 'Барьер', 'Щит на 3 хода соперника: поглощает часть урона, пока не разобьют'],
   ['mark', 'Метка', 'Соперник 2 хода получает +35% урона'],
   ['weak', 'Ослабление', 'Соперник 2 хода наносит −30% урона'],
   ['reflect', 'Отражение', '40% урона следующей атаки соперника возвращается ему'],
@@ -1788,7 +1788,7 @@ function tbInit(x) {
   if (!x.skill) x.skill = skillOf(x.name, x.abil);
   return x;
 }
-const tbFx = (x, t, c) => { if (!F.sim) (F.fx = F.fx || []).push({ id: tbId(x), t, c }); };
+const tbFx = (x, t, c, d = 0) => { if (!F.sim) (F.fx = F.fx || []).push({ id: tbId(x), t, c, d }); };   // d — задержка всплывающей цифры (серия ударов)
 const tbLog = (t, c = '') => { if (!F.sim) fev(t, c); };
 function dealtMul(x) { let m = TB.stance[x.stance].d; if (x.st.weak) m *= TB.e.weak; if (x.st.rageItem) m *= 1 + TB.it.rage; if (x.tmp.ins) m *= 1 + TB.it.ins; return m; }
 function takenMul(y, pierce) {
@@ -1799,22 +1799,22 @@ function takenMul(y, pierce) {
 }
 function tbDmg(x, y, raw) {   // урон: щит, вампиризм
   let d = Math.max(1, Math.round(raw));
-  if (y.st.barrier > 0) { const ab = Math.min(y.st.barrier, d); y.st.barrier -= ab; d -= ab; if (y.st.barrier <= 0) delete y.st.barrier; if (ab) tbLog(`${y.name}: щит поглотил ${ab}.`, 'nt'); }
+  if (y.st.barrier > 0) { const ab = Math.min(y.st.barrier, d); y.st.barrier -= ab; d -= ab; if (y.st.barrier <= 0) { delete y.st.barrier; delete y.st.barT; } if (ab) tbLog(`${y.name}: щит поглотил ${ab}.`, 'nt'); }
   y.hp = Math.max(0, y.hp - d);
   if (x.tmp.vamp && d > 0) { const h = Math.round(d * TB.it.vamp); x.hp = Math.min(x.hpMax, x.hp + h); x.tmp.vampSum = (x.tmp.vampSum || 0) + h; }
   return d;
 }
 function tbStrikes(x, y, n, base, opt = {}) {
-  let total = 0, crits = 0, misses = 0;
+  let total = 0, crits = 0, misses = 0; const hits = [];
   const mul = dealtMul(x) * takenMul(y, opt.pierce) * (opt.k || 1);
   for (let i = 0; i < n; i++) {
     const missP = x.tmp.ins ? 0 : TB.miss + (y.st.smoke ? TB.it.smoke : 0);
-    if (!opt.sure && Math.random() < missP) { misses++; y.qi = Math.min(TB.qiMax, y.qi + TB.qiCritDodge); continue; }
+    if (!opt.sure && Math.random() < missP) { misses++; hits.push(null); y.qi = Math.min(TB.qiMax, y.qi + TB.qiCritDodge); continue; }
     let h = base * (1 - TB.spread + Math.random() * 2 * TB.spread) * mul;
-    if (Math.random() < (x.tmp.crit ? TB.it.crit : TB.crit)) { h *= TB.critK; crits++; x.qi = Math.min(TB.qiMax, x.qi + TB.qiCritDodge); }
-    total += tbDmg(x, y, h);
+    let c = false; if (Math.random() < (x.tmp.crit ? TB.it.crit : TB.crit)) { h *= TB.critK; crits++; c = true; x.qi = Math.min(TB.qiMax, x.qi + TB.qiCritDodge); }
+    const d = tbDmg(x, y, h); total += d; hits.push({ d, c });
   }
-  return { total, crits, misses };
+  return { total, crits, misses, hits };
 }
 function tbReflect(x, y, d) { if (y.st.reflect && d > 0) { const r = Math.round(d * TB.e.reflect); x.hp = Math.max(0, x.hp - r); delete y.st.reflect; tbLog(`Отражение! ${x.name} получает ${r} урона обратно.`, 'ab'); tbFx(x, '−' + r, 'dmg'); } }
 function tbSpend(x, q) { x.qi -= q; if (x.qi <= 0) { x.qi = 0; x.exhausted = true; tbLog(`${x.name} истощён: Цы на нуле — следующий ход пропущен.`, 'hp30'); } }
@@ -1825,7 +1825,12 @@ function tbAction(x, act) {
   x.conc = false; x.defend = false;
   if (act === 'series') {
     const r = tbStrikes(x, y, TB.series, TB.hit(x.p)); x.qi = Math.min(TB.qiMax, x.qi + TB.qiSeries);
-    tbLog(`${x.name}: серия ударов — ${r.total} урона${r.crits ? `, критов: ${r.crits}` : ''}${r.misses ? `, мимо: ${r.misses}` : ''}.`, r.crits >= 2 ? 'crit' : ''); tbFx(y, '−' + r.total, 'dmg'); tbReflect(x, y, r.total);
+    tbLog(`${x.name}: серия ударов — ${r.hits.map(h => h ? h.d + (h.c ? '!' : '') : 'мимо').join(' · ')} = ${r.total} урона.`, r.crits >= 2 ? 'crit' : '');   // каждый удар серии отдельно, «!» — крит
+    r.hits.forEach((h, i) => tbFx(y, h ? (h.c ? '✦ −' : '−') + h.d : 'мимо', h ? (h.c ? 'dmg crit' : 'dmg') : 'info', 1 + i * 170)); F.fxHold = r.hits.length * 170 + 500;   // серия: цифры всплывают по очереди лесенкой tbReflect(x, y, r.total);
+  } else if (act === 'qi') {   // удар Цы: один мощный удар, не промахивается, тратит Цы
+    tbSpend(x, TB.qiStrike);
+    const r = tbStrikes(x, y, 1, TB.hit(x.p) * TB.qiHits, { sure: true });
+    tbLog(`${x.name}: удар Цы — ${r.total} урона${r.crits ? ' (крит!)' : ''}.`, r.crits ? 'crit' : 'ab'); tbFx(y, (r.crits ? '✦ −' : '−') + r.total, 'dmg'); tbReflect(x, y, r.total);
   } else if (act === 'abil') {
     tbSpend(x, TB.qiAbil);
     const pierce = x.skill.eff === 'pierce', r = tbStrikes(x, y, 1, TB.hit(x.p) * TB.abilHits, { pierce, k: pierce ? TB.e.pierce : 1, sure: true });
@@ -1853,7 +1858,7 @@ function tbEffect(x, y) {
   else if (e === 'drain') { const d = Math.min(TB.e.drain, y.qi); y.qi -= d; x.qi = Math.min(TB.qiMax, x.qi + TB.e.drainSelf); tbLog(`${y.name} теряет ${d} Цы.`, 'qi'); if (y.qi <= 0 && d > 0) { y.exhausted = true; tbLog(`${y.name} истощён!`, 'hp30'); } }
   else if (e === 'wound') { y.st.wound = 3; tbLog(`${y.name} ранен на 3 хода.`, 'nt'); }
   else if (e === 'heal') { const h = Math.round(x.hpMax * TB.e.heal); x.hp = Math.min(x.hpMax, x.hp + h); tbLog(`${x.name} восстанавливает ${h} HP.`, 'qi'); tbFx(x, '+' + h, 'heal'); }
-  else if (e === 'barrier') { x.st.barrier = Math.round(x.hpMax * TB.e.barrier); tbLog(`${x.name} ставит щит на ${x.st.barrier}.`, 'nt'); }
+  else if (e === 'barrier') { x.st.barrier = Math.max(x.st.barrier || 0, Math.round(x.hpMax * TB.e.barrier)); x.st.barT = TB.e.barT; tbLog(`${x.name} ставит щит на ${x.st.barrier} (${TB.e.barT} хода).`, 'nt'); }
   else if (e === 'mark') { y.st.mark = 2; tbLog(`${y.name} помечен: +${Math.round((TB.e.mark - 1) * 100)}% урона 2 хода.`, 'nt'); }
   else if (e === 'weak') { y.st.weak = 2; tbLog(`${y.name} ослаблен: −${Math.round((1 - TB.e.weak) * 100)}% урона 2 хода.`, 'nt'); }
   else if (e === 'reflect') { x.st.reflect = 1; tbLog(`${x.name} готов отразить удар.`, 'nt'); }
@@ -1882,7 +1887,7 @@ function tbStart() {   // начало хода текущего бойца
   if (x.turns >= TB.fatigueFrom) { const d = Math.round(x.hpMax * TB.fatigue); x.hp = Math.max(0, x.hp - d); tbLog(`${x.name} устаёт: −${d}.`, 'nt'); if (x.hp <= 0) return tbFinish(y); }
   if (x.st.wound) { const d = Math.round(x.hpMax * TB.e.wound); x.hp = Math.max(0, x.hp - d); tbLog(`${x.name}: рана −${d}.`, 'nt'); tbFx(x, '−' + d, 'dmg'); if (--x.st.wound <= 0) delete x.st.wound; if (x.hp <= 0) return tbFinish(y); }
   for (const k of ['mark', 'weak']) if (x.st[k] && --x.st[k] <= 0) delete x.st[k];
-  if (x.st.barrier) delete x.st.barrier;
+  if (x.st.barT && --x.st.barT <= 0) { delete x.st.barT; if (x.st.barrier) { delete x.st.barrier; tbLog(`${x.name}: щит рассеялся.`, 'nt'); } }   // щит держится несколько ходов соперника
   if (x.exhausted) { x.qi = Math.min(TB.qiMax, x.qi + TB.exhaustQi); x.exhausted = false; tbLog(`${x.name} приходит в себя после истощения (+${TB.exhaustQi} Цы) и пропускает ход.`, 'qi'); return tbEnd(x, true); }
   if (x.st.stun) { delete x.st.stun; x.qi = Math.min(TB.qiMax, x.qi + TB.qiTurn); tbLog(`${x.name} оглушён и пропускает ход.`, 'nt'); return tbEnd(x, true); }
   x.qi = Math.min(TB.qiMax, x.qi + TB.qiTurn);
@@ -1896,7 +1901,7 @@ function tbEnd(x) {
   if (x.st.seal && --x.st.seal <= 0) delete x.st.seal;
   F.cur = F.cur === 'a' ? 'b' : 'a'; F.round++;
   if (F.round > 60) return tbFinish(x.hp / x.hpMax >= y.hp / y.hpMax ? x : y);
-  if (F.sim || F.fast) tbStart(); else { fightPaint(); const f0 = F; setTimeout(() => { if (F === f0) tbStart(); }, 450); }
+  if (F.sim || F.fast) tbStart(); else { fightPaint(); const f0 = F, w = 450 + (F.fxHold || 0); F.fxHold = 0; setTimeout(() => { if (F === f0) tbStart(); }, w); }   // после серии — ждём, пока всплывут все удары
 }
 function tbFinish(w) { if (F.done) return; F.done = true; F.won = w === F.a; F.await = false; tbLog(`Победа: ${w.name}!`, 'crit'); if (!F.sim) fightPaint(); }
 // ---------- ИИ: ботам, автоходу и «Досчитать бой» ----------
@@ -1911,6 +1916,7 @@ function tbAIItems(x, y) {
   if (has('vamp') && x.hp < x.hpMax * 0.7 && Math.random() < 0.4) return tbUseItem(x, 'vamp');
   if (has('ins') && Math.random() < 0.3) return tbUseItem(x, 'ins');
 }
+const estQi = (x, y) => TB.hit(x.p) * TB.qiHits * dealtMul(x) * takenMul(y), canQi = x => x.qi >= TB.qiStrike;
 const estUlt = (x, y) => TB.hit(x.p) * TB.ultHits * dealtMul(x) * takenMul(y), estSeries = (x, y) => TB.hit(x.p) * TB.series * 0.95 * dealtMul(x) * takenMul(y);
 const tbSkill = r => Math.min(0.92, Math.max(0.3, 0.3 + (r || 0) / 2100 * 0.55));   // мастерство бота от рейтинга: бронза ~0.3–0.55, алмаз ~0.8, мастер ~0.9
 function tbAI(x) {
@@ -1922,7 +1928,8 @@ function tbAI(x) {
   let act;
   if (canUlt(x) && estUlt(x, y) >= y.hp && (x.qi >= TB.qiUlt || Math.random() < 0.6 + sk * 0.3)) act = 'ult';
   else if (estSeries(x, y) >= y.hp * 1.1) act = 'series';
-  else if (rand) act = ['series', 'series', canAbil(x) ? 'abil' : 'series', x.qi < 40 ? 'conc' : 'series', canUlt(x) && x.qi >= TB.qiUlt ? 'ult' : 'series'][rnd(0, 4)];
+  else if (canQi(x) && estQi(x, y) >= y.hp * 1.05) act = 'qi';
+  else if (rand) act = ['series', 'series', canAbil(x) ? 'abil' : 'series', x.qi < 40 ? 'conc' : 'series', canUlt(x) && x.qi >= TB.qiUlt ? 'ult' : 'series', canQi(x) ? 'qi' : 'series'][rnd(0, 5)];
   else {
     const threat = !y.ultUsed && y.qi + TB.qiTurn >= TB.qiUlt;
     if (threat && x.qi >= TB.qiDef + 5 && hpR < 0.7 && Math.random() < 0.6) act = 'def';
@@ -1932,10 +1939,12 @@ function tbAI(x) {
       const useful = { heal: hpR < 0.65, barrier: threat || hpR < 0.6, drain: y.qi >= 45, mark: !y.st.mark, weak: !y.st.weak, wound: !y.st.wound, stun: true, pierce: y.defend || y.stance === 'def', reflect: threat, seal: threat }[x.skill.eff];
       act = useful && Math.random() < 0.75 ? 'abil' : 'series';
     } else act = 'series';
+    if (act === 'series' && canQi(x) && x.qi - TB.qiStrike >= (canUlt(x) ? TB.qiUlt - TB.qiTurn : TB.qiAbil + 5) && Math.random() < 0.6) act = 'qi';   // лишняя Цы — в удар Цы
   }
   if (act === 'abil' && !canAbil(x)) act = 'series';
   if (act === 'def' && x.qi < TB.qiDef) act = 'series';
   if (act === 'ult' && !canUlt(x)) act = 'series';
+  if (act === 'qi' && !canQi(x)) act = 'series';
   tbAction(x, act);
 }
 const finishFight = () => { if (!F || F.done) return; F.fast = true; F.busy = false; if (F.await) { F.await = false; tbAI(F[F.cur]); } };   // «Досчитать бой»: оставшиеся ходы за обоих — автоматика
@@ -4071,7 +4080,7 @@ const fCountry = x => x.country || (x.me && G ? (G.players.find(H => H.nick === 
 function tbStatus(x) {
   const s = [];
   if (x.defend) s.push(['🛡 Защита', 'good']); if (x.conc) s.push(['🧘 Концентрация', '']); if (x.exhausted) s.push(['😵 Истощение', 'bad']);
-  if (x.st.barrier) s.push([`🔰 Щит ${x.st.barrier}`, 'good']); if (x.st.reflect) s.push(['🪞 Отражение', 'good']); if (x.st.smoke) s.push(['💨 В дыму', 'good']);
+  if (x.st.barrier) s.push([`🔰 Щит ${x.st.barrier}${x.st.barT ? ' · ' + x.st.barT + ' х.' : ''}`, 'good']); if (x.st.reflect) s.push(['🪞 Отражение', 'good']); if (x.st.smoke) s.push(['💨 В дыму', 'good']);
   if (x.st.stun) s.push(['💫 Оглушён', 'bad']); if (x.st.wound) s.push([`🩸 Рана ×${x.st.wound}`, 'bad']); if (x.st.mark) s.push([`🎯 Метка ×${x.st.mark}`, 'bad']);
   if (x.st.weak) s.push([`⬇ Ослаблен ×${x.st.weak}`, 'bad']); if (x.st.seal) s.push([`🔒 Печать ×${x.st.seal}`, 'bad']); if (x.st.rageItem) s.push(['😡 Сыворотка', '']);
   if (x.ultUsed) s.push(['💥 Ульта потрачена', '']);
@@ -4100,7 +4109,8 @@ const MENU = { open: true };
 function tbMenu() {   // всплывающее меню хода: стойки, все действия с описанием и уроном, все расходники с описанием
   const x = F[F.cur], y = tbOpp(x), ef = effOf(x.skill.eff), its = tbItems(x);
   const acts = [
-    ['series', '<img src="img/btn/ic_series.webp" alt="">', 'Серия ударов', '5 ударов подряд, любой может промахнуться или стать критом.', `≈ ${tbRange(x, y, TB.series, TB.hit(x.p))}`, `+${TB.qiSeries}`, true],
+    ['series', '<img src="img/btn/ic_series.webp" alt="">', 'Серия ударов', '5 ударов подряд, каждый может промахнуться или стать критом. Копит Цы.', `≈ ${tbRange(x, y, TB.series, TB.hit(x.p))}`, `+${TB.qiSeries}`, true],
+    ['qi', '<img src="img/btn/ic_qi.webp" alt="">', 'Удар Цы', 'Один мощный удар Цы: не промахивается, может стать критом.', `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.qiHits, { sure: true })}`, `−${TB.qiStrike}`, canQi(x)],
     ['abil', abilIcon(x.skill.icon), x.skill.name, `${ef[1]}: ${ef[2].charAt(0).toLowerCase() + ef[2].slice(1)}.${x.st.seal ? ' Сейчас под печатью.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.abilHits, { pierce: x.skill.eff === 'pierce', k: x.skill.eff === 'pierce' ? TB.e.pierce : 1, sure: true })}`, `−${TB.qiAbil}`, canAbil(x)],
     ['ult', abilIcon(x.abil.icon), x.abil.name, `Разрушительная: самый сильный удар, один раз за бой.${x.ultUsed ? ' Уже использована.' : x.qi < TB.qiUlt ? ' Цы не хватает — после удара истощение и пропуск хода.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.ultHits, { sure: true })}`, `−${TB.qiUlt}`, canUlt(x)],
     ['def', '<img src="img/btn/ic_def.webp" alt="">', 'Защита', `Блокирует ${Math.round(TB.defBlock * 100)}% урона следующего хода соперника.`, '', `−${TB.qiDef}`, x.qi >= TB.qiDef],
@@ -4141,7 +4151,8 @@ function fightLoop() {   // после отрисовки: старт боя, в
   if (!F || F.sim || !document.getElementById('flog')) return;
   const lg = document.getElementById('flog'); lg.scrollTop = lg.scrollHeight;
   if (!F.started) { F.started = true; const f0 = F; setTimeout(() => { if (F === f0 && !F.done) tbStart(); }, 500); }
-  for (const f of F.fx || []) { const el = document.getElementById(f.id + '-pic'); if (!el) continue; const d = document.createElement('div'); d.className = 'pr-float ' + f.c; d.textContent = f.t; el.appendChild(d); setTimeout(() => d.remove(), 1200); }
+  for (const f of F.fx || []) { const el = document.getElementById(f.id + '-pic'); if (!el) continue; const d = document.createElement('div'); d.className = 'pr-float ' + f.c; d.textContent = f.t; if (f.d) { const k = Math.round(f.d / 170); d.style.top = (22 + k * 13) + '%'; d.style.left = (k % 2 ? 64 : 36) + '%'; d.style.fontSize = '24px'; }
+    if (f.d) { d.style.animationDelay = f.d + 'ms'; d.style.opacity = 0; d.style.animationFillMode = 'both'; } el.appendChild(d); setTimeout(() => d.remove(), 1200 + (f.d || 0)); }
   F.fx = [];
   if (F.done && !F.ovShown) {
     F.ovShown = true;
@@ -4502,7 +4513,7 @@ function act(a, v) {
     case 'fmenu': MENU.open = !MENU.open; render(); return;
     case 'fst': if (F && F.await) { F[F.cur].stance = v; render(); } return;
     case 'fitem': if (F && F.await && tbUseItem(F[F.cur], v)) { save(); render(); } return;
-    case 'fact': { if (!F || !F.await) return; const x = F[F.cur]; if (v === 'abil' && !canAbil(x) || v === 'def' && x.qi < TB.qiDef || v === 'ult' && !canUlt(x)) return; tbAction(x, v); return; }
+    case 'fact': { if (!F || !F.await) return; const x = F[F.cur]; if (v === 'abil' && !canAbil(x) || v === 'def' && x.qi < TB.qiDef || v === 'ult' && !canUlt(x) || v === 'qi' && !canQi(x)) return; tbAction(x, v); return; }
     case 'fauto': if (F && F.await) { tbLog(`${F[F.cur].name}: автоход.`, 'nt'); F.await = false; tbAI(F[F.cur]); } return;
     case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; useGame(F.a); useGame(F.b); F = null; cb(won); break; }
     case 'bureau': S.bpic = rnd(0, 2); if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // картинка Бюро — случайная из трёх   // своё жильё: бюро рядом, действие не тратится
