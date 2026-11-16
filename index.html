@@ -1694,11 +1694,11 @@ const ABIL_LIST = [   // способности соперников: назва
   ['Ледяной трон', 'вмораживает врага в ледяную глыбу'], ['Разрыв реальности', 'раскалывает пространство вокруг врага']
 ];
 // иконки способностей: img/abil/0..119.webp — и у игрока, и у соперников
-const FACE_COUNT = 71;   // портреты: img/face/0..70.webp (выбор героя и сгенерированные бойцы)
+const FACE_COUNT = 83;   // портреты: img/face/0..82.webp (выбор героя и сгенерированные бойцы)
 const tFace = (R, id) => { const p = R.ps[id], f = isHum(R, id) ? G.players[humOf(R, id)].face : (p.img || p.face); return f == null ? '' : `<span class="tvface">${faceImg(f)}</span>`; };   // маленький портрет бойца в карточке матча
 const ibtn = (n, a, v = '', al = '', cls = '', dis = false) => `<button class="ibtn ${cls}" data-a="${a}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="${al}"${dis ? ' disabled' : ''}><img src="img/btn/${n}_0.webp" alt=""><img class="ib1" src="img/btn/${n}_1.webp" alt=""></button>`;   // нарисованная кнопка: синяя, при нажатии — золотая
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
-const ABIL_ICON_COUNT = 140;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
+const ABIL_ICON_COUNT = 186;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]) });
