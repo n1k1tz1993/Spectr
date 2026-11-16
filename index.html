@@ -3945,7 +3945,7 @@ function viewMenu() {
       <div class="dim" style="margin-top:10px">Новая игра — сколько игроков?</div>
       <div class="nrow">${[2, 3, 4, 5, 6].map(n => `<button class="imgbtn" data-a="mnew" data-v="coop${n}" aria-label="${n} игроков"><img src="img/nav/n${n}.webp" alt=""></button>`).join('')}</div>
       ${coop ? '<div class="dim" style="margin-top:6px">Новая совместная игра заменит сохранённую.</div>' : ''}</div>
-    ${solo || coop ? '<button class="imgbtn" data-a="xexp" aria-label="Экспорт персонажа"><img src="img/nav/export.webp" alt=""></button>' : ''}
+    ${solo || coop ? ibtn('export', 'xexp', '', 'Экспорт персонажа') : ''}
     <button class="imgbtn" data-a="about" data-v="0" aria-label="О игре" style="margin-bottom:20px"><img src="img/nav/about.webp" alt=""></button>`;
 }
 const ABOUT_BTN = [[613, 1340, 960, 1440], [200, 1355, 825, 1465], [200, 1355, 825, 1465]];   // кнопка «Дальше/Завершить» на слайде (из 1024×1536)
