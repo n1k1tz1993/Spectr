@@ -1042,6 +1042,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .cpybtn{all:unset;cursor:pointer;display:block;margin:12px auto 0;text-align:center;-webkit-tap-highlight-color:transparent;transition:transform .12s,filter .15s}.cpybtn img{width:110px;height:auto;display:block;margin:0 auto 4px}.cpybtn:active{transform:scale(.94);filter:brightness(1.25)}
 .ibtn:active .ib1{opacity:1}.ibtn:active{transform:scale(.98)}
 .ibtn.ibsm{flex:0 0 42%;margin:0}.ibtn.crrnd{margin-top:12px;padding:0}
+.ibstack .ibtn{margin:8px 0 0;max-width:none}   /* «Надеть/Снять» над «Имя», одной высоты — шрифт одинаковый */
 .ibsz{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.ibsz .ibtn{margin:0}
 .evlogo{display:block;width:min(260px,70%);height:auto;margin:0 auto 8px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}.evlogo.sm{width:min(150px,40%)}
 .ibtn:disabled{opacity:.4;filter:grayscale(.6);cursor:default}.ibtn:disabled .ib1{opacity:0!important}.ibtn.ibauto{margin:8px 12px 2px;width:auto;max-width:none}.ibtn.ibsm2{flex:1;margin:0}
@@ -3831,7 +3832,7 @@ function viewInv() {    // инвентарь: открытые артефакт
       ? `<input id="iname" maxlength="32" placeholder="${esc(ITEMS[i].n)}" value="${esc((S.iname && S.iname[i]) || '')}" style="margin-top:8px">
          <div class="row" style="flex-wrap:nowrap;gap:8px">${ibtn('save', 'iren', i, 'Сохранить')}${ibtn('cancel', 'irencancel', '', 'Отмена')}</div>
          <div class="dim" style="font-size:12px">Оставь пустым, чтобы вернуть исходное название.</div>`
-      : `<div class="row" style="flex-wrap:nowrap;gap:8px">${ibtn(S.equip === i ? 'unequip' : 'equip', 'iequip', i, S.equip === i ? 'Снять' : 'Надеть', 'ibsm2')}${ibtn('name', 'irename', i, 'Имя', 'ibsm')}</div>`), S.equip === i)).join('');
+      : `<div class="ibstack">${ibtn(S.equip === i ? 'unequip' : 'equip', 'iequip', i, S.equip === i ? 'Снять' : 'Надеть')}${ibtn('namew', 'irename', i, 'Имя')}</div>`), S.equip === i)).join('');
   if (!own.length) h += `${ibtn('shop', 'shop', '', 'В магазин')}`;
   return wrap(h + back);
 }
