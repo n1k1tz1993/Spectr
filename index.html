@@ -1702,7 +1702,15 @@ const tFace = (R, id) => { const p = R.ps[id], f = isHum(R, id) ? G.players[humO
 const ibtn = (n, a, v = '', al = '', cls = '', dis = false) => `<button class="ibtn ${cls}" data-a="${a}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="${al}"${dis ? ' disabled' : ''}><img src="img/btn/${n}_0.webp" alt=""><img class="ib1" src="img/btn/${n}_1.webp" alt=""></button>`;   // нарисованная кнопка: синяя, при нажатии — золотая
 const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'string' ? i : 'img/face/' + (((i | 0) % FACE_COUNT + FACE_COUNT) % FACE_COUNT) + '.webp'}" alt="">`;
 const ABIL_ICON_COUNT = 186;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
-const abilIcon = i => `<img class="aic" src="img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp" alt="">`;
+const abilIcon = i => `<img class="aic" src="${typeof i === 'string' ? i : `img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp`}" alt="">`;   // строка — путь к особой иконке
+// особые иконки профессиональных Спектров: img/pro/<ник>_s (обычная способность) и _u (суперспособность)
+const PRO_IC = new Set(['idrax', 'doublelyft', 'akkee', 'capz', 'happi', 'emper0r', 'skai', 'klearlove', 'fak3r', 'fla5h']);
+function proIcons(x) {   // подставить особые иконки бойцу (и в старых сохранениях — при входе в бой)
+  const k = String(x.name || '').toLowerCase(); if (x.me || !PRO_IC.has(k)) return x;   // игрок с таким же ником иконки не получает
+  if (x.abil) x.abil = { ...x.abil, icon: `img/pro/${k}_u.webp` };
+  if (x.skill) x.skill = { ...x.skill, icon: `img/pro/${k}_s.webp` };
+  return x;
+}
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]) });
 // команда героя: если он сейчас играет в лиге — её логотип и название
@@ -1787,7 +1795,7 @@ const tbOpp = x => x === F.a ? F.b : F.a, tbId = x => x === F.a ? 'fa' : 'fb';
 function tbInit(x) {
   Object.assign(x, { hpMax: TB.hp(x.p), hp: TB.hp(x.p), qi: TB.qiStart, stance: 'bal', stCd: rnd(1, 2), ultUsed: false, turns: 0, st: {}, defend: false, conc: false, exhausted: false, itemTurn: false, tmp: {}, used: {} });
   if (!x.skill) x.skill = skillOf(x.name, x.abil);
-  return x;
+  return proIcons(x);
 }
 const tbFx = (x, t, c, d = 0) => { if (!F.sim) (F.fx = F.fx || []).push({ id: tbId(x), t, c, d }); };   // d — задержка всплывающей цифры (серия ударов)
 const tbLog = (t, c = '') => { if (!F.sim) fev(t, c); };
@@ -2410,7 +2418,7 @@ function lgPool(r) {   // все 20 бойцов региона, сильней�
   for (const [k, e] of Object.entries(ELITE_DATA[r] || {})) {
     const same = base.findIndex(b => !b.real && b.name.toLowerCase() === e.n.toLowerCase());   // однофамилец из старой базы — заменяем его, без дублей
     const ep = PRO_P[e.n] != null ? PRO_P[e.n] : e.p;
-    base[same >= 0 ? same : +k] = { name: e.n, p: ep, rating: npcRating(ep), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon }, bio: e.bio, real: true };
+    base[same >= 0 ? same : +k] = proIcons({ name: e.n, p: ep, rating: npcRating(ep), country: e.c, face: e.img, abil: { name: e.a, desc: e.d, icon: e.icon, skill: PRO_IC.has(e.n.toLowerCase()) ? { ...skillOf(e.n), icon: `img/pro/${e.n.toLowerCase()}_s.webp` } : undefined }, bio: e.bio, real: true });
   }
   const n = proCount(r), pros = base.slice(0, n).sort((a, b) => b.p - a.p);
   return (LPOOL[r] = pros.concat(base.slice(n)));
