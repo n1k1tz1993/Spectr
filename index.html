@@ -1468,7 +1468,7 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Gotham Volt', 'us_0'], ['Pacific Mirage', 'us_1'], ['Lone Star Fangs', 'us_2'], ['Neon Jackpots', 'us_3'], ['Great Lakes Forge', 'us_4'], ['Everglade Vipers', 'us_5'],
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
-const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL]).slice(0, 3).map(c => ({ ...c })); h.forEach(c => { if (c.k === 'fest') c.city = FEST_CITIES[H.region][rnd(0, 5)]; if (c.k === 'dh') c.city = DH_CITIES[rnd(0, DH_CITIES.length - 1)]; }); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD, city: DH_CITIES[rnd(0, DH_CITIES.length - 1)] }; return h; };
+const drawHand = (H = S) => { const h = shuffle([...REGIONS[H.region].cards, ...GENERIC, ...SPECIAL.filter(c => !(c.k === 'contract' && H.league != null))]).slice(0, 3).map(c => ({ ...c })); h.forEach(c => { if (c.k === 'fest') c.city = FEST_CITIES[H.region][rnd(0, 5)]; if (c.k === 'dh') c.city = DH_CITIES[rnd(0, DH_CITIES.length - 1)]; }); if (Math.random() < DH_CHANCE) h[rnd(0, 2)] = { ...DH_CARD, city: DH_CITIES[rnd(0, DH_CITIES.length - 1)] }; return h; };
 // события чужого региона в руке (после перелёта или выбора региона) меняются на события текущего; сыгранные остаются
 function relocHand(H = S) {
   if (!H || !H.hand || H.region == null) return;
@@ -1715,11 +1715,13 @@ function proIcons(x) {   // подставить особые иконки бо�
 let F = null, FT = null;
 const fighter = (name, p, rating, me, abil, face) => ({ name, p, rating, me, face: face != null ? face : rnd(0, FACE_COUNT - 1), abil: abil || (([n, d]) => ({ name: n, desc: d, icon: rnd(0, ABIL_ICON_COUNT - 1) }))(ABIL_LIST[rnd(0, ABIL_LIST.length - 1)]) });
 // команда героя: если он сейчас играет в лиге — её логотип и название
+// команда героя в бою: профкоманда лиги, иначе полупро-команда по действующему контракту
+const fightTeam = (H, hi) => heroTeam(H, hi) || (H.semi && SEMI[H.semi.team] ? { logo: SEMI[H.semi.team][1], name: SEMI_TEAMS[H.semi.team] } : null);
 const heroTeam = (H, hi) => { if (!G || !G.leagues || H.league == null) return null; const L = G.leagues[H.league], T = L && L.teams && L.teams.find(t => t.h === hi); return T ? { logo: T.logo, name: T.name } : null; };
 // команда Элитного Спектра в текущем сезоне его лиги
 const eliteTeam = (r, name) => { const L = G && G.leagues && G.leagues[r], T = L && L.teams && L.teams.find(t => t.f && t.f.name === name); return T ? { logo: T.logo, name: T.name } : null; };
 const withMeta = (f, country, team) => Object.assign(f, { country: country || f.country || null, team: team || f.team || null });
-function startFight(title, opp, onEnd) { startFightAB(title, heroF(S, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, heroTeam(S, heroIdx(S)))), opp, onEnd); }
+function startFight(title, opp, onEnd) { startFightAB(title, heroF(S, withMeta(fighter(S.nick, effPower(), S.rating, true, S.ability, S.face), S.country, fightTeam(S, heroIdx(S)))), opp, onEnd); }
 function startFightAB(title, a, b, onEnd) {
   for (const x of [a, b]) { if (!x.skill && x.H) x.skill = x.H.skill; tbInit(x); }
   F = { title, a, b, onEnd, done: false, won: false, ev: [], fx: [], round: 0, used: {} };
@@ -1994,7 +1996,7 @@ function sparStart(h) {
     return;
   }
   const me = G.cur, sp = { a: me, b: h, wa: 0, wb: 0 };
-  const hf = i => { const H = G.players[i]; return heroF(H, withMeta(fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face), H.country, heroTeam(H, i))); };
+  const hf = i => { const H = G.players[i]; return heroF(H, withMeta(fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face), H.country, fightTeam(H, i))); };
   const game = () => startFightAB(`Спарринг Bo3 · бой ${sp.wa + sp.wb + 1} · ${sp.wa}:${sp.wb}`, hf(sp.a), hf(sp.b), won => {
     if (won) sp.wa++; else sp.wb++;
     if (sp.wa < 2 && sp.wb < 2) { game(); return; }
@@ -2074,7 +2076,7 @@ function npcChallenger(k) {   // клуб отыграл турнир без и�
   return { name: g.name, country: g.country, face: g.face, abil: g.abil, p, rating: npcRating(p) };
 }
 function beltFighter(e) {
-  if (e.h != null) { const H = G.players[e.h]; return heroF(H, withMeta(fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face), H.country, heroTeam(H, e.h))); }
+  if (e.h != null) { const H = G.players[e.h]; return heroF(H, withMeta(fighter(H.nick, heroPower(H), H.rating, true, H.ability, H.face), H.country, fightTeam(H, e.h))); }
   return Object.assign(withMeta(fighter(e.name, e.p, e.rating, false, e.abil, e.face), e.country, null), { kit: npcKit('semi') });
 }
 const holderEntry = k => { const b = G.belts[k]; return b.h != null ? { h: b.h } : b; };
@@ -2138,14 +2140,24 @@ function contractStart() {   // турнир на 16 по контракту п�
   logMsg('Контракт: ты выступаешь за ' + SEMI_TEAMS[my] + '.');
   tStart({ kind: 'contract', tier: null, region: S.region, team: my, teams }, 'g16', ps);
 }
+const LADDER_PRO_R = 2000, LADDER_SEMI_P = 0.3;   // с 2000 рейтинга — только профи; ниже ~30% соперников на полупро-контракте
 function bureauFight(kind) {
   if (!spend()) return;
   const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с Элитным Спектром';
   let opp, name;
-  if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55
+  if (kind === 'ladder' && S.rating >= LADDER_PRO_R) {   // 2000+: только профессионалы с командой, ближайшие по рейтингу
+    const r0 = S.region, L0 = G.leagues && G.leagues[r0], tm = {};
+    if (L0 && L0.teams) L0.teams.forEach(T => { if (T.f && !T.semi) tm[T.f.name] = { logo: T.logo, name: T.name }; });   // сезон идёт — нынешние профкоманды
+    else lgPool(r0).slice(0, Math.min(proCount(r0), allRegionTeams(r0).length)).forEach((f, i) => { const t = allRegionTeams(r0)[i]; if (t) tm[f.name] = { logo: t[1], name: t[0] }; });   // межсезонье — команды по силе, как на драфте
+    const pool = lgPool(r0).filter(f => f.name !== S.nick && tm[f.name]);
+    const near = pool.filter(f => Math.abs(f.rating - S.rating) <= 200), list = near.length ? near : pool.slice().sort((a, b) => Math.abs(a.rating - S.rating) - Math.abs(b.rating - S.rating)).slice(0, 3);
+    const f = list[rnd(0, list.length - 1)];
+    name = f.name; opp = withMeta(fighter(f.name, f.p, f.rating, false, f.abil, f.face), f.country, tm[f.name]); opp.kit = npcKit('pro');
+  } else if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55; иногда — боец на полупро-контракте
     const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 30)));
     const g = genSpectre(S.region, takenSet([S.nick]), p); name = g.name;
     opp = fighter(name, p, npcRating(p), false, g.abil, g.face); opp.country = g.country;
+    if (Math.random() < LADDER_SEMI_P) { const t = rnd(0, SEMI.length - 1); opp.team = { logo: SEMI[t][1], name: SEMI_TEAMS[t] }; opp.kit = npcKit('semi'); }
   } else {                   // один из 12 про-игроков региона
     const f = lgPool(S.region)[rnd(0, proCount(S.region) - 1)];
     name = f.name; opp = withMeta(fighter(f.name, f.p, f.rating, false, f.abil, f.face), f.country, eliteTeam(S.region, f.name)); opp.kit = npcKit('pro');
@@ -4479,7 +4491,7 @@ function act(a, v) {
     case 'cardback': S.cardRes = null; S.view = 'main'; break;
     case 'sparpick': if (S.view === 'spar' && G.players[+v] && +v !== G.cur) sparStart(+v); break;
     case 'cupview': S.view = 'cup'; break;
-    case 'offyes': if (S.offer != null) { const t = S.offer; S.offer = null; S.semi = { team: t, from: S.turn, until: S.turn + SEMI_CT_WEEKS - 1, worked: false }; S.coins = (S.coins || 0) + SIGN_COINS; logMsg(`Подписан контракт с ${SEMI_TEAMS[t]} на ${SEMI_CT_WEEKS} недели: +${SIGN_COINS} крипты.`); S.view = 'main'; } break;
+    case 'offyes': if (S.offer != null && S.league != null) { S.offer = null; S.view = 'main'; break; } if (S.offer != null) { const t = S.offer; S.offer = null; S.semi = { team: t, from: S.turn, until: S.turn + SEMI_CT_WEEKS - 1, worked: false }; S.coins = (S.coins || 0) + SIGN_COINS; logMsg(`Подписан контракт с ${SEMI_TEAMS[t]} на ${SEMI_CT_WEEKS} недели: +${SIGN_COINS} крипты.`); S.view = 'main'; } break;
     case 'offno': if (S.offer != null) { logMsg(`Ты отказался от контракта с ${SEMI_TEAMS[S.offer]}.`); S.offer = null; S.view = 'main'; } break;
     case 'noteok': S.notice = null; S.view = 'main'; break;
     case 'mail': if (G.players.length < 2) return; S.mailD = { to: G.players.findIndex((H, i) => i !== G.cur), coins: 0, items: [] }; S.view = 'mail'; break;
