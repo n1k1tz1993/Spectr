@@ -1704,7 +1704,7 @@ const faceImg = (i, cls = '') => `<img class="${cls}" src="${typeof i === 'strin
 const ABIL_ICON_COUNT = 186;   // 0–19 первый набор, 20–119 ещё пять наборов по 20, 120–139 оружие с метеоритной рудой
 const abilIcon = i => `<img class="aic" src="${typeof i === 'string' ? i : `img/abil/${(i | 0) % ABIL_ICON_COUNT}.webp`}" alt="">`;   // строка — путь к особой иконке
 // особые иконки профессиональных Спектров: img/pro/<ник>_s (обычная способность) и _u (суперспособность)
-const PRO_IC = new Set(['idrax', 'doublelyft', 'akkee', 'capz', 'happi', 'emper0r', 'skai', 'klearlove', 'fak3r', 'fla5h']);
+const PRO_IC = new Set(['akkee', 'amee', 'ar0nix', 'arinna', 'attakker', 'bisoo', 'bl4ze', 'boxxer', 'capz', 'd3ft', 'dianna', 'doublelyft', 'drunkdragon', 'ea9l3', 'earthquaker', 'eer0120', 'emper0r', 'fak3r', 'fe4r', 'fla5h', 'fung0d', 'h0bbi', 'happi', 'idrax', 'inphi', 'ishowrush', 'jankoz', 'jann', 'kandypanda', 'kerra', 'kevv1n', 'klearlove', 'kn1ght', 'kollapz', 'konnar', 'krushr', 'lioon', 'lynn', 'm0nezy', 'madfrogg', 'mesiah', 'mo0n', 'nukeduk', 'ny1x', 'ocel0t', 'pokki', 'reginaldo', 'rookee', 'rul3r', 'rybina', 'sh0ck', 'shuuri', 'skai', 'skarlett', 'snupeh', 'st0rm', 'sumaill', 'svift', 'tayl0r', 'th00x', 'theshai', 'tossgurl', 'uzzi', 'valkyra', 'velika', 'w4tch', 'zor0zet']);
 function proIcons(x) {   // подставить особые иконки бойцу (и в старых сохранениях — при входе в бой)
   const k = String(x.name || '').toLowerCase(); if (x.me || !PRO_IC.has(k)) return x;   // игрок с таким же ником иконки не получает
   if (x.abil) x.abil = { ...x.abil, icon: `img/pro/${k}_u.webp` };
