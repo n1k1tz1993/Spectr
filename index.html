@@ -1786,25 +1786,25 @@ const TB = {
   series: 5, miss: 0.10, crit: 0.12, critK: 1.6, spread: 0.15,
   abilHits: 4.2, ultHits: 12,                                // способность ≈ 4 удара + эффект; разрушительная ≈ 12 ударов
   qiStart: 50, qiTurn: 10, qiMax: 100,
-  qiSeries: 5, qiStrike: 20, qiHits: 5.0, qiAbil: 25, qiUlt: 70, qiDef: 20, qiConc: 40, qiCritDodge: 5,
+  qiSeries: 5, qiStrike: 20, qiHits: 5.0, qiAbil: 25, qiUlt: 70, qiDef: 0, qiDefGain: 10, defCounter: 1.5, qiConc: 40, qiCritDodge: 5,
   defBlock: 0.60, concTaken: 1.15, exhaustTaken: 1.20, exhaustQi: 20,
   stance: { bal: { d: 1, t: 1 }, rage: { d: 1.3, t: 1.25 }, def: { d: 0.75, t: 0.75 } },
-  e: { stun: 0.5, drain: 16, drainSelf: 7, wound: 0.022, heal: 0.06, barrier: 0.064, barT: 3, mark: 1.5, weak: 0.66, reflect: 0.5, pierce: 1.2, seal: 3, sealK: 1.4 },   // баланс (разрушительная только при 70 Цы): каждый эффект 47–53% против остальных при равной силе
+  e: { stun: 0.45, drain: 18, drainSelf: 8, wound: 0.022, heal: 0.06, barrier: 0.064, barT: 3, mark: 1.5, weak: 0.66, reflect: 0.5, pierce: 1.2, seal: 3, sealK: 1.3 },   // баланс (разрушительная только при 70 Цы): каждый эффект 47–53% против остальных при равной силе
   it: { stim: 0.12, gren: 0.08, batt: 25, rage: 0.27, rageIn: 0.18, ins: 0.15, vamp: 0.36, smoke: 0.55, crit: 0.75 },
   fatigueFrom: 8, fatigue: 0.05, init: 40,
 };
 const STANCES = [['bal', '⚖', 'Баланс', '100% / 100%'], ['rage', '🔥', 'Ярость', '+30% / +25%'], ['def', '🛡', 'Защитная', '−25% / −25%']];
 const EFFECTS = [   // эффекты обычной способности: игрок придумывает любую способность и даёт ей один из них
-  ['stun', 'Оглушение', '50% шанс, что соперник пропустит следующий ход'],
+  ['stun', 'Оглушение', '45% шанс, что соперник пропустит следующий ход'],
   ['pierce', 'Пробой', 'Игнорирует Защиту и Защитную стойку, урон +20%'],
-  ['drain', 'Иссушение', '−16 Цы у соперника, +7 Цы себе'],
+  ['drain', 'Иссушение', '−18 Цы у соперника, +8 Цы себе'],
   ['wound', 'Рана', 'Соперник 3 хода теряет по 2,2% HP'],
   ['heal', 'Восстановление', 'Лечит 6% HP'],
   ['barrier', 'Барьер', 'Щит 6,4% HP на 3 хода соперника, пока не разобьют'],
   ['mark', 'Метка', 'Соперник 2 хода получает +50% урона'],
   ['weak', 'Ослабление', 'Соперник 2 хода наносит −34% урона'],
   ['reflect', 'Отражение', '50% урона следующей атаки соперника возвращается ему'],
-  ['seal', 'Печать', 'Удар +40%. Соперник 3 хода не может применять способности, удар Цы и разрушительную'],
+  ['seal', 'Печать', 'Удар +30%. Соперник 3 хода не может применять способности, удар Цы и разрушительную'],
 ];
 const effOf = k => EFFECTS.find(e => e[0] === k) || EFFECTS[0];
 const ITEM_TB = {   // что делают расходники в пошаговом бою
@@ -1869,7 +1869,7 @@ function tbSpend(x, q) { x.qi -= q; if (x.qi <= 0) { x.qi = 0; x.exhausted = tru
 const canAbil = x => x.qi >= TB.qiAbil && !x.st.seal, canUlt = x => !x.ultUsed && !x.st.seal && x.qi >= TB.qiUlt;   // разрушительная — только при полных 70 Цы
 function tbAction(x, act) {
   F.await = false;
-  const y = tbOpp(x);
+  const y = tbOpp(x), yHp0 = y.hp;
   x.conc = false; x.defend = false;
   if (act === 'series') {
     const r = tbStrikes(x, y, TB.series, TB.hit(x.p)); x.qi = Math.min(TB.qiMax, x.qi + TB.qiSeries);
@@ -1890,11 +1890,16 @@ function tbAction(x, act) {
     const what = (x.abil && x.abil.desc || '').replace(/[.!\s]+$/, '');
     tbLog(`💥 ${x.name}: «${x.abil.name}»${what ? ' — ' + what.charAt(0).toLowerCase() + what.slice(1) : ''}! ${r.total} урона!`, 'crit'); tbFx(y, '💥 −' + r.total, 'dmg'); tbReflect(x, y, r.total);
   } else if (act === 'def') {
-    tbSpend(x, TB.qiDef); if (x.hp > 0) { x.defend = true; tbLog(`${x.name} уходит в защиту: следующий ход соперника ослаблен на ${Math.round(TB.defBlock * 100)}%.`, 'nt'); tbFx(x, 'Защита', 'info'); }
+    x.qi = Math.min(TB.qiMax, x.qi + TB.qiDefGain); x.defend = true;   // защита: бесплатно, +Цы, блок урона и контрудар
+    tbLog(`${x.name} уходит в защиту (+${TB.qiDefGain} Цы): следующий ход соперника ослаблен на ${Math.round(TB.defBlock * 100)}%, на атаку — контрудар.`, 'nt'); tbFx(x, 'Защита', 'info');
   } else if (act === 'conc') {
     x.conc = true; x.qi = Math.min(TB.qiMax, x.qi + TB.qiConc); tbLog(`${x.name} концентрирует Цы (+${TB.qiConc}).`, 'qi'); tbFx(x, '+' + TB.qiConc + ' Цы', 'info');
   }
   if (x.tmp.vampSum) { tbLog(`${x.name}: кровавый кристалл вернул ${x.tmp.vampSum} HP.`, 'qi'); tbFx(x, '+' + x.tmp.vampSum, 'heal'); }
+  if (y.defend && y.hp > 0 && y.hp < yHp0 && x.hp > 0) {   // атаковал защищающегося — получи контрудар (не промахивается)
+    const c = tbStrikes(y, x, 1, TB.hit(y.p) * TB.defCounter, { sure: true });
+    tbLog(`🛡 ${y.name}: контрудар — ${c.total} урона.`, 'ab'); tbFx(x, '🛡 −' + c.total, 'dmg');
+  }
   x.tmp = {};
   if (y.st.smoke) delete y.st.smoke;
   if (y.hp > 0) hpMark(y);
@@ -1980,7 +1985,7 @@ function tbAI(x) {
   else if (rand) act = ['series', 'series', canAbil(x) ? 'abil' : 'series', x.qi < 40 ? 'conc' : 'series', canUlt(x) && x.qi >= TB.qiUlt ? 'ult' : 'series', canQi(x) ? 'qi' : 'series'][rnd(0, 5)];
   else {
     const threat = !y.ultUsed && y.qi + TB.qiTurn >= TB.qiUlt;
-    if (threat && x.qi >= TB.qiDef + 5 && hpR < 0.7 && Math.random() < 0.6) act = 'def';
+    if (threat && Math.random() < 0.5 + sk * 0.4) act = 'def';   // соперник готов к разрушительной — уйти в защиту
     else if (canUlt(x) && x.qi >= TB.qiUlt && (oR < 0.6 || hpR < 0.45 || Math.random() < 0.3)) act = 'ult';
     else if (x.qi < 25 && !(canUlt(x) && oR < 0.3)) act = 'conc';
     else if (canAbil(x)) {
@@ -1990,7 +1995,7 @@ function tbAI(x) {
     if (act === 'series' && canQi(x) && x.qi - TB.qiStrike >= (!x.ultUsed ? TB.qiUlt - TB.qiTurn : TB.qiAbil + 5) && Math.random() < 0.6) act = 'qi';   // лишняя Цы — в удар Цы
   }
   if (act === 'abil' && !canAbil(x)) act = 'series';
-  if (act === 'def' && x.qi < TB.qiDef) act = 'series';
+  if (act === 'def' && (x.qi < TB.qiDef || x.noDef)) act = 'series';   // noDef — для проверки баланса
   if (act === 'ult' && !canUlt(x)) act = 'series';
   if (act === 'qi' && !canQi(x)) act = 'series';
   tbAction(x, act);
@@ -2997,9 +3002,10 @@ function tZone(R, id, pos, direct, upTo) {
   return inKO ? 'z1' : R.alive.includes(id) ? 'z2' : 'z3';
 }
 const ZONE_LEGEND = '<div class="zleg"><span class="z1">прошёл дальше</span><span class="z2">плей-ин</span><span class="z3">выбыл</span></div>';
-const KO_PLAN = { se16: [['R16', 8], ['QF', 4], ['SF', 2], ['F', 1]], se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
+const KO_PLAN = { n16: [['R16', 8], ['QF', 4], ['SF', 2], ['F', 1]], se16: [['R16', 8], ['QF', 4], ['SF', 2], ['F', 1]], se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
 const FMT = {
   se16: { n: 16, name: 'Бойцовский клуб', desc: '16 бойцов, сетка Bo3, финал Bo5. Победитель становится претендентом и в конце недели проводит титульный бой Bo3 с чемпионом.' },
+  n16: { n: 16, name: 'Турнир новичков', desc: '16 бойцов, стандартная сетка: все бои Bo1, финал Bo3.' },
   se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
   g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
   g16: { n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
@@ -3018,7 +3024,7 @@ function playTour(t) {
   if (inv.length) S.actions -= 1;          // позвать любое число игроков — одно действие
   S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
   const semiT = t === 2;   // полупрофессиональный турнир: все полупро-команды выставляют по бойцу, формат на 32
-  const fmt = semiT ? 'dh32' : ['se8', 'g12', 'g16', 'sw20'][rnd(0, 3)], n = FMT[fmt].n;
+  const fmt = semiT ? 'dh32' : t === 0 ? 'n16' : ['g12', 'g16', 'sw20'][rnd(0, 2)], n = FMT[fmt].n;   // новички — коротко (Bo1), любители — группы/швейцарка, полупро — Метеор-формат на 32
   const invd = (S.tourInvade || []).filter(h => h !== G.cur && G.players[h] && !inv.includes(h));
   invd.forEach(h => { const P = G.players[h]; if (P.dirty) { logTo(P, 'Ты вторгся на турнир игрока ' + S.nick + ' по грязным контрактам — без последствий.'); return; } P.skipNext = true; logTo(P, 'Ты вторгся на турнир игрока ' + S.nick + ' и пропустишь свою неделю.'); });
   S.tourInvade = [];
@@ -3054,6 +3060,7 @@ const teamTag = x => x && x.team != null && SEMI[x.team] ? `<img class="ttag" sr
 function tStart(meta, fmt, ps) {   // сетка любого формата из готового списка участников
   const R = Object.assign({ fmt, ps, M: [], stage: null, stages: [], alive: ps.map(x => x.id), done: false, winner: null, out: null, outs: {}, tbOut: {}, tbn: 0 }, meta);
   const ids = shuffle(ps.map(x => x.id));
+  if (fmt === 'n16') { tBegin(R, 'R16'); for (let i = 0; i < 16; i += 2) tAdd(R, ids[i], ids[i + 1], 1); }
   if (fmt === 'se16') { const q = ids.filter(x => x !== R.holder); tBegin(R, 'R16'); for (let i = 0; i < 16; i += 2) tAdd(R, q[i], q[i + 1], 3); }
   if (fmt === 'se8') { tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, ids[i], ids[i + 1], 3); }
   if (fmt === 'g12') {
@@ -3145,6 +3152,10 @@ function tAdvance(R) {
   if (k === 'F') { knock('F');
     if (R.holder != null) { const c = tStage(R, 'F')[0].w; R.challenger = c; R.alive = [c, R.holder]; tBegin(R, 'TF'); tAdd(R, c, R.holder, 5, 'Титульный бой'); return; }
     R.done = true; R.winner = tStage(R, 'F')[0].w; return; }
+  if (f === 'n16') {   // турнир новичков: всё Bo1, финал Bo3
+    const nx = { R16: ['QF', 8], QF: ['SF', 4], SF: ['F', 2] }[k];
+    if (nx) { knock(k); const w = win(k); tBegin(R, nx[0]); for (let i = 0; i < nx[1]; i += 2) tAdd(R, w[i], w[i + 1], nx[0] === 'F' ? 3 : 1); return; }
+  }
   if (f === 'se16' && k === 'R16') { knock('R16'); const w = win('R16'); tBegin(R, 'QF'); for (let i = 0; i < 8; i += 2) tAdd(R, w[i], w[i + 1], 3); return; }
   if (k === 'SF') { knock('SF'); finalStage(); return; }
   if (f === 'dh32' && k.startsWith('DH')) {
@@ -4185,7 +4196,7 @@ function tbMenu() {   // всплывающее меню хода: стойки,
     ['qi', '<img src="img/btn/ic_qi.webp" alt="">', 'Удар Цы', 'Один мощный удар Цы: не промахивается, может стать критом.', `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.qiHits, { sure: true })}`, `−${TB.qiStrike}`, canQi(x)],
     ['abil', abilIcon(x.skill.icon), x.skill.name, `${ef[1]}: ${ef[2].charAt(0).toLowerCase() + ef[2].slice(1)}.${x.st.seal ? ' Сейчас под печатью.' : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.abilHits, { pierce: x.skill.eff === 'pierce', k: x.skill.eff === 'pierce' ? TB.e.pierce : x.skill.eff === 'seal' ? TB.e.sealK : 1, sure: true })}`, `−${TB.qiAbil}`, canAbil(x)],
     ['ult', abilIcon(x.abil.icon), x.abil.name, `Разрушительная: самый сильный удар, один раз за бой.${x.ultUsed ? ' Уже использована.' : x.qi < TB.qiUlt ? ` Нужно ${TB.qiUlt} Цы.` : ''}`, `≈ ${tbRange(x, y, 1, TB.hit(x.p) * TB.ultHits, { sure: true })}`, `−${TB.qiUlt}`, canUlt(x)],
-    ['def', '<img src="img/btn/ic_def.webp" alt="">', 'Защита', `Блокирует ${Math.round(TB.defBlock * 100)}% урона следующего хода соперника.`, '', `−${TB.qiDef}`, x.qi >= TB.qiDef],
+    ['def', '<img src="img/btn/ic_def.webp" alt="">', 'Защита', `Блокирует ${Math.round(TB.defBlock * 100)}% урона следующего хода соперника, на атаку отвечает контрударом.`, '', `+${TB.qiDefGain}`, true],
     ['conc', '<img src="img/btn/ic_conc.webp" alt="">', 'Концентрация Цы', 'Восстанавливает Цы, но в этот ход получаешь +15% урона.', '', `+${TB.qiConc}`, true],
   ];
   return `<div class="pr-menu ${MENU.open ? '' : 'min'}">
