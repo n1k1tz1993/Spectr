@@ -4022,7 +4022,7 @@ function viewMenu() {
       <a href="https://vk.ru/n1k1tz1993" target="_blank" rel="noopener">VK · vk.ru/n1k1tz1993</a>
       <a href="https://t.me/renznek" target="_blank" rel="noopener">Telegram · @renznek</a>
       <a href="https://instagram.com/renznek_" target="_blank" rel="noopener">Instagram · renznek_</a></div>
-    <div class="dim" style="text-align:center;margin:6px 0 24px;letter-spacing:.06em">Версия 1.00 Release</div>`;
+    <div class="dim" id="offl" style="text-align:center;margin-top:6px;font-size:12px">${window.OFFL || ""}</div><div class="dim" style="text-align:center;margin:6px 0 24px;letter-spacing:.06em">Версия 1.00 Release</div>`;
 }
 const ABOUT_BTN = [[613, 1340, 960, 1440], [200, 1355, 825, 1465], [200, 1355, 825, 1465]];   // кнопка «Дальше/Завершить» на слайде (из 1024×1536)
 function viewAbout(k) {
@@ -4610,5 +4610,13 @@ G = null; S = null;
 render();
 
 // установка как приложения (Chrome: «Установить приложение»)
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // офлайн-режим: просим сервис-воркер скачать все картинки; прогресс — строкой в главном меню
+  navigator.serviceWorker.addEventListener('message', e => { const m = e.data || {}; if (m.t !== 'pc') return;
+    window.OFFL = m.done >= m.total ? '✓ Игра скачана — можно играть без интернета' : `Скачиваю игру для офлайна: ${Math.floor(m.done / m.total * 100)}%`;
+    const el = document.getElementById('offl'); if (el) el.textContent = window.OFFL; });
+  navigator.serviceWorker.ready.then(r => { if (navigator.onLine && r.active) r.active.postMessage('precache'); });
+  window.addEventListener('online', () => navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage('precache')));
+}
 </script></body></html>
