@@ -1536,6 +1536,7 @@ const MB = {   // действия со штрафом: штраф + небол�
   'Бессонная ночь в караоке': [2, 'next'], 'Попробовать деликатес': [2, 'game'],
   'Бессонная ночь': [2, 'game']
 };
+const DISMORAL = -5;   // поражение в турнире: −5 силы до конца недели, снимает «Отдых»
 const R_LOSS = [2, 'next'], FANS_B = [1, 'game'], COND_B = [1, 'turn'], LIB_B = [1, 'game'];   // неудача в лотерее, письма фанатов, подкаст без прибавки, библиотека
 const nbOf = c => { const d = NB[c.t] || 'turn'; return [NB_V[d], d]; };
 const mbOf = c => MB[c.t] || [1, 'next'];
@@ -3343,7 +3344,8 @@ function finishTour() {
       histTo(H, r, T.name + ' · победа'); logTo(H, msg);
     } else { histTo(H, r, T.name + ' · ' + placeText(R, x.id));
       const o = R.outs && R.outs[x.id];
-      logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '. ' + payPrize(R, x, H, PRIZE_PART[o] ? o : 'P')); }
+      logTo(H, T.name + ': ' + placeText(R, x.id) + '. Победитель — ' + champ + '. ' + payPrize(R, x, H, PRIZE_PART[o] ? o : 'P'));
+      addEffTo(H, DISMORAL, 'turn'); logTo(H, 'Дизмораль после поражения: штраф к силе до конца недели. Снимается отдыхом.'); }
     if (R.kind == null && R.tier === 2) semiAfter(H, R, x);   // полупро: отработка контракта и предложения команд
   }
   S.view = S.trun.kind === 'esl' ? 'bureau' : (S.trun.kind === 'dh' || S.trun.kind === 'contract' || S.trun.kind === 'fest') ? 'main' : 'tour'; S.trun = null;
