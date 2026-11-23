@@ -4262,7 +4262,7 @@ function viewTRun() {
   } else if (me) {
     const L = isHum(R, me.a) ? me.a : me.b, Rr = L === me.a ? me.b : me.a, mine = me.g.filter(x => x === L).length;
     h += `<div class="card"><h3>${hums.length > 1 ? 'Матч игрока ' + esc(R.ps[L].name) : 'Твой матч'} · ${stageName(R.stage)}${me.label ? ' · ' + esc(me.label) : ''}</h3>
-      <div class="tvs"><div>${tFace(R, L)}${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${tFace(R, Rr)}${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}${(h0 => abilLine(h0 != null ? G.players[h0] : null, R.ps[Rr].name, R.ps[Rr].abil))(humOf(R, Rr))}</div></div>
+      <div class="tvs"><div>${tFace(R, L)}${nm(L)}<br>${rateHtml(tRating(R, L), 'mid')}${isHum(R, Rr) ? abilLine(G.players[humOf(R, L)]) : ''}</div><div class="tsc">${mine}:${me.g.length - mine}</div><div>${tFace(R, Rr)}${nm(Rr)}<br>${rateHtml(tRating(R, Rr), 'mid')}${(h0 => abilLine(h0 != null ? G.players[h0] : null, R.ps[Rr].name, R.ps[Rr].abil))(humOf(R, Rr))}</div></div>
       <div class="dim" style="text-align:center">Bo${me.bo}${me.bo === 2 ? ' · возможна ничья' : ''} · бой ${me.g.length + 1}</div>
       <button class="imgbtn" data-a="tplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>
       <button class="imgbtn tauto" data-a="tauto" aria-label="Досчитать турнир"><img src="img/nav/tauto.webp" alt=""></button><div class="dim" style="margin-top:4px">Все оставшиеся бои сыграются автоматически, без твоего участия.</div></div>`;
@@ -4412,7 +4412,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
   const L1 = lgHum(L, m.a) ? m.a : m.b, R1 = L1 === m.a ? m.b : m.a, mine = m.g.filter(x => x === L1).length;
   return `<div class="card" style="margin-top:16px"><div class="dim">Неделя ${G.week} · ${L.title || 'лига ' + LSHORT[L.r]} · ${L.wf && m.st === 'RR' ? 'Группы' : LG_STAGE[m.st]}${m.label && !L.wc ? ' · ' + esc(m.label) : ''}</div>
     <h3>Матч игрока ${esc(lgTeamName(L, L1))}</h3>
-    <div class="tvs"><div>${lgTeamCell(L, L1)}<br>${rateHtml(lgRating(L, L1), 'mid')}</div><div class="tsc">${mine}:${m.g.length - mine}</div><div>${lgTeamCell(L, R1)}<br>${rateHtml(lgRating(L, R1), 'mid')}${(T => abilLine(T.h != null ? G.players[T.h] : null, T.f && T.f.name, T.f && T.f.abil))(L.teams[R1])}</div></div>
+    <div class="tvs"><div>${lgTeamCell(L, L1)}<br>${rateHtml(lgRating(L, L1), 'mid')}${lgHum(L, R1) ? abilLine(G.players[L.teams[L1].h]) : ''}</div><div class="tsc">${mine}:${m.g.length - mine}</div><div>${lgTeamCell(L, R1)}<br>${rateHtml(lgRating(L, R1), 'mid')}${(T => abilLine(T.h != null ? G.players[T.h] : null, T.f && T.f.name, T.f && T.f.abil))(L.teams[R1])}</div></div>
     <div class="dim" style="text-align:center">Bo${m.bo}${m.bo === 2 ? ' · возможна ничья' : ''} · бой ${m.g.length + 1}</div>
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${ibtn('lgsim', 'lsim', '', 'Досчитать матч')}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
