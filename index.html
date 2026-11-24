@@ -1045,7 +1045,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .author a{display:block;margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--nest);border:1px solid var(--line);color:var(--gold);text-decoration:none;font-weight:600}.author a:active{filter:brightness(1.3)}
 .abl{display:flex;flex-direction:column;gap:2px;margin-top:6px;font-size:12px;line-height:1.3;text-align:center}.abl i{font-style:normal;color:var(--dim,#9aa3b8)}
 .autot{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit}.autot>span{flex:1}.sw{flex:0 0 auto;width:48px;height:28px;border-radius:14px;background:#3a4256;position:relative;transition:background .2s}.sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s}.sw.on{background:var(--gold)}.sw.on::after{left:23px}
-.dpick{display:flex;flex-direction:column;gap:6px;margin:8px 0}.dpick .btn{display:flex;align-items:center;gap:10px;text-align:left;margin:0}.dpick .tlogo{width:34px;height:34px}
+.dpick{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.dpick .btn span{min-width:0;overflow:hidden;text-overflow:ellipsis}.dpick .btn{display:flex;align-items:center;gap:10px;text-align:left;margin:0}.dpick .tlogo{width:34px;height:34px}
 .ibstack .ibtn{margin:8px 0 0;max-width:none}   /* «Надеть/Снять» над «Имя», одной высоты — шрифт одинаковый */
 .ibsz{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.ibsz .ibtn{margin:0}
 .evlogo{display:block;width:min(260px,70%);height:auto;margin:0 auto 8px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}.evlogo.sm{width:min(150px,40%)}
@@ -2529,17 +2529,22 @@ function rrRounds(ids) {   // круговая система: список ту
   }
   return R;
 }
-// драфт по выбору: игрок из топ-3 рейтинга драфта сам выбирает одну из сильнейших команд (H.draftPick — индекс команды)
-const DRAFT_TOP = 3, draftOffers = r => allRegionTeams(r).slice(0, DRAFT_TOP);
+// драфт по выбору: игрок на N-м месте драфта может выбрать любую команду с N-й и ниже (сильнейшие N−1 команд им не интересуются).
+// Если в лиге есть полупро-команды — их тоже. H.draftPick — индекс команды в списке draftTeams.
+function draftTeams(r) {   // команды лиги в порядке выбора на драфте (сильные → слабые; полупро в конце)
+  const L = G.leagues[r], cfg = grpCfg(r);
+  if (!cfg) return regionTeams(r).map(t => ({ name: t[0], logo: t[1] }));
+  if (!L.semiT) L.semiT = shuffle([...SEMI.keys()]).slice(0, cfg.semi);   // полупро-участники сезона определяются заранее
+  return allRegionTeams(r).slice(0, cfg.pro).map(t => ({ name: t[0], logo: t[1] })).concat(L.semiT.map(k => ({ name: SEMI[k][0], logo: SEMI[k][1], semi: true })));
+}
 function draftRank(r, H) {   // место игрока в драфте по рейтингу (1 — первый)
   const others = lgPool(r).map(f => f.rating).concat(G.players.filter(P => P !== H && P.draft === r).map(P => P.rating));
   return 1 + others.filter(x => x > H.rating).length;
 }
-function draftApplyPicks(r, picked, humans, maxSlot) {   // переставить выбравших игроков на места их команд
-  const want = humans.filter(o => o.H.draftPick != null && o.H.draftPick < maxSlot && picked.findIndex(p => p.h === o.h) >= 0 && picked.findIndex(p => p.h === o.h) < DRAFT_TOP)
-    .sort((a, b) => b.H.rating - a.H.rating), used = new Set();
-  for (const o of want) {
-    const t = o.H.draftPick; if (used.has(t)) continue; used.add(t);
+function draftApplyPicks(r, picked, humans) {   // переставить выбравших игроков в выбранные команды (только на своё место и ниже)
+  const base = new Map(humans.map(o => [o.h, picked.findIndex(p => p.h === o.h)])), used = new Set();
+  for (const o of humans.filter(o => o.H.draftPick != null && base.get(o.h) >= 0).sort((a, b) => b.H.rating - a.H.rating)) {
+    const t = o.H.draftPick; if (t < base.get(o.h) || t >= picked.length || used.has(t)) continue; used.add(t);
     const at = picked.findIndex(p => p.h === o.h), me = picked.splice(at, 1)[0]; picked.splice(t, 0, me);
   }
   humans.forEach(o => { delete o.H.draftPick; });
@@ -2551,9 +2556,9 @@ function lgDraftEU(L) {
   const taken = new Set(pool.map(o => (o.f ? o.f.name : G.players[o.h].nick).toLowerCase()));
   while (pool.length < n) { const f = euFiller(taken, cfg.fill, r); pool.push({ f, rating: f.rating }); }
   pool.sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
-  const picked = pool.slice(0, n); draftApplyPicks(r, picked, humans, cfg.pro);
+  const picked = pool.slice(0, n); draftApplyPicks(r, picked, humans);
   const pro = allRegionTeams(r).slice(0, cfg.pro).map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, cfg.pro, r), city: null }));
-  const semi = shuffle(SEMI.slice()).slice(0, cfg.semi).map(t => ({ name: t[0], logo: t[1], bonus: 0, city: null, semi: true }));
+  const semi = draftTeams(r).filter(t => t.semi).map(t => ({ name: t.name, logo: t.logo, bonus: 0, city: null, semi: true }));
   L.teams = pro.concat(semi).map((T, i) => Object.assign(T, { h: picked[i].h != null ? picked[i].h : null, f: picked[i].f || null }));   // сильная команда берёт сильнейшего
   for (const o of humans) {
     const ti = L.teams.findIndex(T => T.h === o.h);
@@ -2621,7 +2626,7 @@ function lgDraft(L) {
   const pool = lgPool(r).slice(0, 20 - Math.min(humans.length, 8)).map(f => ({ f, rating: f.rating }))
     .concat(humans.map(o => ({ h: o.h, rating: o.H.rating })));
   pool.sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
-  const picked = pool.slice(0, n); draftApplyPicks(r, picked, humans, n);
+  const picked = pool.slice(0, n); draftApplyPicks(r, picked, humans);
   const teams = regionTeams(r);
   L.teams = teams.map((t, i) => ({ name: t[0], logo: t[1], bonus: teamBonus(i, allRegionTeams(r).length, r), city: t[3] || null, h: picked[i].h != null ? picked[i].h : null, f: picked[i].f || null }));   // сильная команда берёт сильнейшего
   for (const o of humans) {
@@ -4393,10 +4398,11 @@ function lgCardHtml(r) {
     if (S.league != null) h += `<div class="dim" style="margin-top:8px">Ты уже играешь в лиге ${LSHORT[S.league]}.</div>`;
     else if (!draftOpen(L)) h += '';
     else if (S.draft === r) {
-      const rk = draftRank(r, S), offers = draftOffers(r);
-      h += rk <= DRAFT_TOP ? `<div class="gold" style="margin-top:8px"><b>Ты ${rk}-й в драфте — команды хотят тебя подписать!</b></div><div class="dim">Выбери, с кем подпишешь контракт на сезон. Не выберешь — тебя возьмёт команда по месту в драфте.</div>
-        <div class="dpick">${offers.map((t, i) => `<button class="btn ${S.draftPick === i ? 'here' : ''}" data-a="dpick" data-v="${i}"><img class="tlogo" src="img/team/${t[1]}.webp" alt=""> ${esc(t[0])}${S.draftPick === i ? ' ✓' : ''}</button>`).join('')}</div>`
-        : `<div class="dim" style="margin-top:8px">Ты ${rk}-й в драфте по рейтингу. Войди в топ-${DRAFT_TOP} — и сильнейшие команды дадут тебе выбор, где играть.</div>`;
+      const rk = draftRank(r, S), T = draftTeams(r), mine = S.draftPick != null ? S.draftPick : rk - 1;
+      h += rk <= T.length ? `<div class="gold" style="margin-top:8px"><b>Ты ${rk}-й в драфте. Тебя хотят подписать ${T.length - rk + 1 === 1 ? 'одна команда' : (T.length - rk + 1) + ' команд'}!</b></div><div class="dim">Выбери любую — контракт на сезон. Сильнее команда — больше бонус${T.some(t => t.semi) ? ', у полупро-команд он меньше' : ''}. ${rk > 1 ? `${rk - 1 === 1 ? 'Первая команда тобой не интересуется' : `Первые ${rk - 1} команд тобой не интересуются`} — подними рейтинг, и выбор станет шире.` : 'Тебя хочет любая команда лиги!'}</div>
+        <div class="dpick">${T.map((t, i) => i < rk - 1 ? '' : `<button class="btn ${mine === i ? 'here' : ''}" data-a="dpick" data-v="${i}"><img class="tlogo" src="img/team/${t.logo}.webp" alt=""><span>${esc(t.name)}${t.semi ? ' <small class="dim">полупро</small>' : ''}</span>${mine === i ? '<b class="gold" style="margin-left:auto">✓</b>' : ''}</button>`).join('')}</div>
+        <div class="dim">${S.draftPick == null ? 'Пока не выбрал — подпишет команда по твоему месту в драфте.' : 'Выбор можно поменять до конца драфта.'} Место в драфте может сдвинуться, если кто-то обгонит тебя по рейтингу.</div>`
+        : `<div class="dim" style="margin-top:8px">Ты ${rk}-й в драфте по рейтингу, а мест в лиге ${T.length}. Подними рейтинг, чтобы попасть в лигу.</div>`;
       h += `${ibtn('draftout', 'ldraft', r, 'Ты в драфте — выйти')}`;
     }
     else h += `<button class="imgbtn" data-a="ldraft" data-v="${r}" aria-label="Встать в драфт"><img src="img/nav/draft.webp" alt=""></button>${S.draft != null ? `<div class="dim" style="margin-top:4px">Вместо драфта ${LSHORT[S.draft]}.</div>` : ''}<div class="dim" style="margin-top:4px">Твой рейтинг: ${S.rating}. ${EU40(r) ? 'Место найдётся для каждого: чем выше рейтинг, тем сильнее команда возьмёт тебя.' : 'Чтобы пройти, нужно обойти Элитных Спектров по рейтингу.'}</div>`;
@@ -4563,7 +4569,7 @@ function act(a, v) {
       break;
     }
     case 'lsim': { if (!AUTOB) return; const L = lgQ(G.lq[0]), m = lgPending(L); if (!m) return; lgSimMatch(L, m); lgAfterGame(L, m); break; }
-    case 'dpick': { if (S.draft == null || draftRank(S.draft, S) > DRAFT_TOP) return; const i = +v; S.draftPick = S.draftPick === i ? null : i; if (S.draftPick != null) logMsg('Драфт: ты выбрал команду ' + draftOffers(S.draft)[i][0] + '.'); break; }
+    case 'dpick': { if (S.draft == null) return; const i = +v, T = draftTeams(S.draft); if (i < draftRank(S.draft, S) - 1 || !T[i]) return; S.draftPick = i; logMsg('Драфт: ты выбрал команду ' + T[i].name + '.'); break; }
     case 'ldraft': { delete S.draftPick; const r = +v; if (!draftOpen(G.leagues[r]) && S.draft !== r) return; S.draft = S.draft === r ? null : r; logMsg(S.draft === r ? 'Ты встал в драфт лиги ' + LSHORT[r] + '.' : 'Ты вышел из драфта.'); break; }
     case 'ltable': S.lret = S.view; S.view = 'ltable'; S.sel = +v; break;
     case 'lhist': S.lret = S.view; S.view = 'lhist'; S.sel = +v; break;
