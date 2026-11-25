@@ -4272,7 +4272,7 @@ function fightLoop() {   // после отрисовки: старт боя, в
       <div class="fwn">${wc ? `<span class="fzfl">${flagOf(wc)}</span>` : ''}<b>${esc(W.name)}</b></div>
       ${wc ? `<div class="dim">${esc(COUNTRIES[wc] || '')}</div>` : ''}
       ${W.beast ? '<div class="dim">Дикий зверь</div>' : `<div class="fwr"><img src="img/rank_${lg2.id}.webp" alt=""><span>${lg2.n}</span><b>${W.rating}</b></div>`}
-      ${ibtn('continue', 'fend', '', 'Продолжить')}</div>`;
+      ${ibtn('continue', 'fend', '', 'Продолжить')}<button class="btn" data-a="flogview" style="text-align:center;margin-top:8px">📜 Журнал боя</button></div>`;
     setTimeout(() => { if (F && F.done && !document.querySelector('.fwin')) document.body.appendChild(ov); }, 900);
   }
 }
@@ -4627,6 +4627,7 @@ function act(a, v) {
     case 'tfinish': finishTour(); S.ttab = null; break;
     case 'ttab': S.ttab = v; return render();
     case 'flogall': if (F) { F.logFull = !F.logFull; render(); } return;
+    case 'flogview': if (F && F.done) { document.querySelectorAll('.fwin').forEach(e => e.remove()); F.logFull = true; render(); const el = document.querySelector('.fyl'); if (el) el.scrollIntoView({ block: 'start' }); } return;   // журнал законченного боя целиком
     case 'fskip': if (!AUTOB) return; if (F && !F.done) finishFight(); return;
     case 'fback': if (F) { if (F.done) return act('fend'); finishFight(); } return;
     case 'fmenu': MENU.open = !MENU.open; render(); return;
