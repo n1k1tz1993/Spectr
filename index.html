@@ -3914,7 +3914,7 @@ function bossFighter(B) {   // боец-босс: случайная спосо�
 }
 // ---------- Поручения ранга D: 1 действие — 5–10 крипты, сразу ----------
 const MIS_D = ['Подмести улицу у Бюро', 'Разобрать почту в приёмной', 'Помыть служебную машину', 'Отнести документы в архив', 'Покормить кота коменданта', 'Расставить стулья в зале', 'Протереть кубки в Зале славы', 'Раздать листовки турнира', 'Починить кофемашину', 'Выгулять собаку охранника', 'Полить цветы в холле', 'Поменять лампу в коридоре'];
-const MIS_RT = 10, MIS_MAX = 3;
+const MIS_RT = 10, MIS_MAX = 3, MIS_BEAST = 0.01;   // в миссиях A и B ~1%: по дороге нападает обезумевший зверь
 const MIS_POOL = {
   C: [['Пропавший курьер', 'Курьер Бюро с ампулами руды не вышел на связь. Найди его в городе и доставь груз.'], ['Шум в метро', 'В тоннелях кто-то сливает Цы из кабелей. Проверь, что там творится.'], ['Охрана выставки', 'Выставка осколков метеорита. Нужно просто постоять рядом — и не дать ничему случиться.'], ['Спарринг для новобранцев', 'Бюро просит показать новичкам пару приёмов. Без травм, пожалуйста.'], ['Сбежавший питомец', 'Ручной лис коллекционера наглотался рудной пыли и светится на всю улицу. Поймай его.']],
   B: [['Чёрный рынок осколков', 'В порту торгуют краденой рудой. Выследи продавцов и сдай их Бюро.'], ['Сопровождение груза', 'Колонна с осколками идёт через весь регион. Довези без потерь.'], ['Дикие Спектры', 'Группа незарегистрированных Спектров громит склады. Убеди их сдаться — или заставь.'], ['Шпион в штабе', 'Кто-то сливает расписание турниров. Найди утечку в Бюро.'], ['Аномалия Цы', 'В пригороде скачет фон Цы, птицы падают с неба. Найди источник.']],
@@ -3937,9 +3937,10 @@ function misStart(i) {
   const pw = misPartyPw(party), ch = misChance(m.rk, pw), ok = ch == null ? null : Math.random() < ch, w = misWeeks(m.rk, party);
   m.taken = true;
   const id = Date.now() + '' + rnd(0, 999);
+  const beast = (m.rk === 'A' || m.rk === 'B') && Math.random() < MIS_BEAST;
   if (m.boss) { const p = Math.round((pw + BOSS_P) * 10) / 10, max = Math.round(TB.hp(p) * BOSS_HP[party.length - 1]); G.boss = G.boss || {}; G.boss[id] = { k: m.boss, p, max, hp: max, next: 0, party: party.slice(), log: [], res: null }; }
   party.forEach(h => { const H = G.players[h];
-    H.mis = { id, rk: m.rk, t: m.t, ok, boss: m.boss || null, left: w + 1 + (h > G.cur ? 1 : 0), party: party.slice(), ch, roll: Math.random() };   // left: остаток этой недели + w полных; кто ещё не ходил в этом круге — +1, чтобы отряд вернулся вместе
+    H.mis = { id, rk: m.rk, t: m.t, ok, boss: m.boss || null, beast: beast ? 1 : 0, left: w + 1 + (h > G.cur ? 1 : 0), party: party.slice(), ch, roll: Math.random() };   // left: остаток этой недели + w полных; кто ещё не ходил в этом круге — +1, чтобы отряд вернулся вместе
     if (h !== G.cur) logTo(H, `${S.nick} позвал тебя на миссию «${m.t}» (ранг ${m.rk}). Ты на миссии ${w} ${weekWord(w)}.`); });
   S.actions = 0; S.misInv = []; clearJet();
   logMsg(`Миссия «${m.t}» (ранг ${m.rk}): отряд выдвинулся. Вернёшься через ${w} ${weekWord(w)}.`);
@@ -4037,6 +4038,9 @@ function viewMwait() {
 function viewMres() {
   const M = S.mis; if (!M) { S.view = 'main'; return viewMain(); }
   if (M.boss) M.ok = !!(G.boss && G.boss[M.id] && G.boss[M.id].res);
+  if (M.beast === 1) return wrap(`<div class="card" style="text-align:center"><img src="img/beast/${M.bk != null ? M.bk : (M.bk = rnd(0, BEASTS.length - 1))}.webp" alt="" style="width:100%;max-width:320px;aspect-ratio:1;object-fit:cover;border-radius:12px;display:block;margin:0 auto">
+    <h2 style="margin-top:10px" class="minus">На обратном пути — зверь!</h2><div class="dim">«${esc(M.t)}» · ранг ${M.rk}. Из чащи выскочил обезумевший зверь, надышавшийся рудной пыли. Победа — +${BEAST.coins} крипты от Бюро, как в контракте. Итог миссии от боя не зависит.</div>
+    <button class="imgbtn" data-a="mbeast" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button></div>`);
   return wrap(`<div class="card" style="text-align:center"><img src="img/mis/${M.ok ? 'success' : 'fail'}.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
     <h2 style="margin-top:10px" class="${M.ok ? 'plus' : 'minus'}">${M.ok ? 'Миссия успешна!' : 'Миссия провалена'}</h2>
     <div class="dim">«${esc(M.t)}» · ранг ${M.rk}${M.boss ? ' · ' + bossOf(M.boss).n : ` · шанс был ${Math.round(M.ch * 100)}%`}</div>
@@ -5517,6 +5521,10 @@ function act(a, v) {
     case 'mstart': misStart(+v); break;
     case 'bfight': case 'bsim': bossAct(a); break;
     case 'bdone': S.view = 'mres'; break;
+    case 'mbeast': { const M = S.mis; if (!M || M.beast !== 1) return; const p = Math.max(1, effPower() - gameBonus(S) - rnd(BEAST.gapLo, BEAST.gapHi)), bk = M.bk != null ? M.bk : rnd(0, BEASTS.length - 1);
+      const opp = fighter('Обезумевший зверь', p, npcRating(p), false, { name: 'Яростный натиск', desc: 'Зверь бросается в бешеную атаку, не зная ни страха, ни боли!', icon: 10 }, `img/beast/${bk}.webp`); opp.beast = true;
+      startFight(`Миссия «${M.t}» · зверь`, opp, won => { M.beast = 2; const n = won ? earn(S, BEAST.coins) : 0; logMsg(`Зверь на миссии «${M.t}»: ${won ? `победа, +${n} крипты.` : 'поражение.'}`); histAdd(`Зверь на миссии · ${won ? 'победа' : 'поражение'}`); S.view = 'mres'; save(); });
+      break; }
     case 'mdo': { misList(S.region); const d = (G.mis[S.region].dl || [])[+v], hi = heroIdx(S); if (!d || d.by.includes(hi) || S.mis || !spend()) return; d.by.push(hi); const n = earn(S, rnd(5, 10)); logMsg(`Поручение «${d.t}»: +${n} крипты.`); break; }
     case 'mclaim': if (S.mis && S.mis.left <= 0 && !misBossPending(S)) { S.misRes = misResolve(S); S.view = 'mclaim'; save(); } break;
     case 'mdone': S.misRes = null; S.view = 'main'; break;
