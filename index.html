@@ -1606,7 +1606,7 @@ function useCard(i, ivDone) {
   if (c.k === 'beast' || c.k === 'duel') { c.used = true; specialFight(c.k); save(); return; }
   if (c.k === 'spar') { c.used = true; if (G.players.length > 1) S.view = 'spar'; else sparStart(null); save(); return; }
   if (c.k === 'contract') { c.used = true; contractStart(); save(); return; }
-  if (c.k === 'fest') { c.used = true; const fi = (S.invite || []).filter(h => G.mode === 'coop' && G.players[h] && h !== G.cur && G.players[h].region === S.region).slice(0, 1); S.invite = [];
+  if (c.k === 'fest') { c.used = true; const fi = (S.invite || []).filter(h => G.mode === 'coop' && G.players[h] && h !== G.cur && G.players[h].region === S.region && !G.players[h].mis).slice(0, 1); S.invite = [];
     fi.forEach(h => logTo(G.players[h], `${S.nick} позвал тебя на «${c.t}» в ${c.city || FEST_CITIES[S.region][0]}.`)); festStart(c.city || FEST_CITIES[S.region][0], fi); save(); return; }
   let R; const e0 = S.effects.length;
   if (isIv(c)) {   // интервью и подкаст: вместо силы — медийность на эту и следующую неделю (подкаст при силе 65+ ещё +20 рейтинга)
@@ -1632,7 +1632,7 @@ function useCard(i, ivDone) {
     R = { kind: 'Бонус', cls: 'plus', txt: capF(effTxt(v, d)), phrase: CARD_PHRASE[d === 'next' ? 'nnext' : d] };
   }
   // позвать игроков с собой: они получают те же бонусы (без штрафов), действие тратит только пригласивший
-  const inv = (S.invite || []).filter(h => G.mode === 'coop' && G.players[h] && h !== G.cur && G.players[h].region === S.region && SHARE_K.includes(c.k)).slice(0, 1);   // только из своего региона
+  const inv = (S.invite || []).filter(h => G.mode === 'coop' && G.players[h] && h !== G.cur && G.players[h].region === S.region && !G.players[h].mis && SHARE_K.includes(c.k)).slice(0, 1);   // только из своего региона
   if (inv.length) {
     const gain = S.effects.slice(e0).filter(e => e.v > 0);
     for (const h of inv) { const H = G.players[h];
@@ -2276,7 +2276,7 @@ function eslStart() {
 function viewEsl() {
   if (!S.esl) eslNew();
   const E = S.esl, n = eslCount(), full = n === E.size, over = n > E.size;
-  const here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
+  const here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region && !G.players[i].mis);
   let h = `<div class="card"><img class="esllogo" src="img/crown.webp" alt="Корона Спектров"><h2>Корона Спектров</h2>
     <div class="dim">Собери свой турнир: позови Элитных Спектров любого региона и игроков, остальное можно добрать бойцами с силой до 50. Турнир — 1 действие${here.length ? ', позвать игроков — ещё 1' : ''}. Победитель получает медаль Короны Спектров и +200 рейтинга.</div>${prizeRulesHtml({ kind: 'esl' })}</div>
     <div class="card"><h3>Размер турнира</h3><div class="ibsz">${Object.keys(ESL_SIZES).map(k => `<button class="ibtn" data-a="eslsize" data-v="${k}" aria-label="${k} бойцов"><img src="img/btn/sz${k}_${+k === E.size ? 1 : 0}.webp" alt=""></button>`).join('')}</div>
@@ -3063,7 +3063,7 @@ const GL = ['A', 'B', 'C', 'D'], DHG = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 function playTour(t) {
   const T = TIERS[t], r = S.region;
   if (t > S.tiers[r] || !S.tourPass) return;
-  const inv = (S.tourInv || []).filter(h => h !== G.cur && G.players[h] && G.players[h].region === S.region);   // только игроки в этом регионе
+  const inv = (S.tourInv || []).filter(h => h !== G.cur && G.players[h] && G.players[h].region === S.region && !G.players[h].mis);   // только игроки в этом регионе
   if (inv.length && S.actions < 1) { logMsg('Не хватает действия, чтобы позвать игроков.'); return; }
   if (inv.length) S.actions -= 1;          // позвать любое число игроков — одно действие
   S.tourPass = false; S.tourInv = [];      // одно действие — один турнир
@@ -4085,7 +4085,7 @@ function invadeHtml() {   // вторжение: любой другой игр�
     <div class="row" style="margin-top:6px">${list.map(i => `<button class="btn ${ivd.includes(i) ? 'here' : ''}" style="width:auto;flex:1 1 40%;text-align:center" data-a="tinvade" data-v="${i}">${ivd.includes(i) ? '⚔ ' : ''}${flagOf(G.players[i].country)} ${esc(G.players[i].nick)}${G.players[i].dirty ? ' <small class="gold">· без штрафа</small>' : ''}</button>`).join('')}</div></div>`;
 }
 function inviteHtml() {   // совместная игра: позвать игроков из этого же региона — одно действие на всех
-  const inv = S.tourInv || [], here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region);
+  const inv = S.tourInv || [], here = G.players.map((H, i) => i).filter(i => i !== G.cur && G.players[i].region === S.region && !G.players[i].mis);
   const away = G.players.filter((H, i) => i !== G.cur && H.region !== S.region);
   return `<div class="card"><h3>Позвать игроков</h3>
     <div class="dim">Позвать можно только тех, кто сейчас в регионе ${REGIONS[S.region].name}. Сколько бы игроков ты ни позвал — это 1 действие.${inv.length ? '' : ' Осталось действий: ' + S.actions + '.'}</div>
@@ -4743,7 +4743,7 @@ function act(a, v) {
       break;
     }
     case 'tinvade': { const h = +v, a2 = S.tourInvade = S.tourInvade || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else a2.push(h); break; }
-    case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (S.actions >= 1 && G.players[h].region === S.region) a2.push(h); break; }
+    case 'tinv': { const h = +v, a2 = S.tourInv = S.tourInv || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else if (S.actions >= 1 && G.players[h].region === S.region && !G.players[h].mis) a2.push(h); break; }
     case 'tauto': if (!AUTOB) return; if (S.trun) tRun(S.trun, true); break;
     case 'tfinish': finishTour(); S.ttab = null; break;
     case 'ttab': S.ttab = v; return render();
