@@ -1052,6 +1052,12 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .ibsz{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.ibsz .ibtn{margin:0}
 .evlogo{display:block;width:min(260px,70%);height:auto;margin:0 auto 8px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}.evlogo.sm{width:min(150px,40%)}
 .ibtn:disabled{opacity:.4;filter:grayscale(.6);cursor:default}.ibtn:disabled .ib1{opacity:0!important}.ibtn.ibauto{margin:8px 12px 2px;width:auto;max-width:none}.ibtn.ibsm2{flex:1;margin:0}
+.slotg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:330px;margin:12px auto;padding:8px;border-radius:14px;background:#0b0f1c;border:2px solid #F5C542}
+.slotg img{width:100%;aspect-ratio:1;border-radius:8px;display:block;background:#1a2036}
+.slotg img.hit{outline:3px solid #F5C542;box-shadow:0 0 14px #F5C542}
+.slotg.spin img{animation:slotspin .12s linear infinite}
+@keyframes slotspin{0%{transform:translateY(-6px);filter:blur(1px)}100%{transform:translateY(6px);filter:blur(1px)}}
+.slotres{min-height:24px;margin:4px 0 8px}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1318,12 +1324,55 @@ const CONS = [
   { k: 'batt', n: 'Рудная батарея', d: 'Капсула с осколком метеорита. Отдаёт телу запас Цы, когда поток почти иссяк.', cost: 30 },
   { k: 'rage', n: 'Сыворотка «Ярость»', d: 'Ты бьёшь сильнее — но и сам открываешься для ударов.', cost: 35 },
   { k: 'vamp', n: 'Кровавый кристалл', d: 'Тянет силу из каждого твоего удара и возвращает её тебе.', cost: 50 },
-  { k: 'crit', n: 'Линза фокуса', d: 'Огранённый кристалл собирает Цы в точку: удары находят самое уязвимое место.', cost: 40 }
+  { k: 'crit', n: 'Линза фокуса', d: 'Огранённый кристалл собирает Цы в точку: удары находят самое уязвимое место.', cost: 40 },
+  { k: 'ana', n: 'Анаболик', d: 'Запрещённый рудный препарат. Тело наливается силой, и до конца боя ты выдерживаешь больше ударов.', cost: 400 }
 ];
-const CONS_ICO = { gren: '🔥', batt: '🔋', rage: '😡', vamp: '🩸', crit: '💥', ins: '📁', stim: '💉', smoke: '💨' };
+const CONS_ICO = { gren: '🔥', batt: '🔋', rage: '😡', vamp: '🩸', crit: '💥', ins: '📁', stim: '💉', smoke: '💨', ana: '💪' };
 const npcKit = lvl => lvl === 'pro' ? shuffle(CONS.map(c => c.k)).slice(0, rnd(3, 5)) : lvl === 'semi' && Math.random() < 0.25 ? shuffle(CONS.map(c => c.k)).slice(0, rnd(1, 2)) : [];
 const DIRTY = { n: 'Грязные контракты', d: 'Связи в тени Бюро. Ты врываешься на чужие турниры, и никто не задаёт вопросов: никаких последствий для тебя.', cost: 3000 };
 const CONS_MAX = 10;
+const XACT = { n: 'Теневой график', d: 'Люди Бюро берут на себя твою рутину. Каждую неделю у тебя на одно действие больше — навсегда.', cost: 25000 };
+const SOCIAL = {
+  smear: { n: 'Вброс грязной инфы', d: 'Слив компромата в сеть. Медийность выбранного Спектра падает на эту и следующую неделю.', cost: 1200, v: -0.2, img: 'smear' },
+  promo: { n: 'Прорекламировать', d: 'Оплаченная кампания в сети. Медийность выбранного Спектра растёт на эту и следующую неделю.', cost: 1200, v: 0.2, img: 'promo' } };
+const BET = { n: 'Ставка', d: 'Ставишь крипту на победу Спектра в его следующем турнире. Чем меньше у него шансов, тем выше коэффициент.', min: 1, max: 1000 };
+const BET_KMAX = 10;   // коэффициент = 1 / шанс: 100% → ×1, 40% → ×2,5, 10% и меньше → ×10; медийность на выигрыш не действует
+const betCoef = p => Math.round(Math.min(BET_KMAX, 1 / Math.max(0.01, p)) * 100) / 100;
+const fmtK = k => '×' + k.toFixed(2).replace('.', ',');
+function betChance(R, x) {   // шанс выиграть турнир: сила против средней силы сетки, по раунду на каждое удвоение
+  const pw = o => { const h = humOf(R, o.id); return h != null ? heroPower(G.players[h]) : (o.p || 0); };
+  const oth = R.ps.filter(o => o !== x), avg = oth.reduce((a, o) => a + pw(o), 0) / Math.max(1, oth.length);
+  const pm = 1 / (1 + Math.exp(-(pw(x) - avg) / 5)), rounds = Math.max(1, Math.ceil(Math.log2(R.ps.length)));
+  return Math.max(0.01, Math.min(1, Math.pow(pm, rounds)));
+}
+function betSettle(R) {   // после турнира: ставки на его участников
+  if (!G.bets || !G.bets.length) return;
+  G.bets = G.bets.filter(b => {
+    const x = R.ps.find(o => humOf(R, o.id) === b.on); if (!x) return true;
+    const B = G.players[b.from], P = G.players[b.on]; if (!B || !P) return false;
+    const k = betCoef(betChance(R, x)), nm = R.kind === 'dh' ? 'Метеор Фест' : R.kind === 'esl' ? 'Корона Спектров' : R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'contract' ? 'турнир по контракту' : TIERS[R.tier] ? TIERS[R.tier].name : 'турнир';
+    if (R.winner === x.id) { const w = Math.round(b.amt * k); B.coins = (B.coins || 0) + w; logTo(B, `Ставка сыграла! ${P.nick} выиграл «${nm}». Коэффициент ${fmtK(k)}: +${w} крипты.`); }
+    else logTo(B, `Ставка не сыграла: ${P.nick} не выиграл «${nm}». Сгорело ${b.amt} крипты.`);
+    return false;
+  });
+}
+// ---------- игровой автомат Бюро: 3×3, линии ×2, диагональ ×3, три семёрки по диагонали ×5 и действие назад ----------
+const SLOT = { sym: 6, jack: 0.02, diag: 0.08, line: 0.30, mul: { line: 2, diag: 3, jack: 5 } };
+const SLOT_LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 4, 8], [2, 4, 6]];
+const slotWins = g => SLOT_LINES.filter(l => g[l[0]] === g[l[1]] && g[l[1]] === g[l[2]]);
+function slotRoll() {
+  const r = Math.random(), out = r < SLOT.jack ? 'jack' : r < SLOT.diag ? 'diag' : r < SLOT.line ? 'line' : 'lose';
+  for (let t = 0; t < 500; t++) {
+    const g = Array.from({ length: 9 }, () => rnd(0, SLOT.sym - 1));
+    let L = null;
+    if (out === 'jack') { L = SLOT_LINES[rnd(3, 4)]; L.forEach(i => g[i] = 0); }
+    else if (out === 'diag') { L = SLOT_LINES[rnd(3, 4)]; const v = rnd(1, SLOT.sym - 1); L.forEach(i => g[i] = v); }
+    else if (out === 'line') { L = SLOT_LINES[rnd(0, 2)]; const v = rnd(0, SLOT.sym - 1); L.forEach(i => g[i] = v); }
+    const w = slotWins(g);
+    if (out === 'lose' ? !w.length : w.length === 1) return { g, out, line: L };
+  }
+  return { g: [1, 2, 3, 4, 5, 1, 2, 3, 4], out: 'lose', line: null };
+}
 const consOf = (H, k) => (H.cons && H.cons[k]) || 0;
 const itemBonus = H => H.equip != null && ITEMS[H.equip] ? ITEMS[H.equip].b : 0;
 const itemName = (H, i) => (H.iname && H.iname[i]) || ITEMS[i].n;   // игрок может переименовать любой свой артефакт
@@ -1359,7 +1408,7 @@ const carIcon = j => CARS[j].img ? `<img class="caricon" src="img/car/${CARS[j].
 // бонус даёт только то, что стоит в гараже (H.garage); смена — со следующей недели
 const garageOf = H => H.garage != null && (H.cars || []).includes(H.garage) && CARS[H.garage] ? H.garage : null;
 const carBonus = H => { const g = garageOf(H); return g == null ? 0 : CARS[g].a; };
-const maxActs = H => 3 + carBonus(H);
+const maxActs = H => 3 + carBonus(H) + (H.xact ? 1 : 0);
 const actWord = n => n === 1 ? 'действие' : n < 5 ? 'действия' : 'действий';
 const hasRoom = (H, k) => (H.rooms || []).includes(k);
 const freeBureau = H => (H.rooms || []).length > 0;   // любое купленное жильё — бюро без траты действия
@@ -1469,7 +1518,8 @@ const hasHeliTop = H => (H.cars || []).includes(HELI_TOP);
 const mediaCar = H => { const c = (H.cars || []).map(j => CARS[j]).filter(x => x && !x.heli); if (!c.length) return 0; const lo = Math.min(...MEDIA_CARS.map(x => x.cost)), hi = Math.max(...MEDIA_CARS.map(x => x.cost)), best = Math.max(...c.map(x => x.cost)); return 0.01 + (best - lo) / (hi - lo) * 0.29; };
 const mediaIv = H => H.mediaTo != null && H.mediaTo >= H.turn ? MEDIA_IV : 0;
 const mediaItems = H => (H.items || []).reduce((a, i) => a + (MEDIA_ITEMS[i] || 0), 0);
-const mediaMul = H => Math.min(MEDIA_MAX, 1 + mediaCar(H) + mediaIv(H) + mediaItems(H));
+const mediaFx = H => (H.mfx || []).filter(e => e.to >= H.turn).reduce((a, e) => a + e.v, 0);   // вброс и реклама от других игроков
+const mediaMul = H => Math.max(0.5, Math.min(MEDIA_MAX, 1 + mediaCar(H) + mediaIv(H) + mediaItems(H) + mediaFx(H)));
 const mediaTxt = H => '×' + mediaMul(H).toFixed(2).replace('.', ',');
 const earn = (H, n) => { n = Math.round((n || 0) * mediaMul(H)); H.coins = (H.coins || 0) + n; return n; };   // любая заработанная крипта проходит через медийность
 const addCoins = (H, n, why) => { if (!n) return; n = earn(H, n); if (why) logTo(H, `${why}: +${n} крипты.`); };
@@ -1814,7 +1864,7 @@ const TB = {
   defBlock: 0.60, concTaken: 1.15, exhaustTaken: 1.20, exhaustQi: 20,
   stance: { bal: { d: 1, t: 1 }, rage: { d: 1.3, t: 1.25 }, def: { d: 0.75, t: 0.75 } },
   e: { stun: 0.45, drain: 18, drainSelf: 8, wound: 0.022, heal: 0.06, barrier: 0.064, barT: 3, mark: 1.5, weak: 0.66, reflect: 0.5, pierce: 1.2, seal: 3, sealK: 1.3 },   // баланс (разрушительная только при 70 Цы): каждый эффект 47–53% против остальных при равной силе
-  it: { stim: 0.12, gren: 0.08, batt: 25, rage: 0.27, rageIn: 0.18, ins: 0.15, vamp: 0.36, smoke: 0.55, crit: 0.75 },
+  it: { stim: 0.12, gren: 0.08, batt: 25, rage: 0.27, rageIn: 0.18, ins: 0.15, vamp: 0.36, smoke: 0.55, crit: 0.75, ana: 0.15 },
   fatigueFrom: 8, fatigue: 0.05, init: 40,
 };
 const STANCES = [['bal', '⚖', 'Баланс', '100% / 100%'], ['rage', '🔥', 'Ярость', '+30% / +25%'], ['def', '🛡', 'Защитная', '−25% / −25%']];
@@ -1834,7 +1884,7 @@ const effOf = k => EFFECTS.find(e => e[0] === k) || EFFECTS[0];
 const ITEM_TB = {   // что делают расходники в пошаговом бою
   ins: 'Следующее действие: удары не промахиваются и +15% урона', stim: 'Лечит 12% HP', smoke: 'Следующий ход соперника: каждый удар промахивается с шансом +55%',
   gren: 'Мгновенно наносит 8% HP соперника', batt: '+25 Цы', rage: 'До твоего следующего хода: наносишь +27%, получаешь +18%',
-  vamp: 'Этот ход: лечишь 36% нанесённого урона', crit: 'Этот ход: шанс крита 75%'
+  vamp: 'Этот ход: лечишь 36% нанесённого урона', crit: 'Этот ход: шанс крита 75%', ana: 'До конца боя: +15% к максимуму HP'
 };
 const SKILL_NAMES = {   // названия обычных способностей по эффекту (боты и кнопка «случайная способность»)
   stun: ['Сотрясающий удар', 'Оглушающий рёв', 'Удар по нервам', 'Громовой хлопок', 'Звон в ушах', 'Ослепляющая вспышка', 'Кулак-таран', 'Ударная волна', 'Сбитое дыхание', 'Молот небес', 'Громовой кулак', 'Электрошок', 'Тигриный рёв'],
@@ -1949,6 +1999,7 @@ function tbUseItem(x, k) {
   if (k === 'stim') { const h = Math.round(x.hpMax * TB.it.stim); x.hp = Math.min(x.hpMax, x.hp + h); tbFx(x, '+' + h, 'heal'); }
   else if (k === 'gren') { const d = tbDmg(x, y, y.hpMax * TB.it.gren); tbFx(y, '🔥 −' + d, 'dmg'); }
   else if (k === 'batt') { x.qi = Math.min(TB.qiMax, x.qi + TB.it.batt); tbFx(x, '+' + TB.it.batt + ' Цы', 'info'); }
+  else if (k === 'ana') { const a = Math.round(x.hpMax * TB.it.ana); x.hpMax += a; x.hp += a; tbFx(x, '💪 +' + a + ' HP', 'heal'); }
   else if (k === 'smoke') x.st.smoke = 1;
   else if (k === 'rage') x.st.rageItem = 1;
   else x.tmp[k] = true;   // ins, vamp, crit — на это действие
@@ -1985,6 +2036,7 @@ function tbFinish(w) { if (F.done) return; F.done = true; F.won = w === F.a; F.a
 function tbAIItems(x, y) {
   const has = k => tbItems(x).includes(k) && !x.used[k] && (!x.H || consOf(x.H, k) > 0);
   if (has('stim') && x.hp < x.hpMax * 0.4) return tbUseItem(x, 'stim');
+  if (has('ana') && x.turns <= 3) return tbUseItem(x, 'ana');
   if (has('batt') && x.qi < 35) return tbUseItem(x, 'batt');
   if (has('gren') && (y.hp < y.hpMax * 0.12 || Math.random() < 0.25)) return tbUseItem(x, 'gren');
   if (has('smoke') && y.qi >= 70 && !y.ultUsed) return tbUseItem(x, 'smoke');
@@ -3460,6 +3512,7 @@ function finishTour() {
     logTo(H, `Вступительный турнир: победа! Бюро выдаёт стартовую крипту: ${INTRO_COINS}. Твоя первая неделя начинается.`);
     S.view = 'main'; S.trun = null; return;
   }
+  betSettle(R);
   { ensureFame(); const x = R.ps[R.winner], h = humOf(R, R.winner), H = h != null ? G.players[h] : null;
     const team = x.team != null && SEMI[x.team] ? { name: SEMI[x.team][0], logo: SEMI[x.team][1] } : R.kind === 'contract' && H ? { name: SEMI[R.team][0], logo: SEMI[R.team][1] } : null;
     const nm = R.kind === 'fest' ? 'Фестиваль Спектров' : R.kind === 'esl' ? 'Корона Спектров' : R.kind === 'dh' ? 'Метеор Фест' : R.kind === 'contract' ? 'Турнир по контракту' : TIERS[R.tier].name;
@@ -3532,7 +3585,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub">${t[1] ? `<button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button>` : ''}<h1>${t[0]}</h1></div>` : ''; };
@@ -3617,7 +3670,7 @@ function viewMain() {
   const week = `<div class="card week">
       <div><h2>Неделя ${S.turn}</h2>${(([st, eta]) => `<div class="dim">Сезон ${seasonNo()} · ${esc(st)}</div><div class="sstat">${esc(eta)}</div>`)(seasonStatus())}
         <div class="inds">${ind}<span class="dim">Действия: ${S.actions} из ${MA}</span></div>
-        <div class="media" title="Множитель ко всей заработанной крипте"><span>📣 Медийность</span><b>${mediaTxt(S)}</b>${mediaIv(S) ? '<small>эфир</small>' : ''}</div>${S.semi ? `<div class="ctline"><img src="img/team/${SEMI[S.semi.team][1]}.webp" alt=""><span>Контракт: <b>${esc(SEMI_TEAMS[S.semi.team])}</b> · до конца недели ${S.semi.until}${S.semi.worked ? ' · отработан' : ' · нужен полупро-турнир'}</span></div>` : S.league != null ? `<div class="ctline pro"><span>Профессиональная команда · призовые +70%</span></div>` : ''}${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
+        <div class="media" title="Множитель ко всей заработанной крипте"><span>📣 Медийность</span><b>${mediaTxt(S)}</b>${mediaIv(S) ? '<small>эфир</small>' : ''}${mediaFx(S) > 0 ? '<small>реклама</small>' : mediaFx(S) < 0 ? '<small class="minus">компромат</small>' : ''}</div>${S.semi ? `<div class="ctline"><img src="img/team/${SEMI[S.semi.team][1]}.webp" alt=""><span>Контракт: <b>${esc(SEMI_TEAMS[S.semi.team])}</b> · до конца недели ${S.semi.until}${S.semi.worked ? ' · отработан' : ' · нужен полупро-турнир'}</span></div>` : S.league != null ? `<div class="ctline pro"><span>Профессиональная команда · призовые +70%</span></div>` : ''}${S.jetlag ? '<div class="minus" style="margin-top:6px">Джетлаг: штраф к силе до любого действия</div>' : ''}
 </div>
       <div class="nextm"><div class="dim">Ближайший матч</div><b>${nextMatchText()}</b></div>
     <button class="imgbtn nextwk ${done ? 'ready' : ''}" data-a="${done ? 'next' : 'pass'}" aria-label="Пропустить неделю"><img src="img/nav/skip.webp" alt="">${done ? '' : `<small>осталось ${S.actions} ${actWord(S.actions)}</small>`}</button>
@@ -4027,7 +4080,7 @@ function viewLib() {
   return wrap(`<div class="card" style="text-align:center">${ni ? `<img class="libimg" src="${ni}" alt="">` : '<img class="libhero" src="img/library.webp" alt="">'}
     <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${capF(effTxt(...LIB_B))}</div></div>
     ${ibtn('dossier', 'dossier', S.region, 'Досье Элитных Спектров')}
-    ${ibtn('teams', 'teams', S.region, 'Команды лиг')}${back}`);
+    ${ibtn('teams', 'teams', S.region, 'Команды лиг')}${ibtn('mech', 'mech', '', 'Механики игры')}${back}`);
 }
 
 function itemCard(it, i, act, on) {
@@ -4044,8 +4097,55 @@ function viewShop() {   // магазин: только названия и це
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j)).join('')}</div>
     <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате. Самая дорогая машина задаёт медийность — множитель ко всей заработанной крипте. Вертолёты медийность не дают, зато в гараже добавляют действия в неделю.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind + (C2.heli ? ` · +${C2.a} действия в неделю в гараже` + (j === HELI_TOP ? ' · миссии ранга A за 1 неделю' : '') : ' · 📣 медийность ×' + (1 + mediaCar({ cars: [j] })).toFixed(2).replace('.', ',')), carIcon(j))).join('')}</div>
     <div class="card"><h3>Расходники</h3><div class="dim">Пригодятся в любом бою.</div>${CONS.map(c => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${c.k}.webp" alt=""><span><b>${esc(c.n)}</b><div class="dim" style="font-size:12px">${esc(c.d)}</div><div class="gold" style="font-size:12px">В запасе: ${consOf(S, c.k)} из ${CONS_MAX}</div></span></span>${consOf(S, c.k) >= CONS_MAX ? '' : `<button class="btn cbtn" data-a="consbuy" data-v="${c.k}" ${(S.coins || 0) < c.cost ? 'disabled' : ''}>${coinHtml(c.cost)}</button>`}</div>`).join('')}</div>
-    <div class="card"><h3>Особое</h3><div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/dirty.webp" alt=""><span><b>${DIRTY.n}</b><div class="dim" style="font-size:12px">${DIRTY.d}</div></span></span>${S.dirty ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="dbuy" ${(S.coins || 0) < DIRTY.cost ? 'disabled' : ''}>${coinHtml(DIRTY.cost)}</button>`}</div></div>
+    <div class="card"><h3>Особое</h3><div class="dim">Теневые услуги Бюро.</div><div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/dirty.webp" alt=""><span><b>${DIRTY.n}</b><div class="dim" style="font-size:12px">${DIRTY.d}</div></span></span>${S.dirty ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="dbuy" ${(S.coins || 0) < DIRTY.cost ? 'disabled' : ''}>${coinHtml(DIRTY.cost)}</button>`}</div>
+      <div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/xact.webp" alt=""><span><b>${XACT.n}</b><div class="dim" style="font-size:12px">${XACT.d}</div></span></span>${S.xact ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="xbuy" ${(S.coins || 0) < XACT.cost ? 'disabled' : ''}>${coinHtml(XACT.cost)}</button>`}</div>
+      ${Object.entries(SOCIAL).map(([k, o]) => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${o.img}.webp" alt=""><span><b>${o.n}</b><div class="dim" style="font-size:12px">${o.d}</div></span></span><button class="btn cbtn" data-a="soc" data-v="${k}" ${(S.coins || 0) < o.cost ? 'disabled' : ''}>${coinHtml(o.cost)}</button></div>`).join('')}
+      <div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/bet.webp" alt=""><span><b>${BET.n}</b><div class="dim" style="font-size:12px">${BET.d}</div>${(G.bets || []).filter(b => b.from === G.cur).map(b => `<div class="gold" style="font-size:12px">Ставка ${b.amt} на ${esc(G.players[b.on].nick)}</div>`).join('')}</span></span><button class="btn cbtn" data-a="bet" ${(S.coins || 0) < 1 ? 'disabled' : ''}>Открыть</button></div></div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>`) + navBar();
+}
+function pickRow(act, sel) {   // выбор любого Спектра сессии
+  return `<div class="invrow">${G.players.map((H, h) => `<button class="invp ${sel === h ? 'on' : ''}" data-a="${act}" data-v="${h}"><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}${h === G.cur ? '<br><small>это ты</small>' : `<br><small>${esc(REGIONS[H.region].name)}</small>`}</button>`).join('')}</div>`;
+}
+function viewSocial() {
+  const o = SOCIAL[S.soc] || SOCIAL.promo;
+  return wrap(`<div class="card" style="text-align:center"><img class="consico" src="img/shop/${o.img}.webp" alt="" style="width:96px;height:96px"><h2>${o.n}</h2><div class="dim">${o.d}</div><div style="margin-top:8px">${coinHtml(o.cost)}</div></div>
+    <div class="card"><h3>Кого выбрать?</h3>${pickRow('socgo', null)}</div>`);
+}
+function viewBet() {
+  const sel = S.betOn != null && G.players[S.betOn] ? S.betOn : null, mine = (G.bets || []).filter(b => b.from === G.cur);
+  return wrap(`<div class="card" style="text-align:center"><img class="consico" src="img/shop/bet.webp" alt="" style="width:96px;height:96px"><h2>${BET.n}</h2><div class="dim">${BET.d} Если фаворит побеждает на слабом турнире, вернётся та же сумма. Если аутсайдер выигрывает турнир сильных, выигрыш умножается. Ставка сыграет на ближайшем турнире Спектра.</div></div>
+    <div class="card"><h3>На кого ставишь?</h3>${pickRow('betpick', sel)}
+      <div class="dim" style="margin-top:10px">Сумма: от ${BET.min} до ${BET.max} крипты</div>
+      <input id="betamt" type="number" inputmode="numeric" min="${BET.min}" max="${BET.max}" value="${S.betAmt || 100}" style="margin-top:6px">
+      <button class="btn primary" data-a="betok" ${sel == null ? 'disabled' : ''} style="margin-top:8px">Поставить${sel != null ? ' на ' + esc(G.players[sel].nick) : ''}</button></div>
+    ${mine.length ? `<div class="card"><h3>Твои ставки</h3>${mine.map(b => `<div class="srow"><span>${esc(G.players[b.on].nick)}</span><b>${coinHtml(b.amt)}</b></div>`).join('')}</div>` : ''}`);
+}
+function viewSlot() {
+  const R = S.slot, g = R ? R.g : [0, 1, 2, 3, 4, 5, 1, 2, 3], hit = R && R.line ? R.line : [];
+  const res = !R ? '' : R.out === 'lose' ? `<div class="minus">Мимо. −${R.bet} крипты.</div>` : `<div class="plus"><b>${R.out === 'jack' ? 'КРИТИЧЕСКАЯ УДАЧА! ' : R.out === 'diag' ? 'Диагональ! ' : 'Линия! '}×${SLOT.mul[R.out]}</b> · +${R.bet * SLOT.mul[R.out]} крипты${R.out === 'jack' ? ' · действие возвращено' : ''}</div>`;
+  return wrap(`<div class="card" style="text-align:center"><img src="img/slot/machine.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
+      <div class="slotg ${S.slotAnim ? 'spin' : ''}">${g.map((v, i) => `<img src="img/slot/${v}.webp" alt="" class="${hit.includes(i) && !S.slotAnim ? 'hit' : ''}">`).join('')}</div>
+      <div class="slotres">${S.slotAnim ? '<div class="dim">Барабаны крутятся…</div>' : res}</div>
+      <div class="dim">Ставка от 1 до 1000 крипты. Одно вращение — одно действие. Три одинаковых в ряд — ×${SLOT.mul.line}, по диагонали — ×${SLOT.mul.diag}, три семёрки по диагонали — ×${SLOT.mul.jack} и действие возвращается.</div>
+      <input id="slotamt" type="number" inputmode="numeric" min="1" max="1000" value="${S.slotBet || 50}" style="margin-top:8px">
+      <div style="margin-top:6px">${coinHtml(S.coins, 'big')} · действий: ${S.actions}</div>
+      ${ibtn('spin', 'spin', '', 'Крутить', '', S.actions < 1 || (S.coins || 0) < 1 || S.slotAnim)}</div>`);
+}
+const MECH = [
+  ['Неделя и действия', 'Игра идёт по неделям. Каждую неделю у тебя 3 действия: турнир, тренировка, бюро, библиотека, отдых, перелёт и события. Вертолёт в гараже и «Теневой график» добавляют действия. Когда действия кончились, нажми «Следующая неделя».'],
+  ['Сила', 'Сила решает исход боёв. Победы на турнирах поднимают её: турнир новичков — до 40, любительский — до 52, полупрофессиональный — до 65. После 65 сила растёт только за новые трофеи: первая победа в каждом турнире каждого региона, Wild Card и Метеор Фест. Предел силы — 81. Артефакт, бонусы недели и события временно добавляют или убавляют силу.'],
+  ['Турниры', 'Местный турнир открывается в Бюро своего региона. Победа открывает следующий уровень. Призовые получают места с 1-го по 4-е. После поражения на турнире приходит дизмораль: штраф к силе до конца недели, который снимает отдых.'],
+  ['Рейтинг и лиги', 'Рейтинг растёт за лестничные матчи, бои с Элитными Спектрами, Корону Спектров, миссии и подкасты сильных бойцов. Рейтинг не тратится на покупки. По рейтингу ты попадаешь в драфт профессиональных лиг: в Бюро можно выбрать команду не выше своего места. Игроки про-команды получают надбавку к призовым.'],
+  ['Контракты и команды', 'После хорошего полупрофессионального турнира команда может предложить контракт на 3 недели: нужно сыграть за неё полупро-турнир, зато призовые выше. Игрок про-команды полупро-контракты не получает.'],
+  ['Wild Card и Чемпионат мира', 'Раз в сезон проходит Wild Card. Регистрируется любой игрок на первом этапе. Лучшие выходят на Чемпионат мира. Первая победа в Wild Card навсегда добавляет силу.'],
+  ['Крипта и медийность', 'Крипта — деньги Спектров. Её дают турниры, лиги, миссии и события. Медийность умножает всю заработанную крипту, до ×2. Её поднимают машина, интервью и подкасты, дорогие артефакты и реклама. Компромат её снижает.'],
+  ['Бой', 'Бой пошаговый. Каждый ход — удар, защита, способность, Удар Цы или суперспособность (нужно 70 Цы). Защита бесплатна, даёт Цы и готовит контрудар. Расходники работают один раз за бой и запрещены в матчах лиги.'],
+  ['Миссии', 'Миссии берут в Бюро. Ранг C длится 1 неделю, B — 2, A — 3. Можно идти одному или втроём с игроками своего региона. Шанс успеха зависит от средней силы отряда. За любую миссию даётся рейтинг.'],
+  ['Теневые услуги', 'В магазине в разделе «Особое»: грязные контракты для вторжений без последствий, лишнее действие в неделю, вброс компромата и реклама любому Спектру, ставки на победу Спектра в турнире. В Бюро стоит игровой автомат.']
+];
+function viewMech() {
+  return wrap(`<div class="card" style="text-align:center"><img class="libhero" src="img/library.webp" alt=""><h2>Механики игры</h2><div class="dim">Как устроен мир Спектров и что дают победы.</div></div>
+    ${MECH.map(([t, d]) => `<div class="card"><h3>${t}</h3><div style="line-height:1.5">${d}</div></div>`).join('')}`);
 }
 function viewInv() {    // инвентарь: открытые артефакты, надет один
   const own = (S.items || []).slice().sort((a, b) => b - a);
@@ -4121,6 +4221,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="Корона Спектров"><img src="img/nav/crown.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="Корона Спектров закрыта"><img src="img/nav/s_crown_lock.webp" alt=""></div>'}
     </div>
     <div class="card"><button class="imgbtn" data-a="missions" aria-label="Миссии Бюро" style="margin-top:0"><img src="img/nav/missions.webp" alt=""></button></div>
+    <div class="card"><button class="imgbtn" data-a="slot" aria-label="Игровой автомат" style="margin-top:0"><img src="img/nav/slot.webp" alt=""></button></div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
     <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="blgb ${i === r ? 'on' : ''}" data-a="blg" data-v="${i}" aria-label="${LSHORT[i]}" title="${LSHORT[i]}"><img src="img/logo_${i}.webp" alt=""></button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
@@ -4582,7 +4683,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${AUTOB ? ibtn('lgsim', 'lsim', '', 'Досчитать матч') : ''}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -4776,6 +4877,29 @@ function act(a, v) {
       S.roomPic = 2; logMsg(`Куплено: ${CARS[j].n}.${S.garage === j ? ' Стоит в гараже.' : ' Поставить в гараж можно в комнате.'}`); break; }
     case 'gsel': { const j = +v; if (!(S.cars || []).includes(j) || S.garage === j) return; S.garage = j; logMsg(`В гараже теперь ${CARS[j].n}.`); break; }
     case 'shop': S.view = 'shop'; break;
+    case 'xbuy': if (S.xact || (S.coins || 0) < XACT.cost) return; S.coins -= XACT.cost; S.xact = true; S.actions++; S.weekMax = maxActs(S); logMsg('Куплено: ' + XACT.n + '. +1 действие каждую неделю.'); break;
+    case 'soc': if (!SOCIAL[v]) return; S.soc = v; S.view = 'soc'; break;
+    case 'socgo': { const o = SOCIAL[S.soc], P = G.players[+v]; if (!o || !P || (S.coins || 0) < o.cost) return; S.coins -= o.cost;
+      P.mfx = (P.mfx || []).filter(e => e.to >= P.turn); P.mfx.push({ v: o.v, to: P.turn + 1 });
+      const me = +v === G.cur;
+      logMsg(`${o.n}: ${me ? 'себя' : P.nick}. Медийность ${o.v > 0 ? 'растёт' : 'падает'} на эту и следующую неделю.`);
+      if (!me) logTo(P, o.v > 0 ? `Кто-то оплатил рекламу в твою честь — медийность растёт на эту и следующую неделю.` : `В сеть слили грязную инфу о тебе — медийность падает на эту и следующую неделю.`);
+      S.view = 'shop'; break; }
+    case 'bet': S.betOn = null; S.view = 'bet'; break;
+    case 'betpick': S.betOn = +v; { const e = document.getElementById('betamt'); if (e) S.betAmt = +e.value || S.betAmt; } break;
+    case 'betok': { const e = document.getElementById('betamt'), n = Math.floor(+(e && e.value)); if (S.betOn == null || !G.players[S.betOn] || !(n >= BET.min && n <= BET.max) || n > (S.coins || 0)) { S.betAmt = n; if (e) e.style.borderColor = '#f66'; return; }
+      S.coins -= n; S.betAmt = n; G.bets = G.bets || []; G.bets.push({ from: G.cur, on: S.betOn, amt: n });
+      logMsg(`Ставка ${n} крипты на ${S.betOn === G.cur ? 'себя' : G.players[S.betOn].nick}. Сыграет на ближайшем турнире.`); S.view = 'shop'; break; }
+    case 'slot': S.slot = null; S.view = 'slot'; break;
+    case 'spin': { const e = document.getElementById('slotamt'), n = Math.floor(+(e && e.value)); if (S.slotAnim || S.actions < 1 || !(n >= 1 && n <= 1000) || n > (S.coins || 0)) { if (e) e.style.borderColor = '#f66'; return; }
+      S.slotBet = n; S.coins -= n; const R = slotRoll(); R.bet = n; S.slot = R;
+      if (R.out !== 'jack') S.actions--;
+      if (R.out !== 'lose') S.coins += n * SLOT.mul[R.out];
+      logMsg(R.out === 'lose' ? `Игровой автомат: мимо, −${n} крипты.` : `Игровой автомат: ×${SLOT.mul[R.out]}, +${n * SLOT.mul[R.out]} крипты.${R.out === 'jack' ? ' Критическая удача — действие вернулось!' : ''}`);
+      S.slotAnim = true; const iv = setInterval(() => document.querySelectorAll('.slotg.spin img').forEach(im => im.src = 'img/slot/' + rnd(0, SLOT.sym - 1) + '.webp'), 90);
+      setTimeout(() => { clearInterval(iv); S.slotAnim = false; save(); render(); }, 1000); break; }
+    case 'mech': S.view = 'mech'; break;
+    case 'libback': S.view = 'lib'; break;
     case 'consbuy': { const c = CONS.find(x => x.k === v); if (!c || (S.coins || 0) < c.cost || consOf(S, c.k) >= CONS_MAX) return; S.coins -= c.cost; S.cons = S.cons || {}; S.cons[c.k] = (S.cons[c.k] || 0) + 1; logMsg('Куплено: ' + c.n + '.'); break; }
     case 'dbuy': { if (S.dirty || (S.coins || 0) < DIRTY.cost) return; S.coins -= DIRTY.cost; S.dirty = true; logMsg('Куплено: ' + DIRTY.n + '. Вторжения на турниры — без последствий.'); break; }
     case 'ibuy': {
