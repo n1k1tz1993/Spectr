@@ -1059,7 +1059,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 @keyframes slotspin{0%{transform:translateY(-6px);filter:blur(1px)}100%{transform:translateY(6px);filter:blur(1px)}}
 .slotres{min-height:24px;margin:4px 0 8px}
 .mcup{position:absolute;display:flex;align-items:center;justify-content:center;gap:1cqw;background:none center/100% 100% no-repeat;border:0;padding:0 1.2cqw;color:#BFF6FF;cursor:pointer;line-height:1.05;text-align:left}.mcup span{display:flex;flex-direction:column}.mcup i{font-style:normal;font-size:1.5cqw;color:#7FBFD0;margin-top:.3cqw}
-.mcup img{width:4.6cqw;height:4.6cqw;border-radius:.8cqw;object-fit:contain}.mcup b{font-size:2.3cqw;font-weight:800}
+.mcup img{width:7cqw;height:7cqw;border-radius:.8cqw;object-fit:contain}.mcup b{font-size:2.3cqw;font-weight:800}
 .tmcell{display:inline-flex;align-items:center;gap:6px;min-width:0}.tmcell b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tlogo.big{width:72px;height:72px;font-size:32px}
 .tmvs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start;margin-top:8px}.tmvs .tsc{font-size:26px;font-weight:800;align-self:center}
@@ -1071,10 +1071,10 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .tmros{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.tmrc{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:8px;border-radius:10px;background:#0f1426;border:1px solid #1d2540}.tmrc.hum{border-color:var(--gold)}.tmrc .tlogo{width:40px;height:40px}.tmrc b{font-size:13px}
 .tfrow{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:14px 0}.tfp{display:flex;flex-direction:column;align-items:center;gap:4px;background:#0f1426;border:4px solid;border-radius:14px;padding:8px;color:inherit;cursor:pointer;width:96px}.tfp .ava{width:64px;height:64px}
 .cwpanel{background-color:#0d1220;border-radius:14px}.cwin{position:absolute;inset:6cqw 5cqw;overflow:auto;display:flex;flex-direction:column;gap:2cqw;color:#e8ecf6}
-.cwttl{font-size:6cqw;font-weight:800;text-align:center;color:var(--gold)}.cwgrid{display:grid;grid-template-columns:1fr 1fr;gap:3cqw}
-.cwc{display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center}.cwc img{width:22cqw;height:22cqw;object-fit:contain}.cwgrid.m4{grid-template-columns:repeat(4,1fr);gap:1.5cqw}.cwgrid.m4 img{width:17cqw;height:17cqw}.cwgrid.m4 b{font-size:3cqw}.cwc b{font-size:3.6cqw}.cwc small{font-size:3.2cqw;color:var(--gold)}.cwc.off{opacity:.35}
-.cwcel{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:2cqw}.cwcup{width:40cqw;height:40cqw;object-fit:contain;align-self:center}
-.cwteam{display:flex;align-items:center;justify-content:center;gap:2cqw;font-size:5cqw}.cwmem{display:flex;justify-content:center;gap:4cqw;flex-wrap:wrap}.cwmem>div{display:flex;flex-direction:column;align-items:center;gap:1cqw}.cwmem .ava{width:18cqw;height:18cqw}.cwmem small{font-size:3.4cqw}
+.cwlogo{width:22cqw;height:22cqw;object-fit:contain;align-self:center;border-radius:3cqw}.cwhead{display:flex;align-items:center;justify-content:center;gap:3cqw}.cwhead .cwlogo{width:16cqw;height:16cqw}.cwttl{font-size:6cqw;font-weight:800;text-align:center;color:var(--gold)}.cwgrid{display:grid;grid-template-columns:1fr 1fr;gap:3cqw}
+.cwc{display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center}.cwc img{width:20cqw;height:20cqw;object-fit:contain}.cwgrid.m4{grid-template-columns:repeat(4,1fr);gap:1.5cqw}.cwgrid.m4 img{width:17cqw;height:17cqw}.cwgrid.m4 b{font-size:3cqw}.cwc b{font-size:3.6cqw}.cwc small{font-size:3.2cqw;color:var(--gold)}.cwc.off{opacity:.35}
+.cwcel{width:86%;align-self:center;aspect-ratio:16/9;object-fit:cover;border-radius:2cqw}.cwcup{width:24cqw;height:24cqw;object-fit:contain;align-self:center}
+.cwteam{display:flex;align-items:center;justify-content:center;gap:2cqw;font-size:5cqw}.cwmem{display:flex;justify-content:center;gap:4cqw;flex-wrap:wrap}.cwmem>div{display:flex;flex-direction:column;align-items:center;gap:1cqw}.cwmem .ava{width:15cqw;height:15cqw}.cwmem small{font-size:3.4cqw}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -3307,7 +3307,7 @@ function tlTeamOf(H) {   // команда героя на идущем кома
 }
 function viewTLTurn(L) {
   if (G.lview === 'tform') {
-    return `<div class="card" style="margin-top:24px;text-align:center"><div class="dim">Неделя ${G.week} · ${esc(L.title)}</div><div class="logo" style="font-size:28px;margin:12px 0 4px">Сбор команд</div>
+    return `<div class="card" style="margin-top:24px;text-align:center"><div class="dim">Неделя ${G.week} · ${esc(L.title)}</div><img src="img/tcup/logo_${L.size}.webp" alt="" style="width:110px;height:110px;border-radius:16px;margin:12px auto 0;display:block"><div class="logo" style="font-size:28px;margin:8px 0 4px">Сбор команд</div>
       <div class="dim">Нажми на игрока, чтобы сменить цвет рамки. Одинаковый цвет — одна команда (до ${L.size} игроков). Серая рамка — игрок без напарника, команду ему подберёт драфт.</div>
       <div class="tfrow">${L.reg.map(h => { const H = G.players[h], c = L.col[h] || 0; return `<button class="tfp" data-a="tfcol" data-v="${h}" style="border-color:${TL_COL[c]}"><span class="ava">${faceImg(H.face)}</span><b>${esc(H.nick)}</b></button>`; }).join('')}</div>
       ${ibtn('draftgo', 'tfgo', '', 'Начать драфт')}</div>`;
@@ -3322,7 +3322,7 @@ function viewTLTurn(L) {
   }
   const m = lgPending(L); if (!m) return '';
   if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
-    <div class="logo" style="font-size:30px;margin:18px 0 6px">Играет ${esc(L.title)}!</div><div class="dim">${tlStageName(m.st)}</div>${ibtn('lgstart', 'lgo', '', 'Начать')}</div>`;
+    <img src="img/tcup/logo_${L.size}.webp" alt="" style="width:120px;height:120px;border-radius:16px;margin:14px auto 0;display:block"><div class="logo" style="font-size:30px;margin:10px 0 6px">Играет ${esc(L.title)}!</div><div class="dim">${tlStageName(m.st)}</div>${ibtn('lgstart', 'lgo', '', 'Начать')}</div>`;
   return tmPanel(L, m, tlStageName(m.st) + (m.label ? ' · ' + m.label : ''));
 }
 function tlCardHtml() {   // карточка в Бюро
@@ -3333,7 +3333,7 @@ function tlCardHtml() {   // карточка в Бюро
   const me = tlMine(L, hi);
   const st = L.phase === 'reg' ? `Регистрация открыта. Этап 1 — неделя ${L.start}, в ход лиг. ${L.reg.length ? 'Записались: ' + L.reg.map(h => esc(G.players[h].nick)).join(', ') + '.' : ''}`
     : L.phase === 'end' ? `Турнир сезона ${L.season} окончен. Новый — в следующем сезоне.` : `Идёт турнир: ${tlStageName(L.M.length ? L.M[L.M.length - 1].st : 'K1')}.${me >= 0 ? ` <b class="gold">Твоя команда: ${esc(L.teams[me].name)}</b>` : ''}`;
-  return `<div class="card"><h3>Командные лиги</h3>${tabs}<div class="dim">Главный турнир ${z}на${z} раз в сезон: 100 команд, профи всех регионов и рандомы. Регистрация бесплатная и не тратит действие.</div>
+  return `<div class="card"><img class="evlogo sm" src="img/tcup/logo_${z}.webp" alt=""><h3>Командные лиги</h3>${tabs}<div class="dim">Главный турнир ${z}на${z} раз в сезон: 100 команд, профи всех регионов и рандомы. Регистрация бесплатная и не тратит действие.</div>
     <div style="margin-top:6px">${st}</div>${cup ? `<div class="dim" style="margin-top:4px">Действующий чемпион: ${esc(cup.name)} (${cup.mem.map(x => esc(x.n)).join(', ')})</div>` : ''}
     ${reg ? '<div class="bonus nt" style="margin-top:8px">✓ Ты записан</div>' : ''}
     ${L.phase === 'reg' ? ibtn(reg ? 'wcunreg' : 'wcreg', 'tlreg', '', reg ? 'Отменить регистрацию' : `Записаться на лигу ${z}на${z}`) : ''}
@@ -3350,7 +3350,7 @@ function viewTLeague() {
   } else if (tab === 't') {
     body = L.sw ? `<div class="card"><h3>Этап 2 · швейцарская система</h3><div class="dim">1–4 — в плей-офф, 5–12 — в плей-ин.</div>${tlSwiss(L).map((x, k) => `<div class="tmrow ${tmHum(L, x.i) ? 'hum' : ''} ${k < 4 ? 'z1' : k < 12 ? 'z2' : 'z3'}"><span style="display:flex;align-items:center;gap:6px;min-width:0"><em class="dim" style="font-style:normal;min-width:20px">${k + 1}.</em>${tmCell(L, x.i)}</span><b>${x.w}–${x.l}</b></div>`).join('')}</div>` : '<div class="card dim">Швейцарская система ещё не началась.</div>';
   } else body = `<div class="card"><h3>Составы команд</h3>${tmRoster(L)}</div>`;
-  return wrap(`<div class="card"><h2>${esc(L.title)} · сезон ${L.season}</h2><div class="row" style="flex-wrap:nowrap;gap:6px">${tb('m', 'Матчи')}${tb('t', 'Таблица')}${tb('r', 'Составы')}</div></div>${body}`);
+  return wrap(`<div class="card"><img class="evlogo sm" src="img/tcup/logo_${L.size}.webp" alt=""><h2>${esc(L.title)} · сезон ${L.season}</h2><div class="row" style="flex-wrap:nowrap;gap:6px">${tb('m', 'Матчи')}${tb('t', 'Таблица')}${tb('r', 'Составы')}</div></div>${body}`);
 }
 
 // ---------- региональный командный турнир: 8 команд, сетка Bo1, финал Bo3 ----------
@@ -3359,7 +3359,7 @@ function viewTTour() {
   const z = S.ttz || 2, inv = (S.ttInv || []).filter(h => G.players[h]), pros = S.ttPro || [];
   const mates = G.players.map((H, h) => h).filter(h => h !== G.cur && G.players[h].region === S.region && !G.players[h].mis);
   const can = S.tcup && Object.values(S.tcup).some(Boolean), pool = can ? lgPool(S.region).slice(0, proCount(S.region)) : [], full = inv.length + pros.length >= z - 1;
-  return wrap(`<div class="card"><h2>Региональный командный турнир</h2><div class="dim">8 команд, сетка: бои Bo1, финал Bo3. Победа поднимает силу, как полупрофессиональный турнир. Участие — 1 действие, позвать напарников — бесплатно.</div>
+  return wrap(`<div class="card"><img class="evlogo sm" src="img/tcup/logo_${z}.webp" alt=""><h2>Региональный командный турнир</h2><div class="dim">8 команд, сетка: бои Bo1, финал Bo3. Победа поднимает силу, как полупрофессиональный турнир. Участие — 1 действие, позвать напарников — бесплатно.</div>
       <div class="row" style="flex-wrap:nowrap;gap:6px;margin-top:8px">${[2, 3].map(k => `<button class="btn ${k === z ? 'here' : ''}" style="margin:0" data-a="ttz" data-v="${k}" ${TL_SIZES.includes(k) ? '' : 'disabled'}>${k}на${k}${TL_SIZES.includes(k) ? '' : ' · скоро'}</button>`).join('')}</div></div>
     <div class="card"><h3>Напарники · ${inv.length + pros.length + 1} из ${z}</h3><div class="dim">Игроки из твоего региона.${can ? ' Ты выиграл главную командную лигу — можно звать и профи своего региона.' : ' Свободные места займут случайные бойцы.'}</div>
       ${mates.length ? `<div class="invrow">${mates.map(h => `<button class="invp ${inv.includes(h) ? 'on' : ''}" data-a="ttinv" data-v="${h}" ${!inv.includes(h) && full ? 'disabled' : ''}><span class="ava">${faceImg(G.players[h].face)}</span>${esc(G.players[h].nick)}</button>`).join('')}</div>` : ''}
@@ -3423,11 +3423,11 @@ function viewCupWin() {
   if (k === 'mo') {
     const it = [[S.wfWon, 'img/trophy/wf.webp', 'Чемпионат мира'], [S.wcWon, 'img/trophy/wc.webp', 'Wild Card'], [S.dhWon ? 1 : 0, 'img/trophy/dh.webp', 'Метеор Фест'], [S.eslWins, 'img/crown.webp', 'Корона Спектров']];
     const med = TIERS.map((t, i) => [S.troph.filter(x => x.n === t.name).length, TIER_SHORT[i], 'medal']).concat(TL_SIZES.map(z => [(S.ttWon || {})[z] || 0, `Командный ${z}на${z}`, 'medal_t' + z]));
-    inner = `<div class="cwttl">Мировые трофеи</div><div class="cwgrid">${it.map(([n, img, t]) => `<div class="cwc ${n ? '' : 'off'}"><img src="${img}" alt="" onerror="this.style.visibility='hidden'"><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>
+    inner = `<div class="cwhead"><img class="cwlogo" src="img/tcup/logo_mo.webp" alt=""><div class="cwttl">Мировые трофеи</div></div><div class="cwgrid">${it.map(([n, img, t]) => `<div class="cwc ${n ? '' : 'off'}"><img src="${img}" alt="" onerror="this.style.visibility='hidden'"><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>
       <div class="cwttl" style="margin-top:3cqw">Медали за турниры</div><div class="cwgrid m4">${med.map(([n, t, img]) => `<div class="cwc ${n ? '' : 'off'}"><img src="img/tcup/${img}.webp" alt=""><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>`;
   } else {
     const z = +k, wins = (G.tcups && G.tcups[z] || []).filter(c => c.mem.some(x => x.h === hi)), last = (G.tcups && G.tcups[z] || [])[0], show = wins[0] || last;
-    inner = `<div class="cwttl">Лига ${z}на${z}</div><img class="cwcel" src="img/tcup/celebrate_${z}.webp" alt=""><img class="cwcup" src="img/tcup/cup_${z}.webp" alt="">
+    inner = `<div class="cwhead"><img class="cwlogo" src="img/tcup/logo_${z}.webp" alt=""><div class="cwttl">Лига ${z}на${z}</div></div><img class="cwcel" src="img/tcup/celebrate_${z}.webp" alt=""><img class="cwcup" src="img/tcup/cup_${z}.webp" alt="">
       ${show ? `<div class="dim" style="text-align:center">${wins.length ? `Твой кубок${wins.length > 1 ? ' ×' + wins.length : ''} · сезон ${show.season}` : `Кубок ещё не твой. Действующий чемпион · сезон ${show.season}`}</div><div class="cwteam">${show.logo ? `<img class="tlogo" src="img/team/${show.logo}.webp" alt="">` : ''}<b>${esc(show.name)}</b></div>
         <div class="cwmem">${show.mem.map(x => `<div><span class="ava">${faceImg(x.face)}</span><small>${flagOf(x.c)} ${esc(x.n)}</small></div>`).join('')}</div>` : '<div class="dim" style="text-align:center">Кубок ещё никто не выиграл.</div>'}`;
   }
