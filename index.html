@@ -3121,7 +3121,8 @@ function lgStartTurn() {   // ход лиг: после того как все �
   tlEnsure();
   for (const z of TL_SIZES) {   // командные лиги: этап — в свою неделю
     const L = G.tlg[z]; if (!L) continue;
-    if (L.phase === 'reg' && G.week >= L.start) tlOpen(L);
+    if (z === 3 && L.phase === 'reg' && L.start == null) { const L2 = G.tlg[2]; if (L2 && L2.phase === 'end' && L2.season === L.season) { L.start = G.week + 2; G.players.forEach(H => logTo(H, `Лига 2на2 окончена. Лига 3на3 стартует в неделю ${L.start} — регистрация в Бюро.`)); } }   // 3на3 — после окончания 2на2
+    if (L.phase === 'reg' && L.start != null && G.week >= L.start) tlOpen(L);
     const b = L.sch && Object.keys(L.sch).find(k => L.sch[k] === G.week);
     if (L.phase !== 'reg' && L.phase !== 'end' && b) { L.blk = b; L.left = 99; G.lq.push('tl' + z); }
   }
@@ -3164,7 +3165,7 @@ function lgAfterGame(L, m) {
 }
 
 // ---------- командные режимы 2на2 / 3на3: матч — серия игр, игра — «все против всех» по очереди: победитель остаётся, каждый бой с полного ХП ----------
-const TL_SIZES = [2], TL_N = 100, TL_GAME = 150, TL_PRIZE = { 1: 3000, 2: 1500, 3: 800, 5: 400 }, TL_SW = 5;
+const TL_SIZES = [2, 3], TL_N = 100, TL_GAME = 150, TL_PRIZE = { 1: 3000, 2: 1500, 3: 800, 5: 400 }, TL_SW = 5;
 const TL_COL = ['#7C8496', '#3B82F6', '#EF4444', '#22C55E', '#EAB308', '#A855F7'];
 const TL_SCH = { K: 0, SW: 3, PI: 5, QF: 6, SF: 7, F: 8 };   // недели этапов от старта
 const TL_STAGE = { K1: 'Этап 1 · отбор · 100 → 50', K2: 'Этап 1 · отбор · 50 → 25', PI: 'Плей-ин', QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал' };
@@ -3286,7 +3287,7 @@ function tlEnsure() {
     const L = G.tlg[z];
     if (!L || (L.phase === 'end' && L.season !== seasonNo())) {
       if (L) G.tlPrev[z] = L;
-      G.tlg[z] = { team: true, r: 'tl' + z, size: z, title: `Лига ${z}на${z}`, season: seasonNo(), phase: 'reg', start: G.week + 3, reg: [], col: {}, teams: [], M: [], cur: null, left: 0, wsr: 0, bye: {} };
+      G.tlg[z] = { team: true, r: 'tl' + z, size: z, title: `Лига ${z}на${z}`, season: seasonNo(), phase: 'reg', start: z === 2 ? G.week + 3 : null, reg: [], col: {}, teams: [], M: [], cur: null, left: 0, wsr: 0, bye: {} };
     }
   }
 }
@@ -3427,7 +3428,7 @@ function tlCardHtml() {   // карточка в Бюро
   const tabs = `<div class="row" style="flex-wrap:nowrap;gap:6px;margin:6px 0">${[2, 3].map(k => `<button class="btn ${k === z ? 'here' : ''}" style="margin:0" data-a="tlz" data-v="${k}" ${TL_SIZES.includes(k) ? '' : 'disabled'}>${k}на${k}${TL_SIZES.includes(k) ? '' : ' · скоро'}</button>`).join('')}</div>`;
   if (!L) return `<div class="card"><h3>Командные лиги</h3>${tabs}<div class="dim">Скоро.</div></div>`;
   const me = tlMine(L, hi);
-  const st = L.phase === 'reg' ? `Регистрация открыта. Этап 1 — неделя ${L.start}, в ход лиг. ${L.reg.length ? 'Записались: ' + L.reg.map(h => esc(G.players[h].nick)).join(', ') + '.' : ''}`
+  const st = L.phase === 'reg' ? `Регистрация открыта. ${L.start != null ? `Этап 1 — неделя ${L.start}, в ход лиг.` : 'Стартует через 2 недели после окончания Лиги 2на2.'} ${L.reg.length ? 'Записались: ' + L.reg.map(h => esc(G.players[h].nick)).join(', ') + '.' : ''}`
     : L.phase === 'end' ? `Турнир сезона ${L.season} окончен. Новый — в следующем сезоне.` : `Идёт турнир: ${tlStageName(L.M.length ? L.M[L.M.length - 1].st : 'K1')}.${me >= 0 ? ` <b class="gold">Твоя команда: ${esc(L.teams[me].name)}</b>` : ''}`;
   return `<div class="card"><img class="evlogo sm" src="img/tcup/logo_${z}.webp" alt=""><h3>Командные лиги</h3>${tabs}<div class="dim">Главный турнир ${z}на${z} раз в сезон: 100 команд, профи всех регионов и рандомы. Регистрация бесплатная и не тратит действие.</div>
     <div style="margin-top:6px">${st}</div>${cup ? `<div class="dim" style="margin-top:4px">Действующий чемпион: ${esc(cup.name)} (${cup.mem.map(x => esc(x.n)).join(', ')})</div>` : ''}
@@ -4732,7 +4733,7 @@ const MECH = [
   ['Крипта и медийность', 'Крипта — деньги Спектров. Её дают турниры, лиги, миссии и события. Медийность умножает всю заработанную крипту, до ×2. Её поднимают машина, интервью и подкасты, дорогие артефакты и реклама. Компромат её снижает.'],
   ['Бой', 'Бой пошаговый. Каждый ход — удар, защита, способность, Удар Цы или суперспособность (нужно 70 Цы). Защита бесплатна, даёт Цы и готовит контрудар. Расходники работают один раз за бой и запрещены в матчах лиги.'],
   ['Миссии', 'Миссии берут в Бюро. Поручения D — мелкая работа за 1 действие и немного крипты. Ранг C длится 1 неделю, B — 2, A — 3, S — 2. Можно идти одному или втроём с игроками своего региона. Шанс успеха C–A зависит от средней силы отряда. В миссии S в конце ждёт босс: бойцы выходят по очереди, урон по боссу сохраняется, успех — только если босс повержен. За миссии C–S даётся рейтинг.'],
-  ['Командные режимы', 'Командный матч — серия игр. В игре бойцы команд выходят по очереди: победитель остаётся, следующий бой начинается заново с полного ХП и Цы. Игра кончается, когда у команды выбыли все бойцы. Раз в сезон проходит Лига 2на2 на 100 команд: запись в Бюро, команды собирает драфт. В Бюро есть и региональные командные турниры на 8 команд: победа поднимает силу.'],
+  ['Командные режимы', 'Командный матч — серия игр. В игре бойцы команд выходят по очереди: победитель остаётся, следующий бой начинается заново с полного ХП и Цы. Игра кончается, когда у команды выбыли все бойцы. Раз в сезон проходит Лига 2на2 на 100 команд, а после неё — Лига 3на3 по тем же правилам: запись в Бюро, команды собирает драфт. В Бюро есть и региональные командные турниры на 8 команд: победа поднимает силу.'],
   ['Кафе Бюро', 'В Бюро есть кафе: из 10 блюд каждую неделю доступны 3. Блюдо даёт бонус к силе на один следующий бой — от +0,5 до +3, чем сытнее, тем дороже. Бонус еды складывается со всеми другими бонусами. Можно купить все три блюда, но действует только самое сытное: больше +3 от еды получить нельзя.'],
   ['Теневые услуги', 'В магазине в разделе «Особое»: грязные контракты для вторжений без последствий, лишнее действие на текущую неделю, вброс компромата и реклама любому Спектру, ставки на победу Спектра в турнире. В Бюро стоит игровой автомат.']
 ];
@@ -5502,7 +5503,7 @@ function act(a, v) {
     case 'tfgo': { const L = G.lq && lgQ(G.lq[0]); if (!L || !L.team || L.pre !== 'tform') return; tlBuild(L); lgProcess(); break; }
     case 'toffer': { const L = G.lq && lgQ(G.lq[0]); if (!L || !L.team || L.pre !== 'toffer') return; tlOfferAns(L, v === '1'); lgProcess(); break; }
     case 'tlz': S.tlz = +v; break;
-    case 'tlreg': { tlEnsure(); const L = G.tlg[S.tlz || 2], hi = heroIdx(S); if (!L || L.phase !== 'reg') return; const k = L.reg.indexOf(hi); if (k >= 0) L.reg.splice(k, 1); else L.reg.push(hi); logMsg(k >= 0 ? `Регистрация на турнир «${L.title}» отменена.` : `Ты записан на турнир «${L.title}». Этап 1 — неделя ${L.start}.`); break; }
+    case 'tlreg': { tlEnsure(); const L = G.tlg[S.tlz || 2], hi = heroIdx(S); if (!L || L.phase !== 'reg') return; const k = L.reg.indexOf(hi); if (k >= 0) L.reg.splice(k, 1); else L.reg.push(hi); logMsg(k >= 0 ? `Регистрация на турнир «${L.title}» отменена.` : `Ты записан на турнир «${L.title}». ${L.start != null ? `Этап 1 — неделя ${L.start}.` : 'Старт — после Лиги 2на2.'}`); break; }
     case 'tlview': S.tltab = 'm'; S.view = 'tleague'; break;
     case 'tltab': S.tltab = v; break;
     case 'tlpeek': G.lpeek = v || null; break;
