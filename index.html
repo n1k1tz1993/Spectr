@@ -1622,10 +1622,26 @@ function relocHand(H = S) {
 }
 // бонусы складываются, но суммарно не больше EFF_CAP; штрафы складываются без ограничения
 const EFF_CAP = 5;
+// ---------- Кафе Бюро: 10 блюд, в неделю доступны 3; бонус на один следующий бой, складывается со всем, от еды берётся только самый большой ----------
+const FOOD = [
+  { k: 'ramen', n: 'Острый рамен', d: 'Бульон на рудных специях. Согревает и бодрит.', v: 0.5 },
+  { k: 'dumpl', n: 'Пельмени «Северные»', d: 'Ручная лепка, сметана, укроп. Сытно и по-домашнему.', v: 0.75 },
+  { k: 'burger', n: 'Бургер чемпиона', d: 'Двойная котлета и соус, который подают на финалах.', v: 1 },
+  { k: 'tacos', n: 'Тако «Метеор»', d: 'Хрустящая лепёшка и мясо, обжаренное на камне метеорита.', v: 1.25 },
+  { k: 'bibim', n: 'Пибимпап с яйцом', d: 'Корейская классика: рис, овощи и много энергии.', v: 1.5 },
+  { k: 'steak', n: 'Стейк средней прожарки', d: 'Белок и железо перед тяжёлым боем.', v: 1.75 },
+  { k: 'sushi', n: 'Сет «Дракон»', d: 'Роллы с угрём и икрой летучей рыбы. Лёгкость и концентрация.', v: 2 },
+  { k: 'duck', n: 'Утка по-пекински', d: 'Хрустящая корочка, блинчики и соус хойсин. Еда победителей.', v: 2.5 },
+  { k: 'crab', n: 'Королевский краб', d: 'Свежий улов с Камчатки. Дорого, но сила того стоит.', v: 2.75 },
+  { k: 'feast', n: 'Пир Спектра', d: 'Фирменное блюдо шефа: всего понемногу и с рудной искрой.', v: 3 },
+];
+const foodCost = f => Math.round(15 + f.v * 20);   // как расходники: 25–75
+const foodLvl = f => FOOD.indexOf(f) + 1;   // сытость 1–10 вместо чисел силы
+function cafeList(r) { G.cafe = G.cafe || {}; const C = G.cafe[r]; if (C && C.week === G.week) return C.list; const list = shuffle(FOOD.map(f => f.k)).slice(0, 3); G.cafe[r] = { week: G.week, list }; return list; }
 const effSum = (H, withGame) => { let pos = 0, neg = 0; for (const e of H.effects) if ((e.game ? withGame : e.from <= H.turn && H.turn <= e.to)) { if (e.v > 0) pos += e.v; else neg += e.v; } return Math.min(EFF_CAP, pos) + neg; };
-const heroPower = H => H.power + itemBonus(H) + effSum(H, true) - (H.jetlag ? 5 : 0);
-const gameBonus = H => effSum(H, true) - effSum(H, false);   // прибавка от бонусов «на следующий бой» (с учётом потолка)
-const useGame = f => { if (f && f.H) f.H.effects = f.H.effects.filter(e => !e.game); };   // бой сыгран — бонус на бой израсходован
+const heroPower = H => H.power + itemBonus(H) + effSum(H, true) + (H.food || 0) - (H.jetlag ? 5 : 0);
+const gameBonus = H => effSum(H, true) - effSum(H, false) + (H.food || 0);   // прибавка от бонусов «на следующий бой» (с учётом потолка)
+const useGame = f => { if (f && f.H) { f.H.effects = f.H.effects.filter(e => !e.game); if (f.H.food) { f.H.food = 0; f.H.foodN = null; } } };   // бой сыгран — бонус на бой израсходован
 const heroF = (H, f) => Object.defineProperty(f, 'H', { value: H, enumerable: false });   // ссылка на героя (не сохраняется)
 const effPower = () => heroPower(S);
 const addEffTo = (H, v, d) => { if (d === 'game') { H.effects.push({ v, game: true }); return; } const from = d === 'next' ? H.turn + 1 : H.turn; H.effects.push({ v, from, to: d === 'two' ? from + 1 : from }); };
@@ -3992,6 +4008,15 @@ function bossAct(a) {
   startFightAB(`Миссия «${M.t}» · ${bossOf(Bx.k, Bx.v).n}`, hf, bf, won => { bossDuelDone(Bx, won, bf.hp); S.view = 'mboss'; save(); });
 }
 const bossCard = (k, small, v) => { const b = bossOf(k, v); return `<div class="bossc ${small ? 'sm' : ''}"><img src="img/boss/${b.k}.webp" alt=""><div><div class="bosst">BOSS · ${b.t}</div><b>${b.n}</b><div class="dim">${b.d}</div></div></div>`; };
+function viewCafe() {
+  const L = cafeList(S.region).map(k => FOOD.find(f => f.k === k));
+  return wrap(`<div class="card"><img src="img/cafe.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
+      <h2 style="margin-top:10px">Кафе Бюро · ${esc(REGIONS[S.region].name)}</h2><div class="dim">Сытный обед даёт бонус к силе на один следующий бой и складывается со всеми другими бонусами. От еды действует только самое сытное блюдо. Меню меняется каждую неделю. Покупка не тратит действие.</div>
+      ${S.food ? `<div class="bonus nt" style="margin-top:8px">🍽 Ты пообедал: ${esc(S.foodN || 'блюдо')} — бонус на следующий бой</div>` : ''}</div>
+    ${L.map(f => { const c = foodCost(f), worse = (S.food || 0) >= f.v;
+      return `<div class="card srow consrow"><span class="carrow"><img class="consico" src="img/cafe/${f.k}.webp" alt=""><span><b>${f.n}</b><div class="dim" style="font-size:12px">${f.d}</div><div class="gold" style="font-size:12px">Сытость: ${foodLvl(f)}/10</div>${S.food && S.foodN === f.n ? '<div class="plus" style="font-size:11px">✓ Уже съедено</div>' : worse && S.food ? '<div class="dim" style="font-size:11px">Ты уже сытнее — бонус не вырастет</div>' : ''}</span></span>
+        <button class="btn cbtn" data-a="eat" data-v="${f.k}" ${(S.coins || 0) < c ? 'disabled' : ''}>${coinHtml(c)}</button></div>`; }).join('')}`);
+}
 function viewMboss() {
   const M = S.mis, Bx = M && G.boss && G.boss[M.id]; if (!Bx) { S.view = 'mres'; return viewMres(); }
   const b = bossOf(Bx.k, Bx.v), pct = Math.round(Bx.hp / Bx.max * 100);
@@ -4145,7 +4170,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { cafe: ['Кафе', 'toBureau'], mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub">${t[1] ? `<button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button>` : ''}<h1>${t[0]}</h1></div>` : ''; };
@@ -4704,6 +4729,7 @@ const MECH = [
   ['Бой', 'Бой пошаговый. Каждый ход — удар, защита, способность, Удар Цы или суперспособность (нужно 70 Цы). Защита бесплатна, даёт Цы и готовит контрудар. Расходники работают один раз за бой и запрещены в матчах лиги.'],
   ['Миссии', 'Миссии берут в Бюро. Поручения D — мелкая работа за 1 действие и немного крипты. Ранг C длится 1 неделю, B — 2, A — 3, S — 2. Можно идти одному или втроём с игроками своего региона. Шанс успеха C–A зависит от средней силы отряда. В миссии S в конце ждёт босс: бойцы выходят по очереди, урон по боссу сохраняется, успех — только если босс повержен. За миссии C–S даётся рейтинг.'],
   ['Командные режимы', 'Командный матч — серия игр. В игре бойцы команд выходят по очереди: победитель остаётся, следующий бой начинается заново с полного ХП и Цы. Игра кончается, когда у команды выбыли все бойцы. Раз в сезон проходит Лига 2на2 на 100 команд: запись в Бюро, команды собирает драфт. В Бюро есть и региональные командные турниры на 8 команд: победа поднимает силу.'],
+  ['Кафе Бюро', 'В Бюро есть кафе: из 10 блюд каждую неделю доступны 3. Блюдо даёт бонус к силе на один следующий бой — от +0,5 до +3, чем сытнее, тем дороже. Бонус еды складывается со всеми другими бонусами. Можно купить все три блюда, но действует только самое сытное: больше +3 от еды получить нельзя.'],
   ['Теневые услуги', 'В магазине в разделе «Особое»: грязные контракты для вторжений без последствий, лишнее действие на текущую неделю, вброс компромата и реклама любому Спектру, ставки на победу Спектра в турнире. В Бюро стоит игровой автомат.']
 ];
 function viewMech() {
@@ -4784,6 +4810,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="Корона Спектров"><img src="img/nav/crown.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="Корона Спектров закрыта"><img src="img/nav/s_crown_lock.webp" alt=""></div>'}
     </div>
     <div class="card"><button class="imgbtn" data-a="missions" aria-label="Миссии Бюро" style="margin-top:0"><img src="img/nav/missions.webp" alt=""></button></div>
+    <div class="card"><button class="imgbtn" data-a="cafe" aria-label="Кафе" style="margin-top:0"><img src="img/nav/cafe.webp" alt=""></button></div>
     <div class="card"><button class="imgbtn" data-a="slot" aria-label="Игровой автомат" style="margin-top:0"><img src="img/nav/slot.webp" alt=""></button></div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
     <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="blgb ${i === r ? 'on' : ''}" data-a="blg" data-v="${i}" aria-label="${LSHORT[i]}" title="${LSHORT[i]}"><img src="img/logo_${i}.webp" alt=""></button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}${tlCardHtml()}</div></div>`);
@@ -4887,7 +4914,7 @@ function viewMenu() {
       <a href="https://vk.ru/n1k1tz1993" target="_blank" rel="noopener">VK · vk.ru/n1k1tz1993</a>
       <a href="https://t.me/renznek" target="_blank" rel="noopener">Telegram · @renznek</a>
       <a href="https://instagram.com/renznek_" target="_blank" rel="noopener">Instagram · renznek_</a></div>
-    <div class="dim" id="offl" style="text-align:center;margin-top:6px;font-size:12px">${window.OFFL || ""}</div><div class="dim" style="text-align:center;margin:6px 0 24px;letter-spacing:.06em">Версия 1.00 Release</div>`;
+    <div class="dim" id="offl" style="text-align:center;margin-top:6px;font-size:12px">${window.OFFL || ""}</div><div class="dim" style="text-align:center;margin:6px 0 24px;letter-spacing:.06em">Версия 2.00</div>`;
 }
 const ABOUT_BTN = [[613, 1340, 960, 1440], [200, 1355, 825, 1465], [200, 1355, 825, 1465]];   // кнопка «Дальше/Завершить» на слайде (из 1024×1536)
 function viewAbout(k) {
@@ -5248,7 +5275,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${AUTOB ? ibtn('lgsim', 'lsim', '', 'Досчитать матч') : ''}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { mboss: viewMboss, myteam: viewMyTeam, tleague: viewTLeague, ttour: viewTTour, ttr: viewTTR, cupwin: viewCupWin, soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { cafe: viewCafe, mboss: viewMboss, myteam: viewMyTeam, tleague: viewTLeague, ttour: viewTTour, ttr: viewTTR, cupwin: viewCupWin, soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -5526,6 +5553,9 @@ function act(a, v) {
     case 'mstart': misStart(+v); break;
     case 'bfight': case 'bsim': bossAct(a); break;
     case 'bdone': S.view = 'mres'; break;
+    case 'cafe': S.view = 'cafe'; break;
+    case 'eat': { const f = FOOD.find(x => x.k === v); if (!f || !cafeList(S.region).includes(v)) return; const c = foodCost(f); if ((S.coins || 0) < c) return; S.coins -= c;
+      if (f.v > (S.food || 0)) { S.food = f.v; S.foodN = f.n; } logMsg(`Кафе: ${f.n}. Бонус на следующий бой.`); break; }
     case 'mbeast': { const M = S.mis; if (!M || M.beast !== 1) return; const p = Math.max(1, effPower() - gameBonus(S) - rnd(BEAST.gapLo, BEAST.gapHi)), bk = M.bk != null ? M.bk : rnd(0, BEASTS.length - 1);
       const opp = fighter('Обезумевший зверь', p, npcRating(p), false, { name: 'Яростный натиск', desc: 'Зверь бросается в бешеную атаку, не зная ни страха, ни боли!', icon: 10 }, `img/beast/${bk}.webp`); opp.beast = true;
       startFight(`Миссия «${M.t}» · зверь`, opp, won => { M.beast = 2; const n = won ? earn(S, BEAST.coins) : 0; logMsg(`Зверь на миссии «${M.t}»: ${won ? `победа, +${n} крипты.` : 'поражение.'}`); histAdd(`Зверь на миссии · ${won ? 'победа' : 'поражение'}`); S.view = 'mres'; save(); });
