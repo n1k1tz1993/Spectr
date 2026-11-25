@@ -1047,6 +1047,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .autot{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit}.autot>span{flex:1}.sw{flex:0 0 auto;width:48px;height:28px;border-radius:14px;background:#3a4256;position:relative;transition:background .2s}.sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s}.sw.on{background:var(--gold)}.sw.on::after{left:23px}
 .dpick{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.dpick .btn span{min-width:0;overflow:hidden;text-overflow:ellipsis}.dpick .btn{display:flex;align-items:center;gap:10px;text-align:left;margin:0}.dpick .tlogo{width:34px;height:34px}
 .media{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px}.media b{color:var(--gold);font-size:15px}.media small{background:var(--gold);color:#1a1200;border-radius:6px;padding:1px 6px;font-weight:700}
+.mis{position:relative;border-left:4px solid}.misrk{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#10131c}.mis h3{padding-right:44px}.misrow{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-top:8px}.misch{position:relative;height:26px;border-radius:8px;background:var(--nest);overflow:hidden;margin-top:8px}.misch i{position:absolute;inset:0 auto 0 0}.misch b{position:relative;display:block;line-height:26px;text-align:center;font-size:13px;text-shadow:0 1px 2px #000}.misout{display:flex;flex-direction:column;gap:6px;margin:12px 0;font-size:15px}.misout div{background:var(--nest);border-radius:8px;padding:8px}
 .ibstack .ibtn{margin:8px 0 0;max-width:none}   /* «Надеть/Снять» над «Имя», одной высоты — шрифт одинаковый */
 .ibsz{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}.ibsz .ibtn{margin:0}
 .evlogo{display:block;width:min(260px,70%);height:auto;margin:0 auto 8px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}.evlogo.sm{width:min(150px,40%)}
@@ -1463,7 +1464,7 @@ const coinHtml = (n, cls = '') => `<span class="coins ${cls}">${COIN_SVG}<b>${(n
 // машина (лучшая из купленных, без вертолётов) ×1.01–1.30 постоянно · интервью/подкаст +0.20 на эту и следующую неделю · 4 лучших артефакта +0.08/+0.10/+0.14/+0.18
 const MEDIA_MAX = 2, MEDIA_IV = 0.2, MEDIA_ITEMS = { 16: 0.08, 17: 0.10, 18: 0.14, 19: 0.18 };
 const MEDIA_CARS = CARS.filter(x => !x.heli);   // вертолёты медийность не дают: у них +1 действие и быстрые миссии
-const HELI_TOP = CARS.reduce((b, x, j) => x.heli && (b < 0 || x.cost > CARS[b].cost) ? j : b, -1);   // самый дорогой вертолёт: миссии ранга S проходят за 1 неделю
+const HELI_TOP = CARS.reduce((b, x, j) => x.heli && (b < 0 || x.cost > CARS[b].cost) ? j : b, -1);   // самый дорогой вертолёт: миссии ранга A проходят за 1 неделю
 const hasHeliTop = H => (H.cars || []).includes(HELI_TOP);
 const mediaCar = H => { const c = (H.cars || []).map(j => CARS[j]).filter(x => x && !x.heli); if (!c.length) return 0; const lo = Math.min(...MEDIA_CARS.map(x => x.cost)), hi = Math.max(...MEDIA_CARS.map(x => x.cost)), best = Math.max(...c.map(x => x.cost)); return 0.01 + (best - lo) / (hi - lo) * 0.29; };
 const mediaIv = H => H.mediaTo != null && H.mediaTo >= H.turn ? MEDIA_IV : 0;
@@ -1532,6 +1533,7 @@ function endTurn() {
   let roundDone = true;
   if (G && G.mode === 'coop') { G.cur = (G.cur + 1) % G.players.length; S = G.players[G.cur]; G.handoff = true; roundDone = G.cur === 0; }   // передать телефон
   if (G && roundDone) lgStartTurn();   // все сходили — играют лиги
+  misWeekStart(S);   // герой на миссии: неделя пропускается или пора забрать награду
   save();
 }
 // у каждого действия есть польза. Длительность: game — следующий бой, turn — до конца недели, next — следующая неделя, two — эта и следующая неделя
@@ -3344,6 +3346,105 @@ function viewParcel() {
     ${ibtn('receive', 'mget', '', 'Получить посылку')}${postFor(G.cur).length > 1 ? `<div class="dim" style="margin-top:6px">Ещё посылок: ${postFor(G.cur).length - 1}</div>` : ''}</div>`);
 }
 const boostWord = b => b < 1.6 ? 'Слабое усиление' : b < 3.4 ? 'Заметное усиление' : b < 5.6 ? 'Сильное усиление' : b < 7.6 ? 'Мощное усиление' : 'Легендарное усиление';   // без чисел
+
+// ---------- Миссии Бюро: ранги C / B / A, 1 / 2 / 3 недели; 1–3 Спектра одного региона; шанс — от средней силы отряда ----------
+const MIS_RANK = {
+  C: { w: 1, d: 34, cap: 0.97, coins: 150, cons: 0, win: [2, 'turn'], fail: null, col: '#7FD6A0' },
+  B: { w: 2, d: 48, cap: 0.88, coins: 450, cons: 1, win: [3, 'two'], fail: [-3, 'turn'], col: '#6FB8FF' },
+  A: { w: 3, d: 62, cap: 0.75, coins: 1100, cons: 2, win: [5, 'two'], fail: [-5, 'two'], col: '#FFB347' },
+};
+const MIS_RT = 10, MIS_MAX = 3;
+const MIS_POOL = {
+  C: [['Пропавший курьер', 'Курьер Бюро с ампулами руды не вышел на связь. Найди его в городе и доставь груз.'], ['Шум в метро', 'В тоннелях кто-то сливает Цы из кабелей. Проверь, что там творится.'], ['Охрана выставки', 'Выставка осколков метеорита. Нужно просто постоять рядом — и не дать ничему случиться.'], ['Спарринг для новобранцев', 'Бюро просит показать новичкам пару приёмов. Без травм, пожалуйста.'], ['Сбежавший питомец', 'Ручной лис коллекционера наглотался рудной пыли и светится на всю улицу. Поймай его.']],
+  B: [['Чёрный рынок осколков', 'В порту торгуют краденой рудой. Выследи продавцов и сдай их Бюро.'], ['Сопровождение груза', 'Колонна с осколками идёт через весь регион. Довези без потерь.'], ['Дикие Спектры', 'Группа незарегистрированных Спектров громит склады. Убеди их сдаться — или заставь.'], ['Шпион в штабе', 'Кто-то сливает расписание турниров. Найди утечку в Бюро.'], ['Аномалия Цы', 'В пригороде скачет фон Цы, птицы падают с неба. Найди источник.']],
+  A: [['Кратер', 'Свежий кратер в горах. Первыми к нему должны дойти люди Бюро — не контрабандисты.'], ['Ядро метеорита', 'Найдено ядро метеорита размером с кулак. Его хотят все. Доставь его в Бюро живым.'], ['Охота на изгоя', 'Бывший чемпион сошёл с ума от руды. Его нужно остановить, пока он не разрушил квартал.'], ['Лаборатория в тайге', 'Подпольная лаборатория делает искусственную руду. Закрой её.'], ['Буря Цы', 'Над столицей собирается буря Цы. Нужен отряд, который сможет её развеять.']],
+};
+function misList(r) {   // миссии региона на эту неделю (обновляются каждую неделю)
+  G.mis = G.mis || {}; const M = G.mis[r];
+  if (M && M.week === G.week) return M.list;
+  const list = Object.keys(MIS_RANK).map(rk => { const [t, d] = MIS_POOL[rk][rnd(0, MIS_POOL[rk].length - 1)]; return { rk, t, d, taken: false }; });
+  G.mis[r] = { week: G.week, list }; return list;
+}
+const misChance = (rk, pw) => { const R = MIS_RANK[rk]; return Math.max(0.03, Math.min(R.cap, 0.5 + (pw - R.d) * 0.045)); };
+const misWeeks = (rk, party) => rk === 'A' && party.some(h => hasHeliTop(G.players[h])) ? 1 : MIS_RANK[rk].w;   // Atlas T90 — миссия A за 1 неделю
+const misBusy = H => H.mis ? 'уже на миссии' : H.draft != null ? 'стоит в драфте' : H.league != null ? 'играет в лиге' : '';
+const misPartyPw = party => party.reduce((a, h) => a + heroPower(G.players[h]), 0) / party.length;
+function misStart(i) {
+  const L = misList(S.region), m = L[i]; if (!m || m.taken || misBusy(S)) return;
+  const party = [G.cur, ...(S.misInv || []).filter(h => G.players[h] && G.players[h].region === S.region && !misBusy(G.players[h]))].slice(0, MIS_MAX);
+  const pw = misPartyPw(party), ch = misChance(m.rk, pw), ok = Math.random() < ch, w = misWeeks(m.rk, party);
+  m.taken = true;
+  const id = Date.now() + '' + rnd(0, 999);
+  party.forEach(h => { const H = G.players[h];
+    H.mis = { id, rk: m.rk, t: m.t, ok, left: w + 1 + (h > G.cur ? 1 : 0), party: party.slice(), ch, roll: Math.random() };   // left: остаток этой недели + w полных; кто ещё не ходил в этом круге — +1, чтобы отряд вернулся вместе
+    if (h !== G.cur) logTo(H, `${S.nick} позвал тебя на миссию «${m.t}» (ранг ${m.rk}). Ты на миссии ${w} ${weekWord(w)}.`); });
+  S.actions = 0; S.misInv = []; clearJet();
+  logMsg(`Миссия «${m.t}» (ранг ${m.rk}): отряд выдвинулся. Вернёшься через ${w} ${weekWord(w)}.`);
+  S.view = 'mwait'; save();
+}
+const weekWord = n => n === 1 ? 'неделю' : n < 5 ? 'недели' : 'недель';
+function misResolve(H) {   // награда по возвращении: каждый в отряде получает одно и то же
+  const M = H.mis, R = MIS_RANK[M.rk], out = [];
+  H.rating += MIS_RT; out.push(`+${MIS_RT} рейтинга`);
+  if (M.ok) {
+    out.push(`+${earn(H, R.coins)} крипты`);
+    const ks = shuffle(CONS.map(c => c.k)).slice(0, R.cons);
+    ks.forEach(k => { H.cons = H.cons || {}; H.cons[k] = Math.min(CONS_MAX, consOf(H, k) + 1); out.push(CONS.find(c => c.k === k).n); });
+    addEffTo(H, ...R.win); out.push(capF(effTxt(...R.win)));
+  } else {
+    if (R.fail && M.roll < 0.5) { addEffTo(H, ...R.fail); out.push(capF(effTxt(...R.fail))); }
+    else if (M.roll > 0.8) { const k = CONS[rnd(0, CONS.length - 1)].k; H.cons = H.cons || {}; H.cons[k] = Math.min(CONS_MAX, consOf(H, k) + 1); out.push(CONS.find(c => c.k === k).n + ' (нашёлся по дороге)'); }
+    else if (M.roll > 0.6) out.push(`+${earn(H, Math.round(R.coins * 0.2))} крипты (утешительные)`);
+  }
+  histTo(H, H.region, `Миссия «${M.t}» (${M.rk}) · ${M.ok ? 'успех' : 'провал'}`);
+  logTo(H, `Миссия «${M.t}»: ${M.ok ? 'успех' : 'провал'}. ${out.join(', ')}.`);
+  H.mis = null; return { ...M, out };
+}
+function misWeekStart(H) {   // начало недели героя на миссии: ждать или забирать награду
+  if (!H.mis) return;
+  if (H.mis.left > 0) H.mis.left--;
+  if (H.mis.left > 0) { H.actions = 0; H.view = 'mwait'; } else H.view = 'mres';   // неделя возвращения — обычная, с действиями
+}
+function viewMissions() {
+  const L = misList(S.region), busy = misBusy(S), inv = (S.misInv || []).filter(h => G.players[h]);
+  const party = [G.cur, ...inv], pw = misPartyPw(party);
+  const mates = G.players.map((H, h) => h).filter(h => h !== G.cur && G.players[h].region === S.region);
+  return wrap(`<div class="card"><img src="img/mis/menu.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
+    <h2 style="margin-top:10px">Миссии Бюро · ${esc(REGIONS[S.region].name)}</h2>
+    <div class="dim">Отряд уходит на задание и пропускает недели: ранг C — 1, B — 2, A — 3. За любую миссию +${MIS_RT} рейтинга. Шанс успеха зависит от средней силы отряда. Миссии обновляются каждую неделю.</div>
+    ${busy ? `<div class="minus" style="margin-top:8px">Нельзя: ты ${busy}.</div>` : ''}</div>
+    ${G.players.length > 1 ? `<div class="card"><h3>Позвать на миссию</h3><div class="dim">До ${MIS_MAX - 1} Спектров из твоего региона. Все получат те же награды. Сила считается средняя.</div>
+      <div class="invrow">${mates.length ? mates.map(h => { const H = G.players[h], why = misBusy(H); return `<button class="invp ${inv.includes(h) ? 'on' : ''}" data-a="minv" data-v="${h}" ${why ? 'disabled style="opacity:.45"' : ''}><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}${why ? `<br><small>${why}</small>` : ''}</button>`; }).join('') : '<div class="dim">В регионе нет других игроков.</div>'}</div>
+      <div class="dim" style="margin-top:6px">Отряд: ${party.map(h => esc(G.players[h].nick)).join(', ')} · средняя сила ${Math.round(pw)}</div></div>` : ''}
+    ${L.map((m, i) => { const R = MIS_RANK[m.rk], ch = misChance(m.rk, pw), w = misWeeks(m.rk, party);
+      return `<div class="card mis" style="border-color:${R.col}"><div class="misrk" style="background:${R.col}">${m.rk}</div>
+        <h3>${esc(m.t)}</h3><div class="dim">${esc(m.d)}</div>
+        <div class="misrow"><span>⏳ ${w} ${weekWord(w)}</span><span>🏆 ${R.coins}+ крипты${R.cons ? ` · расходники ×${R.cons}` : ''} · бонус к силе</span></div>
+        <div class="misch"><i style="width:${Math.round(ch * 100)}%;background:${ch > 0.66 ? '#5BD38A' : ch > 0.33 ? '#F3C64B' : '#F0616D'}"></i><b>Шанс успеха: ${Math.round(ch * 100)}%</b></div>
+        ${R.fail ? '<div class="dim" style="font-size:12px">Провал может закончиться штрафом к силе.</div>' : '<div class="dim" style="font-size:12px">Провал — без штрафа.</div>'}
+        ${m.taken ? '<div class="dim" style="text-align:center;margin-top:8px">Миссия уже взята</div>' : ibtn('mstart', 'mstart', i, 'Начать миссию', '', !!busy)}</div>`; }).join('')}${back}`);
+}
+function viewMwait() {
+  const M = S.mis; if (!M) { S.view = 'main'; return viewMain(); }
+  return wrap(`<div class="card" style="text-align:center"><img src="img/mis/menu.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
+    <h2 style="margin-top:10px">На миссии</h2><div class="dim">«${esc(M.t)}» · ранг ${M.rk}${M.party.length > 1 ? ' · отряд: ' + M.party.map(h => esc(G.players[h].nick)).join(', ') : ''}</div>
+    <div class="gold" style="margin-top:8px">${M.left - 1 > 0 ? `После этой недели — ещё ${M.left - 1} ${weekWord(M.left - 1)} на миссии` : 'Возвращение — в начале следующей недели'}</div>
+    <div class="dim" style="margin-top:4px">Пока идёт миссия, недели пропускаются.</div>
+    ${ibtn('next', 'next', '', 'Пропустить неделю')}</div>`);
+}
+function viewMres() {
+  const M = S.mis; if (!M) { S.view = 'main'; return viewMain(); }
+  return wrap(`<div class="card" style="text-align:center"><img src="img/mis/${M.ok ? 'success' : 'fail'}.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
+    <h2 style="margin-top:10px" class="${M.ok ? 'plus' : 'minus'}">${M.ok ? 'Миссия успешна!' : 'Миссия провалена'}</h2>
+    <div class="dim">«${esc(M.t)}» · ранг ${M.rk} · шанс был ${Math.round(M.ch * 100)}%</div>
+    ${ibtn('mclaim', 'mclaim', '', 'Забрать награды')}</div>`);
+}
+function viewMclaim() {
+  const R = S.misRes; if (!R) { S.view = 'main'; return viewMain(); }
+  return wrap(`<div class="card" style="text-align:center"><h2 class="${R.ok ? 'plus' : 'minus'}">${R.ok ? 'Награды за миссию' : 'Итог миссии'}</h2>
+    <div class="misout">${R.out.map(x => `<div>${esc(x)}</div>`).join('')}</div>
+    ${ibtn('continue', 'mdone', '', 'Продолжить')}</div>`);
+}
 function viewNotice() {
   const N = S.notice;
   return wrap(`<div class="card offer">${N.team != null ? `<img class="offlogo" src="img/team/${SEMI[N.team][1]}.webp" alt="">` : ''}<h2>${esc(N.t)}</h2><p style="text-align:left">${esc(N.d)}</p>
@@ -3431,10 +3532,10 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
-const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub"><button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button><h1>${t[0]}</h1></div>` : ''; };
+const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub">${t[1] ? `<button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button>` : ''}<h1>${t[0]}</h1></div>` : ''; };
 const labelOf = c => {
   if (c.k === 'p') return '<div class="bonus plus">Бонус!</div>';
   if (c.k === 'm') return '<div class="bonus minus">Эффект и бонус</div>';
@@ -3941,7 +4042,7 @@ function viewShop() {   // магазин: только названия и це
   return wrap(`<div class="card"><h2>Магазин</h2><div class="dim">Покупки оплачиваются криптой. Рейтинг на покупки не тратится. Жильё меняет вид комнаты, машина встаёт в гараж, артефакты надеваются в инвентаре.</div>
       <div style="margin-top:8px">${coinHtml(S.coins, 'big')}</div></div>
     <div class="card"><h3>Жильё</h3>${ROOMS.map((R, j) => row(R.n, R.cost, ro.includes(j), 'rbuy', j)).join('')}</div>
-    <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате. Самая дорогая машина задаёт медийность — множитель ко всей заработанной крипте. Вертолёты медийность не дают, зато в гараже добавляют действия в неделю.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind + (C2.heli ? ` · +${C2.a} действия в неделю в гараже` + (j === HELI_TOP ? ' · миссии ранга S за 1 неделю' : '') : ' · 📣 медийность ×' + (1 + mediaCar({ cars: [j] })).toFixed(2).replace('.', ',')), carIcon(j))).join('')}</div>
+    <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате. Самая дорогая машина задаёт медийность — множитель ко всей заработанной крипте. Вертолёты медийность не дают, зато в гараже добавляют действия в неделю.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind + (C2.heli ? ` · +${C2.a} действия в неделю в гараже` + (j === HELI_TOP ? ' · миссии ранга A за 1 неделю' : '') : ' · 📣 медийность ×' + (1 + mediaCar({ cars: [j] })).toFixed(2).replace('.', ',')), carIcon(j))).join('')}</div>
     <div class="card"><h3>Расходники</h3><div class="dim">Пригодятся в любом бою.</div>${CONS.map(c => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${c.k}.webp" alt=""><span><b>${esc(c.n)}</b><div class="dim" style="font-size:12px">${esc(c.d)}</div><div class="gold" style="font-size:12px">В запасе: ${consOf(S, c.k)} из ${CONS_MAX}</div></span></span>${consOf(S, c.k) >= CONS_MAX ? '' : `<button class="btn cbtn" data-a="consbuy" data-v="${c.k}" ${(S.coins || 0) < c.cost ? 'disabled' : ''}>${coinHtml(c.cost)}</button>`}</div>`).join('')}</div>
     <div class="card"><h3>Особое</h3><div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/dirty.webp" alt=""><span><b>${DIRTY.n}</b><div class="dim" style="font-size:12px">${DIRTY.d}</div></span></span>${S.dirty ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="dbuy" ${(S.coins || 0) < DIRTY.cost ? 'disabled' : ''}>${coinHtml(DIRTY.cost)}</button>`}</div></div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>`) + navBar();
@@ -4019,6 +4120,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
       ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}${none ? '<div class="dim" style="margin-top:4px;font-size:13px">Действия на неделю закончились.</div>' : ''}
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="Корона Спектров"><img src="img/nav/crown.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="Корона Спектров закрыта"><img src="img/nav/s_crown_lock.webp" alt=""></div>'}
     </div>
+    <div class="card"><button class="imgbtn" data-a="missions" aria-label="Миссии Бюро" style="margin-top:0"><img src="img/nav/missions.webp" alt=""></button></div>
     <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
     <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="blgb ${i === r ? 'on' : ''}" data-a="blg" data-v="${i}" aria-label="${LSHORT[i]}" title="${LSHORT[i]}"><img src="img/logo_${i}.webp" alt=""></button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}</div></div>`);
 }
@@ -4480,7 +4582,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${AUTOB ? ibtn('lgsim', 'lsim', '', 'Досчитать матч') : ''}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -4496,6 +4598,7 @@ function render() {
   if (S.intro && !F) { app.dataset.view = 'intro'; app.innerHTML = viewIntro(); if (lastView !== 'intro' + S.intro) { window.scrollTo(0, 0); lastView = 'intro' + S.intro; } return; }
   if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';
   else if (S.notice && !F && (S.view === 'main' || !S.view)) S.view = 'notice';
+  else if (S.mis && !F && !['mwait', 'mres', 'mclaim'].includes(S.view)) S.view = S.mis.left > 0 ? 'mwait' : 'mres';   // на миссии — только экран миссии
   else if (!F && (S.view === 'main' || !S.view) && postFor(G.cur).length) S.view = 'parcel';   // при входе в ход — открыть посылку
   else if (S.offer != null && !F && (S.view === 'main' || S.view === 'tour' || S.view === 'bureau' || !S.view)) S.view = 'offer';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
@@ -4704,6 +4807,11 @@ function act(a, v) {
     case 'fly': if (spend()) { S.region = +v; relocHand(S); S.jetlag = hasRoom(S, 4) ? 0 : 1; logMsg('Перелёт в ' + REGIONS[S.region].name + (S.jetlag ? '. Джетлаг до конца хода.' : '. Свой остров — без джетлага.')); S.view = 'main'; } break;
     case 'pass': clearJet(); logMsg('Неделя пропущена.'); endTurn(); break;
     case 'next': endTurn(); break;
+    case 'missions': S.view = 'missions'; break;
+    case 'minv': { const h = +v, H = G.players[h]; if (!H || h === G.cur || H.region !== S.region || misBusy(H)) return; const a = S.misInv || []; S.misInv = a.includes(h) ? a.filter(x => x !== h) : a.length < MIS_MAX - 1 ? a.concat(h) : a; break; }
+    case 'mstart': misStart(+v); break;
+    case 'mclaim': if (S.mis && S.mis.left <= 0) { S.misRes = misResolve(S); S.view = 'mclaim'; save(); } break;
+    case 'mdone': S.misRes = null; S.view = 'main'; break;
     default: return;
   }
   save();
