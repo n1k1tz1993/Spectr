@@ -1107,6 +1107,11 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .tmrc b{white-space:normal!important;overflow-wrap:anywhere;line-height:1.15}
 .cwped.off{opacity:.18;filter:grayscale(1) drop-shadow(0 6px 8px rgba(0,0,0,.7))}.cwttl.sm{font-size:4.6cqw;margin-top:2cqw}
 .cwlist{display:grid;grid-template-columns:1fr 1fr;gap:1.4cqw 4cqw;font-size:3.4cqw}.cwlist>div{display:flex;justify-content:space-between;border-bottom:1px solid #1d2540;padding:.8cqw 0}.cwlist b{color:var(--gold)}
+.fyteam.boss{border-color:#FF5C8A;background:linear-gradient(180deg,rgba(255,92,138,.18),rgba(0,0,0,.35))}.fyteam.boss b{color:#FF8FB0;font-size:17px;letter-spacing:.2em}
+.bossc{display:flex;gap:12px;align-items:flex-start;text-align:left;margin-top:10px;padding:10px;border-radius:12px;background:linear-gradient(135deg,rgba(255,92,138,.12),rgba(0,0,0,.25));border:1px solid rgba(255,92,138,.5)}
+.bossc img{width:96px;height:96px;border-radius:12px;object-fit:cover;flex:0 0 auto;background:#000}.bossc.sm img{width:64px;height:64px}.bossc b{font-size:17px}.bossc .dim{font-size:12.5px;margin-top:2px}
+.bosst{font-size:11px;font-weight:900;letter-spacing:.12em;color:#FF8FB0}
+.bosshp{position:relative;height:24px;border-radius:12px;background:#2a1220;overflow:hidden;margin:12px 0 6px}.bosshp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#c2185b,#ff5c8a)}.bosshp b{position:relative;display:block;text-align:center;line-height:24px;font-size:13px}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1969,6 +1974,7 @@ const tbOpp = x => x === F.a ? F.b : F.a, tbId = x => x === F.a ? 'fa' : 'fb';
 function tbInit(x) {
   Object.assign(x, { hpMax: TB.hp(x.p), hp: TB.hp(x.p), qi: TB.qiStart, stance: 'bal', stCd: rnd(1, 2), ultUsed: false, turns: 0, st: {}, defend: false, conc: false, exhausted: false, itemTurn: false, tmp: {}, used: {} });
   if (!x.skill) x.skill = skillOf(x.name, x.abil);
+  if (x.bossMax) { x.hpMax = x.bossMax; x.hp = x.bossHp; }   // босс: большой запас ХП, урон сохраняется между бойцами
   return proIcons(x);
 }
 const tbFx = (x, t, c, d = 0) => { if (!F.sim) (F.fx = F.fx || []).push({ id: tbId(x), t, c, d }); };   // d — задержка всплывающей цифры (серия ударов)
@@ -3873,7 +3879,41 @@ const MIS_RANK = {
   C: { w: 1, d: 34, cap: 0.97, coins: 150, cons: 0, win: [2, 'turn'], fail: null, col: '#7FD6A0' },
   B: { w: 2, d: 48, cap: 0.88, coins: 450, cons: 1, win: [3, 'two'], fail: [-3, 'turn'], col: '#6FB8FF' },
   A: { w: 3, d: 62, cap: 0.75, coins: 1100, cons: 2, win: [5, 'two'], fail: [-5, 'two'], col: '#FFB347' },
+  S: { w: 2, d: 0, cap: 1, coins: 2400, cons: 2, win: [5, 'two'], fail: [-3, 'turn'], col: '#FF5C8A', boss: true },   // исход решает бой с боссом
 };
+// ---------- Боссы миссий ранга S: бой на выбывание, ХП босса сохраняется между бойцами отряда ----------
+// у каждого — по способности на каждый эффект и 3 суперспособности; в бою берутся случайные
+const BOSSES = [
+  { k: 'mafia', n: 'Дон Неро', t: 'Мафиози', d: 'Глава синдиката «Семья Неро». Держит казино, порты и чёрный рынок метеоритной руды. Сам дерётся редко — но если вышел, значит, кто-то задолжал слишком много.',
+    sk: { stun: ['Удар тростью', 193], pierce: ['Выстрел из-за угла', 126], drain: ['Долг с процентами', 152], wound: ['Отравленное вино', 103], heal: ['Сигара и коньяк', 112], barrier: ['Живой щит', 189], mark: ['Чёрная метка', 30], weak: ['Предложение без выбора', 196], reflect: ['Подставной свидетель', 154], seal: ['Омерта', 36] },
+    ult: [['Семейный приговор', 'вся «Семья» обрушивается на врага разом', 140], ['Ночь длинных ножей', 'клинки летят из каждой тени', 121], ['Бетонные ботинки', 'отправляет врага на дно залива', 26]],
+    m: [['Чёрная месса', 'Дон Неро собирает глав кланов в заброшенном соборе. Ворвись, пока они не поделили город.'], ['Бетонный причал', 'На причале в бетон заливают свидетеля. Успей до того, как застынет раствор.'], ['Казино «Метеор»', 'В казино Неро отмывают руду. Сорви вечер большой игры и выведи Дона из-за стола.'], ['Долговая книга', 'У Дона есть книга, где записан каждый должник Бюро. Её нужно забрать — вместе с ним.'], ['Семейный ужин', 'Раз в год вся «Семья» ужинает вместе. Это единственный шанс застать Дона без охраны.'], ['Тихий адвокат', 'Адвокат Неро готов сдать босса. Встреча под мостом — и Дон уже знает о ней.']] },
+  { k: 'bandit', n: 'Рваный Клык', t: 'Бандит', d: 'Главарь банды с окраин. Грабит инкассаторов, жжёт гаражи и бьёт без правил. Шрам через всё лицо — от последнего Спектра, который пытался его остановить.',
+    sk: { stun: ['Кастет в челюсть', 1], pierce: ['Обрез в упор', 8], drain: ['Гоп-стоп', 41], wound: ['Ржавая заточка', 40], heal: ['Глоток из фляги', 111], barrier: ['Крышка мусорного бака', 32], mark: ['Наводка', 21], weak: ['Песок в глаза', 25], reflect: ['Подлый приём', 22], seal: ['Удавка', 58] },
+    ult: [['Налёт на рассвете', 'вся банда вылетает из-за угла с бутылками и битами', 104], ['Кровавая разборка', 'дерётся так, будто ему нечего терять', 17], ['Коктейль из гаража', 'поджигает всё вокруг', 6]],
+    m: [['Ржавый тракт', 'Банда Клыка перекрыла трассу и обирает фуры с рудой. Расчисти дорогу.'], ['Налёт на инкассаторов', 'Завтра Клык нападёт на машину Бюро. Будь внутри вместо охраны.'], ['Гаражный кооператив', 'Логово банды — лабиринт из гаражей на окраине. Найди Клыка до того, как он найдёт тебя.'], ['Пыльная заправка', 'Банда держит заправку на трассе как штаб. Заезжай — бензин сегодня бесплатный.'], ['Ночная электричка', 'Клык грабит последнюю электричку. В третьем вагоне — ты.'], ['Король свалки', 'На городской свалке Клык устроил бойцовский клуб. Запишись — и выйди против него.']] },
+  { k: 'smuggler', n: 'Лис Марлоу', t: 'Контрабандист', d: 'Возит руду через пять границ, не попавшись ни разу. Улыбается, торгуется и всегда держит нож за спиной. Говорят, у него есть свой метеорит.',
+    sk: { stun: ['Ящик по голове', 151], pierce: ['Метательный нож', 18], drain: ['Подмена груза', 175], wound: ['Рудная пыль в рану', 35], heal: ['Аптечка с чёрного рынка', 46], barrier: ['Фальшивый борт', 166], mark: ['Маячок на одежде', 171], weak: ['Сонный газ', 118], reflect: ['Двойное дно', 162], seal: ['Таможенная пломба', 78] },
+    ult: [['Груз с метеорита', 'вскрывает ящик с чистой рудой', 176], ['Последний рейс', 'уходит в отрыв и возвращается с разгону', 120], ['Контрабандный залп', 'из трюма летит всё, что не прошло таможню', 182]],
+    m: [['Двойное дно', 'Корабль Марлоу заходит в порт. В трюме двойное дно, а в нём — руда на миллион.'], ['Последний паром', 'Марлоу уходит последним паромом за границу. Он не должен доплыть.'], ['Туман в порту', 'В тумане порта Марлоу встречает покупателя. Стань этим покупателем.'], ['Груз 7-Б', 'Контейнер 7-Б светится по ночам. Марлоу придёт за ним сам.'], ['Таможня спит', 'Сегодня таможенники получили конверты. Значит, Марлоу везёт что-то крупное.'], ['Пещера контрабандистов', 'Под скалами — пещера, где Марлоу прячет товар. Вход только во время отлива.']] },
+  { k: 'merc', n: 'Полковник Грау', t: 'Наёмник', d: 'Бывший офицер, теперь — оружие для того, кто больше заплатит. Не знает жалости, не знает страха, знает только контракт. Ещё ни разу не провалил задание.',
+    sk: { stun: ['Светошумовая граната', 129], pierce: ['Бронебойный патрон', 68], drain: ['Выматывающий обстрел', 63], wound: ['Осколочная мина', 122], heal: ['Боевой стимулятор', 150], barrier: ['Тактический щит', 173], mark: ['Лазерный прицел', 188], weak: ['Подавляющий огонь', 83], reflect: ['Контрзасада', 64], seal: ['Глушилка связи', 172] },
+    ult: [['Ковровая бомбардировка', 'вызывает огонь с воздуха', 99], ['Приказ: зачистка', 'работает быстро и без лишних слов', 186], ['Последний патрон', 'один выстрел, который решает всё', 130]],
+    m: [['Стальной контракт', 'Грау нанят убрать судью турнира. Встань между ним и целью.'], ['Тихий периметр', 'Наёмники Грау заняли рудник. Пройди периметр и сними командира.'], ['Заложники в башне', 'Грау держит заложников на крыше башни Бюро. Лифт не работает.'], ['Красная зона', 'В красной зоне после падения метеорита хозяйничает отряд Грау. Пора навести порядок.'], ['Наёмник без флага', 'Грау продаёт секреты Бюро всем сразу. Найди его до следующей сделки.'], ['Последний приказ', 'Командование отдало Грау последний приказ. Ты — его цель.']] },
+  { k: 'beast', n: 'Образец Х-7', t: 'Чудище', d: 'Результат экспериментов подпольных лабораторий: человека накачали чистой рудой, пока от него не осталось ничего человеческого. Чувствует Цы за километр и питается ею.',
+    sk: { stun: ['Рёв из клетки', 155], pierce: ['Хитиновое жало', 48], drain: ['Пожирание Цы', 12], wound: ['Кислотная кровь', 59], heal: ['Регенерация тканей', 13], barrier: ['Рудный панцирь', 170], mark: ['Запах добычи', 100], weak: ['Споровое облако', 50], reflect: ['Шипастая шкура', 161], seal: ['Мутагенный укус', 174] },
+    ult: [['Разрыв клетки', 'срывается с цепи и рвёт всё на пути', 167], ['Финальная стадия', 'мутирует прямо в бою', 153], ['Пасть бездны', 'раскрывает пасть, полную рудного огня', 101]],
+    m: [['Сбежавший образец', 'Из подпольной лаборатории сбежал Образец Х-7. За ним тянется след из выпитых Спектров.'], ['Лаборатория под рынком', 'Под рыбным рынком — лаборатория. Внизу что-то скребётся в стены.'], ['Клетка номер ноль', 'Учёные просят Бюро перевезти «Образец». Клетка уже треснула.'], ['Канализация шепчет', 'Из канализации доносится рёв, а уличные фонари гаснут один за другим.'], ['Неудачный эксперимент', 'Лаборатория в горах замолчала три дня назад. Проверь, кто там остался в живых.'], ['Ночь в зоопарке', 'Х-7 забрался в городской зоопарк. Звери молчат — значит, он ещё там.']] },
+];
+const bossOf = k => BOSSES.find(b => b.k === k) || BOSSES[0];
+const BOSS_P = 1, BOSS_HP = [1.1, 1.6, 2.15];   // сила — средняя сила отряда + 1 (≈ 20% соло, 35–40% вдвоём-втроём против ИИ); ХП — множитель от отряда (1/2/3 бойца)
+function bossFighter(B) {   // боец-босс: случайная способность и ульта из его набора, вместо команды — BOSS
+  const b = bossOf(B.k), e = EFFECTS[rnd(0, EFFECTS.length - 1)][0], [sn, si] = b.sk[e], [un, ud, ui] = b.ult[rnd(0, b.ult.length - 1)];
+  const f = fighter(b.n, B.p, 0, false, { name: un, desc: ud, icon: ui }, `img/boss/${b.k}.webp`);
+  return Object.assign(f, { boss: b.k, skill: { name: sn, icon: si, eff: e }, team: { name: 'BOSS' }, kit: npcKit('pro'), bossMax: B.max, bossHp: B.hp });
+}
+// ---------- Поручения ранга D: 1 действие — 5–10 крипты, сразу ----------
+const MIS_D = ['Подмести улицу у Бюро', 'Разобрать почту в приёмной', 'Помыть служебную машину', 'Отнести документы в архив', 'Покормить кота коменданта', 'Расставить стулья в зале', 'Протереть кубки в Зале славы', 'Раздать листовки турнира', 'Починить кофемашину', 'Выгулять собаку охранника', 'Полить цветы в холле', 'Поменять лампу в коридоре'];
 const MIS_RT = 10, MIS_MAX = 3;
 const MIS_POOL = {
   C: [['Пропавший курьер', 'Курьер Бюро с ампулами руды не вышел на связь. Найди его в городе и доставь груз.'], ['Шум в метро', 'В тоннелях кто-то сливает Цы из кабелей. Проверь, что там творится.'], ['Охрана выставки', 'Выставка осколков метеорита. Нужно просто постоять рядом — и не дать ничему случиться.'], ['Спарринг для новобранцев', 'Бюро просит показать новичкам пару приёмов. Без травм, пожалуйста.'], ['Сбежавший питомец', 'Ручной лис коллекционера наглотался рудной пыли и светится на всю улицу. Поймай его.']],
@@ -3883,21 +3923,23 @@ const MIS_POOL = {
 function misList(r) {   // миссии региона на эту неделю (обновляются каждую неделю)
   G.mis = G.mis || {}; const M = G.mis[r];
   if (M && M.week === G.week) return M.list;
-  const list = Object.keys(MIS_RANK).map(rk => { const [t, d] = MIS_POOL[rk][rnd(0, MIS_POOL[rk].length - 1)]; return { rk, t, d, taken: false }; });
-  G.mis[r] = { week: G.week, list }; return list;
+  const list = ['C', 'B', 'A'].map(rk => { const [t, d] = MIS_POOL[rk][rnd(0, MIS_POOL[rk].length - 1)]; return { rk, t, d, taken: false }; });
+  const B = BOSSES[rnd(0, BOSSES.length - 1)], [bt, bd] = B.m[rnd(0, B.m.length - 1)]; list.push({ rk: 'S', t: bt, d: bd, boss: B.k, taken: false });
+  G.mis[r] = { week: G.week, list, dl: shuffle(MIS_D.slice()).slice(0, 3).map(t => ({ t, by: [] })) }; return list;
 }
-const misChance = (rk, pw) => { const R = MIS_RANK[rk]; return Math.max(0.03, Math.min(R.cap, 0.5 + (pw - R.d) * 0.045)); };
+const misChance = (rk, pw) => { const R = MIS_RANK[rk]; if (R.boss) return null; return Math.max(0.03, Math.min(R.cap, 0.5 + (pw - R.d) * 0.045)); };
 const misWeeks = (rk, party) => rk === 'A' && party.some(h => hasHeliTop(G.players[h])) ? 1 : MIS_RANK[rk].w;   // Atlas T90 — миссия A за 1 неделю
 const misBusy = H => H.mis ? 'уже на миссии' : H.draft != null ? 'стоит в драфте' : H.league != null ? 'играет в лиге' : '';
 const misPartyPw = party => party.reduce((a, h) => a + heroPower(G.players[h]), 0) / party.length;
 function misStart(i) {
   const L = misList(S.region), m = L[i]; if (!m || m.taken || misBusy(S)) return;
   const party = [G.cur, ...(S.misInv || []).filter(h => G.players[h] && G.players[h].region === S.region && !misBusy(G.players[h]))].slice(0, MIS_MAX);
-  const pw = misPartyPw(party), ch = misChance(m.rk, pw), ok = Math.random() < ch, w = misWeeks(m.rk, party);
+  const pw = misPartyPw(party), ch = misChance(m.rk, pw), ok = ch == null ? null : Math.random() < ch, w = misWeeks(m.rk, party);
   m.taken = true;
   const id = Date.now() + '' + rnd(0, 999);
+  if (m.boss) { const p = Math.round((pw + BOSS_P) * 10) / 10, max = Math.round(TB.hp(p) * BOSS_HP[party.length - 1]); G.boss = G.boss || {}; G.boss[id] = { k: m.boss, p, max, hp: max, next: 0, party: party.slice(), log: [], res: null }; }
   party.forEach(h => { const H = G.players[h];
-    H.mis = { id, rk: m.rk, t: m.t, ok, left: w + 1 + (h > G.cur ? 1 : 0), party: party.slice(), ch, roll: Math.random() };   // left: остаток этой недели + w полных; кто ещё не ходил в этом круге — +1, чтобы отряд вернулся вместе
+    H.mis = { id, rk: m.rk, t: m.t, ok, boss: m.boss || null, left: w + 1 + (h > G.cur ? 1 : 0), party: party.slice(), ch, roll: Math.random() };   // left: остаток этой недели + w полных; кто ещё не ходил в этом круге — +1, чтобы отряд вернулся вместе
     if (h !== G.cur) logTo(H, `${S.nick} позвал тебя на миссию «${m.t}» (ранг ${m.rk}). Ты на миссии ${w} ${weekWord(w)}.`); });
   S.actions = 0; S.misInv = []; clearJet();
   logMsg(`Миссия «${m.t}» (ранг ${m.rk}): отряд выдвинулся. Вернёшься через ${w} ${weekWord(w)}.`);
@@ -3906,6 +3948,7 @@ function misStart(i) {
 const weekWord = n => n === 1 ? 'неделю' : n < 5 ? 'недели' : 'недель';
 function misResolve(H) {   // награда по возвращении: каждый в отряде получает одно и то же
   const M = H.mis, R = MIS_RANK[M.rk], out = [];
+  if (M.boss) M.ok = !!(G.boss && G.boss[M.id] && G.boss[M.id].res);
   H.rating += MIS_RT; out.push(`+${MIS_RT} рейтинга`);
   if (M.ok) {
     out.push(`+${earn(H, R.coins)} крипты`);
@@ -3917,6 +3960,7 @@ function misResolve(H) {   // награда по возвращении: каж
     else if (M.roll > 0.8) { const k = CONS[rnd(0, CONS.length - 1)].k; H.cons = H.cons || {}; H.cons[k] = Math.min(CONS_MAX, consOf(H, k) + 1); out.push(CONS.find(c => c.k === k).n + ' (нашёлся по дороге)'); }
     else if (M.roll > 0.6) out.push(`+${earn(H, Math.round(R.coins * 0.2))} крипты (утешительные)`);
   }
+  if (M.boss) { const Bx = G.boss && G.boss[M.id]; if (Bx && M.party.every(h => !G.players[h] || !G.players[h].mis || G.players[h] === H)) delete G.boss[M.id]; }
   histTo(H, H.region, `Миссия «${M.t}» (${M.rk}) · ${M.ok ? 'успех' : 'провал'}`);
   logTo(H, `Миссия «${M.t}»: ${M.ok ? 'успех' : 'провал'}. ${out.join(', ')}.`);
   H.mis = null; return { ...M, out };
@@ -3924,7 +3968,33 @@ function misResolve(H) {   // награда по возвращении: каж
 function misWeekStart(H) {   // начало недели героя на миссии: ждать или забирать награду
   if (!H.mis) return;
   if (H.mis.left > 0) H.mis.left--;
-  if (H.mis.left > 0) { H.actions = 0; H.view = 'mwait'; } else H.view = 'mres';   // неделя возвращения — обычная, с действиями
+  if (H.mis.left > 0) { H.actions = 0; H.view = 'mwait'; } else H.view = misBossPending(H) ? 'mboss' : 'mres';   // неделя возвращения — обычная, с действиями; ранг S — сначала бой с боссом
+}
+const misBossPending = H => H.mis && H.mis.boss && G.boss && G.boss[H.mis.id] && G.boss[H.mis.id].res == null;
+function bossHeroF(h) { const H = G.players[h]; return heroF(H, withMeta(fighter(H.nick, h === G.cur ? effPower() : heroPower(H), H.rating, true, H.ability, H.face), H.country, fightTeam(H, h))); }
+function bossDuelDone(Bx, won, left) {   // итог одного боя отряда с боссом
+  const h = Bx.party[Bx.next], b = bossOf(Bx.k);
+  Bx.hp = Math.max(0, Math.round(left)); Bx.log.push([G.players[h] ? G.players[h].nick : '?', won]);
+  if (won || Bx.hp <= 0) { Bx.res = true; Bx.hp = 0; }
+  else { Bx.next++; if (Bx.next >= Bx.party.length) Bx.res = false; }
+  if (Bx.res != null) Bx.party.forEach(x => { const H = G.players[x]; if (H) logTo(H, Bx.res ? `${b.n} повержен! Миссия ранга S выполнена.` : `${b.n} оказался сильнее отряда. Миссия ранга S провалена.`); });
+}
+function bossAct(a) {
+  const M = S.mis, Bx = M && G.boss && G.boss[M.id]; if (!Bx || Bx.res != null) return;
+  if (a === 'bsim') { if (!AUTOB) return; while (Bx.res == null) { const bf = bossFighter(Bx); const w = simAB(bossHeroF(Bx.party[Bx.next]), bf); bossDuelDone(Bx, w, bf.hp); } return; }
+  const bf = bossFighter(Bx), hf = bossHeroF(Bx.party[Bx.next]);
+  startFightAB(`Миссия «${M.t}» · ${bossOf(Bx.k).n}`, hf, bf, won => { bossDuelDone(Bx, won, bf.hp); S.view = 'mboss'; save(); });
+}
+const bossCard = (k, small) => { const b = bossOf(k); return `<div class="bossc ${small ? 'sm' : ''}"><img src="img/boss/${b.k}.webp" alt=""><div><div class="bosst">BOSS · ${b.t}</div><b>${b.n}</b><div class="dim">${b.d}</div></div></div>`; };
+function viewMboss() {
+  const M = S.mis, Bx = M && G.boss && G.boss[M.id]; if (!Bx) { S.view = 'mres'; return viewMres(); }
+  const b = bossOf(Bx.k), pct = Math.round(Bx.hp / Bx.max * 100);
+  return wrap(`<div class="card" style="text-align:center"><div class="dim">Миссия ранга S · «${esc(M.t)}» · конец недели</div><h2>Бой с боссом</h2>${bossCard(Bx.k)}
+      <div class="bosshp"><i style="width:${pct}%"></i><b>ХП босса: ${pct}%</b></div><div class="dim" style="font-size:12px">Бойцы отряда выходят по очереди. Урон по боссу сохраняется. Миссия успешна, только если босс повержен.</div></div>
+    <div class="card"><h3>Отряд</h3>${Bx.party.map((h, j) => { const H = G.players[h], st = j < Bx.log.length ? (Bx.log[j][1] ? '<span class="plus">победил</span>' : '<span class="minus">выбыл</span>') : j === Bx.next && Bx.res == null ? '<span class="gold">выходит сейчас</span>' : '<span class="dim">ждёт</span>';
+      return `<div class="srow"><span class="carrow"><span class="ava" style="width:36px;height:36px">${faceImg(H.face)}</span><b>${esc(H.nick)}</b></span>${st}</div>`; }).join('')}</div>
+    ${Bx.res == null ? `<div class="card" style="text-align:center"><div>В бой выходит <b>${esc(G.players[Bx.party[Bx.next]].nick)}</b></div><button class="imgbtn" data-a="bfight" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${AUTOB ? ibtn('lgsim', 'bsim', '', 'Досчитать бой') : ''}</div>`
+      : `<div class="card" style="text-align:center"><h2 class="${Bx.res ? 'plus' : 'minus'}">${Bx.res ? `${b.n} повержен!` : `${b.n} победил`}</h2>${ibtn('continue', 'bdone', '', 'Продолжить')}</div>`}`);
 }
 function viewMissions() {
   const L = misList(S.region), busy = misBusy(S), inv = (S.misInv || []).filter(h => G.players[h]);
@@ -3937,13 +4007,24 @@ function viewMissions() {
     ${G.players.length > 1 ? `<div class="card"><h3>Позвать на миссию</h3><div class="dim">До ${MIS_MAX - 1} Спектров из твоего региона. Все получат те же награды. Сила считается средняя.</div>
       <div class="invrow">${mates.length ? mates.map(h => { const H = G.players[h], why = misBusy(H); return `<button class="invp ${inv.includes(h) ? 'on' : ''}" data-a="minv" data-v="${h}" ${why ? 'disabled style="opacity:.45"' : ''}><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}${why ? `<br><small>${why}</small>` : ''}</button>`; }).join('') : '<div class="dim">В регионе нет других игроков.</div>'}</div>
       <div class="dim" style="margin-top:6px">Отряд: ${party.map(h => esc(G.players[h].nick)).join(', ')} · средняя сила ${Math.round(pw)}</div></div>` : ''}
+    ${misDHtml()}
     ${L.map((m, i) => { const R = MIS_RANK[m.rk], ch = misChance(m.rk, pw), w = misWeeks(m.rk, party);
+      if (R.boss) return `<div class="card mis" style="border-color:${R.col}"><div class="misrk" style="background:${R.col}">S</div>
+        <h3>${esc(m.t)}</h3><div class="dim">${esc(m.d)}</div>${bossCard(m.boss, true)}
+        <div class="misrow"><span>⏳ ${w} ${weekWord(w)}</span><span>🏆 ${R.coins}+ крипты · расходники ×${R.cons} · бонус к силе</span></div>
+        <div class="dim" style="font-size:12px">В конце — бой с боссом. Бойцы выходят по очереди, урон по боссу сохраняется. Успех — только если босс повержен. Сила босса — по средней силе отряда (${Math.round(pw + BOSS_P)}).</div>
+        ${m.taken ? '<div class="dim" style="text-align:center;margin-top:8px">Миссия уже взята</div>' : ibtn('mstart', 'mstart', i, 'Начать миссию', '', !!busy)}</div>`;
       return `<div class="card mis" style="border-color:${R.col}"><div class="misrk" style="background:${R.col}">${m.rk}</div>
         <h3>${esc(m.t)}</h3><div class="dim">${esc(m.d)}</div>
         <div class="misrow"><span>⏳ ${w} ${weekWord(w)}</span><span>🏆 ${R.coins}+ крипты${R.cons ? ` · расходники ×${R.cons}` : ''} · бонус к силе</span></div>
         <div class="misch"><i style="width:${Math.round(ch * 100)}%;background:${ch > 0.66 ? '#5BD38A' : ch > 0.33 ? '#F3C64B' : '#F0616D'}"></i><b>Шанс успеха: ${Math.round(ch * 100)}%</b></div>
         ${R.fail ? '<div class="dim" style="font-size:12px">Провал может закончиться штрафом к силе.</div>' : '<div class="dim" style="font-size:12px">Провал — без штрафа.</div>'}
         ${m.taken ? '<div class="dim" style="text-align:center;margin-top:8px">Миссия уже взята</div>' : ibtn('mstart', 'mstart', i, 'Начать миссию', '', !!busy)}</div>`; }).join('')}${back}`);
+}
+function misDHtml() {   // поручения D: 1 действие — немного крипты
+  misList(S.region); const D = G.mis[S.region].dl || [], hi = heroIdx(S);
+  return `<div class="card mis" style="border-color:#9AA3B5"><div class="misrk" style="background:#9AA3B5">D</div><h3>Поручения Бюро</h3><div class="dim">Мелкая работа: 1 действие — 5–10 крипты, сразу. Каждое поручение — раз в неделю.</div>
+    ${D.map((d, j) => `<div class="srow"><span>${esc(d.t)}</span>${d.by.includes(hi) ? '<span class="dim">✓ сделано</span>' : `<button class="btn cbtn" data-a="mdo" data-v="${j}" ${S.actions < 1 || S.mis ? 'disabled' : ''}>1 действие</button>`}</div>`).join('')}</div>`;
 }
 function viewMwait() {
   const M = S.mis; if (!M) { S.view = 'main'; return viewMain(); }
@@ -3955,9 +4036,10 @@ function viewMwait() {
 }
 function viewMres() {
   const M = S.mis; if (!M) { S.view = 'main'; return viewMain(); }
+  if (M.boss) M.ok = !!(G.boss && G.boss[M.id] && G.boss[M.id].res);
   return wrap(`<div class="card" style="text-align:center"><img src="img/mis/${M.ok ? 'success' : 'fail'}.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
     <h2 style="margin-top:10px" class="${M.ok ? 'plus' : 'minus'}">${M.ok ? 'Миссия успешна!' : 'Миссия провалена'}</h2>
-    <div class="dim">«${esc(M.t)}» · ранг ${M.rk} · шанс был ${Math.round(M.ch * 100)}%</div>
+    <div class="dim">«${esc(M.t)}» · ранг ${M.rk}${M.boss ? ' · ' + bossOf(M.boss).n : ` · шанс был ${Math.round(M.ch * 100)}%`}</div>
     ${ibtn('mclaim', 'mclaim', '', 'Забрать награды')}</div>`);
 }
 function viewMclaim() {
@@ -4054,7 +4136,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub">${t[1] ? `<button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button>` : ''}<h1>${t[0]}</h1></div>` : ''; };
@@ -4611,7 +4693,7 @@ const MECH = [
   ['Wild Card и Чемпионат мира', 'Раз в сезон проходит Wild Card. Регистрируется любой игрок на первом этапе. Лучшие выходят на Чемпионат мира. Первая победа в Wild Card навсегда добавляет силу.'],
   ['Крипта и медийность', 'Крипта — деньги Спектров. Её дают турниры, лиги, миссии и события. Медийность умножает всю заработанную крипту, до ×2. Её поднимают машина, интервью и подкасты, дорогие артефакты и реклама. Компромат её снижает.'],
   ['Бой', 'Бой пошаговый. Каждый ход — удар, защита, способность, Удар Цы или суперспособность (нужно 70 Цы). Защита бесплатна, даёт Цы и готовит контрудар. Расходники работают один раз за бой и запрещены в матчах лиги.'],
-  ['Миссии', 'Миссии берут в Бюро. Ранг C длится 1 неделю, B — 2, A — 3. Можно идти одному или втроём с игроками своего региона. Шанс успеха зависит от средней силы отряда. За любую миссию даётся рейтинг.'],
+  ['Миссии', 'Миссии берут в Бюро. Поручения D — мелкая работа за 1 действие и немного крипты. Ранг C длится 1 неделю, B — 2, A — 3, S — 2. Можно идти одному или втроём с игроками своего региона. Шанс успеха C–A зависит от средней силы отряда. В миссии S в конце ждёт босс: бойцы выходят по очереди, урон по боссу сохраняется, успех — только если босс повержен. За миссии C–S даётся рейтинг.'],
   ['Командные режимы', 'Командный матч — серия игр. В игре бойцы команд выходят по очереди: победитель остаётся, следующий бой начинается заново с полного ХП и Цы. Игра кончается, когда у команды выбыли все бойцы. Раз в сезон проходит Лига 2на2 на 100 команд: запись в Бюро, команды собирает драфт. В Бюро есть и региональные командные турниры на 8 команд: победа поднимает силу.'],
   ['Теневые услуги', 'В магазине в разделе «Особое»: грязные контракты для вторжений без последствий, лишнее действие на текущую неделю, вброс компромата и реклама любому Спектру, ставки на победу Спектра в турнире. В Бюро стоит игровой автомат.']
 ];
@@ -4891,13 +4973,13 @@ function tbStatus(x) {
 }
 function fzCard(x, id) {   // карточка бойца: портрет с рамкой стороны, флаг+ник, ранг|рейтинг, команда, HP, Цы, статусы
   const lg = leagueOf(x.rating), cc = fCountry(x), S0 = STANCES.find(s => s[0] === x.stance), c = id === 'fa' ? 'a' : 'b';
-  const team = x.beast ? `<span class="fyteam wild">${abilIcon(30)}<b>Дикий зверь</b></span>`
+  const team = x.beast ? `<span class="fyteam wild">${abilIcon(30)}<b>Дикий зверь</b></span>` : x.boss ? '<span class="fyteam boss"><b>BOSS</b></span>'
     : x.team && x.team.name ? `<span class="fyteam ${x.team.name.length > 13 ? 'long' : ''}">${x.team.logo ? `<img src="img/team/${x.team.logo}.webp" alt="">` : ''}<b>${esc(x.team.name)}</b></span>` : '<span class="fyteam fa"><b>FREE AGENT</b></span>';
   return `<div class="fyc ${id} ${F.done ? (F.won === (c === 'a') ? 'won' : 'lost') : ''} ${F.cur === c && !F.done ? 'pr-turn' : ''}">
     <div class="fyp" id="${id}-pic">${faceImg(x.face)}<span class="pr-stance">${S0[1]} ${S0[2]}</span></div>
     <div class="fyi">
       <div class="fyhd"><div class="fynr"><div class="fyn">${cc ? `<span class="fzfl">${flagOf(cc)}</span>` : ''}<b>${esc(x.name)}</b></div>
-      <div class="fyr">${x.beast ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div></div></div>
+      <div class="fyr">${x.beast || x.boss ? '' : `<img src="img/rank_${lg.id}.webp" alt=""><span class="fysep"></span><b class="fyrt" title="${lg.n}">${x.rating}</b>`}</div></div></div>
       ${team}
     </div>
     <div class="fybars">
@@ -5157,7 +5239,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${AUTOB ? ibtn('lgsim', 'lsim', '', 'Досчитать матч') : ''}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { myteam: viewMyTeam, tleague: viewTLeague, ttour: viewTTour, ttr: viewTTR, cupwin: viewCupWin, soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { mboss: viewMboss, myteam: viewMyTeam, tleague: viewTLeague, ttour: viewTTour, ttr: viewTTR, cupwin: viewCupWin, soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -5174,7 +5256,7 @@ function render() {
   if (S.vic && !F && (S.view === 'main' || !S.view)) S.view = 'vic';
   else if (S.notice && !F && (S.view === 'main' || !S.view)) S.view = 'notice';
   else if (S.ttr && !F && S.view !== 'ttr') S.view = 'ttr';   // идёт командный турнир — только его экран
-  else if (S.mis && !F && !['mwait', 'mres', 'mclaim'].includes(S.view)) S.view = S.mis.left > 0 ? 'mwait' : 'mres';   // на миссии — только экран миссии
+  else if (S.mis && !F && !['mwait', 'mres', 'mclaim', 'mboss'].includes(S.view)) S.view = S.mis.left > 0 ? 'mwait' : misBossPending(S) ? 'mboss' : 'mres';   // на миссии — только экран миссии
   else if (!F && (S.view === 'main' || !S.view) && postFor(G.cur).length) S.view = 'parcel';   // при входе в ход — открыть посылку
   else if (S.offer != null && !F && (S.view === 'main' || S.view === 'tour' || S.view === 'bureau' || !S.view)) S.view = 'offer';   // экран большой победы — при первом возвращении на главный
   const v = VIEWS[S.view] || viewMain;
@@ -5433,7 +5515,10 @@ function act(a, v) {
     case 'missions': S.view = 'missions'; break;
     case 'minv': { const h = +v, H = G.players[h]; if (!H || h === G.cur || H.region !== S.region || misBusy(H)) return; const a = S.misInv || []; S.misInv = a.includes(h) ? a.filter(x => x !== h) : a.length < MIS_MAX - 1 ? a.concat(h) : a; break; }
     case 'mstart': misStart(+v); break;
-    case 'mclaim': if (S.mis && S.mis.left <= 0) { S.misRes = misResolve(S); S.view = 'mclaim'; save(); } break;
+    case 'bfight': case 'bsim': bossAct(a); break;
+    case 'bdone': S.view = 'mres'; break;
+    case 'mdo': { misList(S.region); const d = (G.mis[S.region].dl || [])[+v], hi = heroIdx(S); if (!d || d.by.includes(hi) || S.mis || !spend()) return; d.by.push(hi); const n = earn(S, rnd(5, 10)); logMsg(`Поручение «${d.t}»: +${n} крипты.`); break; }
+    case 'mclaim': if (S.mis && S.mis.left <= 0 && !misBossPending(S)) { S.misRes = misResolve(S); S.view = 'mclaim'; save(); } break;
     case 'mdone': S.misRes = null; S.view = 'main'; break;
     default: return;
   }
