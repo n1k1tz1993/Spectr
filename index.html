@@ -1075,6 +1075,10 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .cwc{display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center}.cwc img{width:20cqw;height:20cqw;object-fit:contain}.cwgrid.m4{grid-template-columns:repeat(4,1fr);gap:1.5cqw}.cwgrid.m4 img{width:17cqw;height:17cqw}.cwgrid.m4 b{font-size:3cqw}.cwc b{font-size:3.6cqw}.cwc small{font-size:3.2cqw;color:var(--gold)}.cwc.off{opacity:.35}
 .cwcel{width:86%;align-self:center;aspect-ratio:16/9;object-fit:cover;border-radius:2cqw}.cwcup{width:24cqw;height:24cqw;object-fit:contain;align-self:center}
 .cwteam{display:flex;align-items:center;justify-content:center;gap:2cqw;font-size:5cqw}.cwmem{display:flex;justify-content:center;gap:4cqw;flex-wrap:wrap}.cwmem>div{display:flex;flex-direction:column;align-items:center;gap:1cqw}.cwmem .ava{width:15cqw;height:15cqw}.cwmem small{font-size:3.4cqw}
+.lmrow{display:grid;grid-template-columns:1fr auto 1fr;gap:1.6cqw;padding:0 2.4cqw;font-size:2.8cqw}
+.lmrow em{font-style:normal;font-weight:800;font-size:3.6cqw;color:var(--gold)}
+.lms{display:flex;align-items:center;gap:1cqw;min-width:0}.lms.rev{flex-direction:row-reverse}.lms b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-weight:600}.lms.won b{color:#7FD6A0}
+.lms .rt{display:inline-flex;align-items:center;gap:.5cqw;flex:0 0 auto}.lms .rt img{width:3.4cqw;height:3.4cqw}.lms .rt b{font-size:2.6cqw;color:#cfd6e6}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -3029,6 +3033,12 @@ function lgFinish(L) {
     H.league = null;
   });
 }
+function lgRec(L, m) {   // последние матчи основной лиги региона — для окна трофеев на карте
+  if (!m.done || L.title || L.team || L.r == null || !G.leagues[L.r]) return;
+  const side = i => { const T = L.teams[i]; return { n: lgTeamName(L, i), c: T.h != null ? G.players[T.h].country : T.f.country, r: lgRating(L, i) }; };
+  const wa = m.g.filter(x => x === m.a).length;
+  G.lastM = G.lastM || {}; G.lastM[L.r] = [{ a: side(m.a), b: side(m.b), sa: wa, sb: m.g.length - wa, w: m.w === m.a ? 0 : m.w === m.b ? 1 : -1 }].concat(G.lastM[L.r] || []).slice(0, 3);
+}
 const lgSimMatch = (L, m) => { if (L.team) return tmSim(L, m); while (!m.done) tGame(m, simAB(lgFighter(L, m.a), lgFighter(L, m.b)) ? m.a : m.b); };
 const lgPending = L => L ? (L.cur || []).find(m => !m.done && (lgHum(L, m.a) || lgHum(L, m.b))) : null;
 // фазы, после которых идёт стадия плей-офф (четвертьфинал, полуфинал или финал)
@@ -3069,7 +3079,7 @@ function lgProcess() {
     L.cur = lgNextRound(L);
     if (!L.title && L.cur && L.cur[0] && ['QF', 'SF', 'F'].includes(L.cur[0].st)) L.left = 0;   // стадия плей-офф — одна на неделю
     if (!L.cur) { if (L.wc) wcFinish(L); else if (L.wf) wfFinish(L); else if (L.team) tlFinish(L); L.left = 0; continue; }
-    for (const m of L.cur) if (!lgHum(L, m.a) && !lgHum(L, m.b)) lgSimMatch(L, m);
+    for (const m of L.cur) if (!lgHum(L, m.a) && !lgHum(L, m.b)) { lgSimMatch(L, m); lgRec(L, m); }
   }
   // неделя закончилась: новый сезон стартует только после чемпионата мира (wfFinish) — перерыв BREAK_WEEKS недель
   if (G.leagues.every(L => L.phase === 'done') && !G.wc && !G.wf && !G.wcPool) startNewSeason();   // страховка для старых сохранений
@@ -3078,7 +3088,7 @@ function lgProcess() {
   beltWeek(); G.week++;
 }
 function lgAfterGame(L, m) {
-  const done = m.done;
+  const done = m.done; lgRec(L, m);
   if (done) for (const i of [m.a, m.b]) if (lgHum(L, i)) {
     const H = G.players[L.teams[i].h], wa = m.g.filter(x => x === m.a).length;
     if (m.w === i) earn(H, L.wf ? WF_GAME : L.wc ? WC_GAME : LG_COINS.win);   // победа в серии: лига 50, Wild Card 100, чемпионат мира 400
@@ -3318,7 +3328,7 @@ function viewTLTurn(L) {
       <div style="margin:14px auto">${tmLogo(T, 'big')}</div><h2>${esc(T.name)}</h2>
       <div>Команда ${esc(T.name)} предлагает ${hs.length > 1 ? 'вам' : 'тебе'} контракт на турнир ${L.size}на${L.size}.</div>
       <div class="dim" style="margin-top:6px">Состав: ${T.mem.map(x => flagOf(tmMemCountry(x)) + ' ' + esc(tmMemName(x))).join(', ')}</div>
-      <div style="margin-top:12px">${ibtn('sign', 'toffer', '1', 'Подписать')}${ibtn('decline', 'toffer', '0', 'Отказаться')}</div></div>`;
+      <div style="margin-top:12px">${ibtn('sign', 'toffer', '1', 'Подписать')}${ibtn('refuse', 'toffer', '0', 'Отказаться')}</div></div>`;
   }
   const m = lgPending(L); if (!m) return '';
   if (G.lview === 'ann') return `<div class="card" style="margin-top:32px;text-align:center"><div class="dim">Неделя ${G.week} · сезон ${seasonNo()} · ход лиг</div>
@@ -4016,8 +4026,9 @@ function mapHtml() {
 }
 function viewLeague() {
   const r = S.sel, P = PANELS[r];
-  const hist = S.hist.filter(h => h.r === r).slice(0, 3);
-  const rows = P.rows.map(([a, b], i) => `<div class="lrow" style="top:${pc(a, 1536)};height:${pc(b - a, 1536)};left:${pc(P.x[0], 1024)};width:${pc(P.x[1] - P.x[0], 1024)}">${hist[i] ? esc(hist[i].t) : ''}</div>`).join('');
+  const lm = (G.lastM || {})[r] || [];   // последние матчи основной лиги региона: счёт по центру, по бокам флаг, ник, ранг и рейтинг
+  const sd = (x, won, rev) => `<span class="lms ${rev ? 'rev' : ''} ${won ? 'won' : ''}">${flagOf(x.c)}<b>${esc(x.n)}</b>${rateHtml(x.r)}</span>`;
+  const rows = P.rows.map(([a, b], i) => `<div class="lrow lmrow" style="top:${pc(a, 1536)};height:${pc(b - a, 1536)};left:${pc(P.x[0], 1024)};width:${pc(P.x[1] - P.x[0], 1024)}">${lm[i] ? `${sd(lm[i].a, lm[i].w === 0)}<em>${lm[i].sa}:${lm[i].sb}</em>${sd(lm[i].b, lm[i].w === 1, true)}` : i === 0 ? '<span class="dim" style="margin:auto">Матчей лиги пока не было</span>' : ''}</div>`).join('');
   const won = TIERS.map((t, i) => S.troph.some(x => x.r === r && x.n === t.name) ? TIER_SHORT[i] : '').concat(S.troph.some(x => x.r === r && x.n === 'Кубок лиги') ? ['Лига'] : ['']);
   const room = P.pedY - P.rows[2][1] - 20;   // высота от пьедестала до списка матчей
   const peds = P.ped.map((cx, i) => !won[i] ? '' : TROPHY_IMG[r] ? `<img class="lpedimg" src="img/trophy/r${r}_${i}.webp" alt="${won[i]}" title="${won[i]}" style="left:${pc(cx, 1024)};top:${pc(P.pedY + PED_SINK, 1536)};height:${pc(Math.min(room, 140 + i * 25), 1536)}">`
