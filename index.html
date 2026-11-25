@@ -1113,6 +1113,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .bosst{font-size:11px;font-weight:900;letter-spacing:.12em;color:#FF8FB0}
 .bosshp{position:relative;height:24px;border-radius:12px;background:#2a1220;overflow:hidden;margin:12px 0 6px}.bosshp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#c2185b,#ff5c8a)}.bosshp b{position:relative;display:block;text-align:center;line-height:24px;font-size:13px}
 .hdtn.lg{font-size:max(10px,2.5cqw)!important}.hdtn.xl{font-size:max(9px,2.1cqw)!important}
+.bstack{display:flex;flex-direction:column;gap:10px}.bstack>.imgbtn,.bstack>button,.bstack>div{margin:0!important}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -4667,8 +4668,8 @@ function viewLib() {
   const ni = LIB_NOTES[i].img;
   return wrap(`<div class="card" style="text-align:center">${ni ? `<img class="libimg" src="${ni}" alt="">` : '<img class="libhero" src="img/library.webp" alt="">'}
     <div class="dim">Заметка ${i + 1} из ${N}</div><h2>${esc(LIB_NOTES[i].t)}</h2><div style="text-align:left;line-height:1.5">${esc(LIB_NOTES[i].d)}</div><div class="bonus plus">${capF(effTxt(...LIB_B))}</div></div>
-    ${ibtn('dossier', 'dossier', S.region, 'Досье Элитных Спектров')}
-    ${ibtn('teams', 'teams', S.region, 'Команды лиг')}${ibtn('mech', 'mech', '', 'Механики игры')}${back}`);
+    <div class="bstack" style="margin-top:12px">${ibtn('dossier', 'dossier', S.region, 'Досье Элитных Спектров')}
+    ${ibtn('teams', 'teams', S.region, 'Команды лиг')}${ibtn('mech', 'mech', '', 'Механики игры')}${back}</div>`);
 }
 
 function itemCard(it, i, act, on) {
@@ -4806,14 +4807,14 @@ function viewBureau() {   // слева — бюро и услуги, справ
   return wrap(`<div class="bgrid"><div class="bleft">
     <div class="card"><img class="scene" src="img/${['bureau', 'bureau_1', 'bureau_2'][S.bpic | 0]}.webp" alt="Бюро Спектров">
       <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
-    <div class="card"><h2>Услуги бюро</h2>
-      ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром'], ['ttour', '', 's_ttour', 'Региональные командные турниры']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}${none ? '<div class="dim" style="margin-top:4px;font-size:13px">Действия на неделю закончились.</div>' : ''}
+    <div class="card"><h2>Услуги бюро</h2>${none ? '<div class="dim" style="margin:-4px 0 8px;font-size:13px">Действия на неделю закончились.</div>' : ''}<div class="bstack">
+      ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром'], ['ttour', '', 's_ttour', 'Региональные командные турниры']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="Корона Спектров"><img src="img/nav/crown.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="Корона Спектров закрыта"><img src="img/nav/s_crown_lock.webp" alt=""></div>'}
-    </div>
-    <div class="card"><button class="imgbtn" data-a="missions" aria-label="Миссии Бюро" style="margin-top:0"><img src="img/nav/missions.webp" alt=""></button></div>
-    <div class="card"><button class="imgbtn" data-a="cafe" aria-label="Кафе" style="margin-top:0"><img src="img/nav/cafe.webp" alt=""></button></div>
-    <div class="card"><button class="imgbtn" data-a="slot" aria-label="Игровой автомат" style="margin-top:0"><img src="img/nav/slot.webp" alt=""></button></div>
-    <div class="card"><button class="imgbtn" data-a="famebu" aria-label="Зал славы" style="margin-top:0"><img src="img/nav/fame.webp" alt=""></button></div></div>
+      <button class="imgbtn" data-a="missions" aria-label="Миссии Бюро"><img src="img/nav/missions.webp" alt=""></button>
+      <button class="imgbtn" data-a="cafe" aria-label="Кафе"><img src="img/nav/cafe.webp" alt=""></button>
+      <button class="imgbtn" data-a="slot" aria-label="Игровой автомат"><img src="img/nav/slot.webp" alt=""></button>
+      <button class="imgbtn" data-a="famebu" aria-label="Зал славы"><img src="img/nav/fame.webp" alt=""></button>
+    </div></div></div>
     <div class="bright">${(() => { const r = S.blg != null ? S.blg : S.region; return `<div class="card blgtabs"><div class="row" style="flex-wrap:nowrap;gap:4px;margin:0">${REGIONS.map((R, i) => `<button class="blgb ${i === r ? 'on' : ''}" data-a="blg" data-v="${i}" aria-label="${LSHORT[i]}" title="${LSHORT[i]}"><img src="img/logo_${i}.webp" alt=""></button>`).join('')}</div></div>` + lgCardHtml(r); })()}${wcCardHtml()}${wfCardHtml()}${tlCardHtml()}</div></div>`);
 }
 function viewFame() {
