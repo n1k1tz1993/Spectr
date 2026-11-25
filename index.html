@@ -1058,9 +1058,8 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .slotg.spin img{animation:slotspin .12s linear infinite}
 @keyframes slotspin{0%{transform:translateY(-6px);filter:blur(1px)}100%{transform:translateY(6px);filter:blur(1px)}}
 .slotres{min-height:24px;margin:4px 0 8px}
-.mcups{position:absolute;right:.8cqw;top:9.5cqw;display:flex;flex-direction:column;gap:.6cqw}
-.mcup{display:flex;flex-direction:column;align-items:center;gap:.4cqw;background:rgba(8,12,24,.72);border:1px solid #2a3556;border-radius:1cqw;padding:.6cqw;color:#BFF6FF;cursor:pointer;line-height:1}
-.mcup img{width:6cqw;height:6cqw;border-radius:1cqw;object-fit:contain}.mcup b{font-size:1.7cqw}
+.mcup{position:absolute;display:flex;align-items:center;justify-content:center;gap:1cqw;background:none center/100% 100% no-repeat;border:0;padding:0 1.2cqw;color:#BFF6FF;cursor:pointer;line-height:1.05;text-align:left}.mcup span{display:flex;flex-direction:column}.mcup i{font-style:normal;font-size:1.5cqw;color:#7FBFD0;margin-top:.3cqw}
+.mcup img{width:4.6cqw;height:4.6cqw;border-radius:.8cqw;object-fit:contain}.mcup b{font-size:2.3cqw;font-weight:800}
 .tmcell{display:inline-flex;align-items:center;gap:6px;min-width:0}.tmcell b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tlogo.big{width:72px;height:72px;font-size:32px}
 .tmvs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start;margin-top:8px}.tmvs .tsc{font-size:26px;font-weight:800;align-self:center}
@@ -1176,13 +1175,14 @@ const GENERIC = [
 // карта 1254×1254: выноски (x0,y0,x1,y1), точки, короткое имя лиги
 const MAPW = 1672, MAPH = 941;
 const MAP_SHORT = ['USA', 'EC', 'CSL', 'ASL', 'SSS'];   // короткие названия лиг в выносках карты (CSL — Континентальная лига Спектров)   // карта обрезана: сверху 125 px, снизу всё ниже 1000 px
-const MAPSPOTS = [   // выноски новой карты 1672×941: рамка (внутренняя тёмная часть) и точка на карте
-  { box: [37, 623, 362, 794], pin: [245, 367] },
-  { box: [352, 75, 675, 245], pin: [829, 257] },
-  { box: [1160, 75, 1479, 245], pin: [1020, 236] },
-  { box: [943, 623, 1260, 794], pin: [1396, 383] },
-  { box: [1321, 623, 1640, 794], pin: [1508, 403] }
+const MAPSPOTS = [   // выноски карты 1672×941 (map_v3): рамка (внутренняя тёмная часть) и точка на карте
+  { box: [41, 599, 361, 757], pin: [248, 340] },
+  { box: [353, 43, 679, 205], pin: [828, 229] },
+  { box: [1160, 43, 1480, 205], pin: [1023, 213] },
+  { box: [945, 613, 1259, 768], pin: [1395, 373] },
+  { box: [1324, 613, 1631, 769], pin: [1501, 393] }
 ];
+const MAPCUPS = [['mo', 'МО', 'Мировые'], ['2', '2на2', 'Команды'], ['3', '3на3', 'Команды']];   // кнопки кубков внизу слева: рамки, вырезанные из карты
 // панели лиг 1024×1536: строки «Последние матчи», края строк, центры пьедесталов, низ подписи трофея
 const TROPHY_IMG = [true, true, true, true, false];   // трофеи лиг: img/trophy/r<регион>_<0..3>.webp (новички, любители, полупро, лига)
 const PED_SINK = 28;   // насколько основание трофея опускается на диск пьедестала
@@ -4008,11 +4008,11 @@ const nextMatchText = () => {
 };
 const pc = (v, w) => (v / w * 100).toFixed(3) + '%';
 function mapHtml() {
-  return `<div class="map"><div class="mapin"><img src="img/map_v2.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
+  return `<div class="map"><div class="mapin"><img src="img/map_v3.webp" alt="Карта мира">${MAPSPOTS.map((m, i) => {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
     return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}"><img src="img/logo_${i}.webp" alt=""><span><b>${MAP_SHORT[i]}</b><i>${esc(REGIONS[i].name)}</i></span></div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
-  }).join('')}<div class="mcups">${[['mo', 'МО'], ['2', '2на2'], ['3', '3на3']].map(([k, t]) => `<button class="mcup" data-a="cupwin" data-v="${k}" aria-label="${t}"><img src="img/nav/cup_${k}.webp" alt=""><b>${t}</b></button>`).join('')}</div></div></div>`;
+  }).join('')}${MAPCUPS.map(([k, t, d], j) => `<button class="mcup" data-a="cupwin" data-v="${k}" aria-label="${t}" style="left:${pc(38 + j * 234, MAPW)};top:${pc(780, MAPH)};width:${pc(222, MAPW)};height:${pc(149, MAPH)};background-image:url(img/nav/mapf_${k}.webp)"><img src="img/nav/cup_${k}.webp" alt=""><b>${t}</b></button>`).join('')}</div></div>`;
 }
 function viewLeague() {
   const r = S.sel, P = PANELS[r];
