@@ -3509,7 +3509,7 @@ function viewCupWin() {
   let inner = '';
   if (k === 'mo') {
     const it = [[S.wfWon, 'img/trophy/wf.webp', 'Чемпионат мира'], [S.wcWon, 'img/trophy/wc.webp', 'Wild Card'], [S.dhWon ? 1 : 0, 'img/trophy/dh.webp', 'Метеор Фест'], [S.eslWins, 'img/crown.webp', 'Корона Спектров']];
-    const med = TIERS.map((t, i) => [S.troph.filter(x => x.n === t.name).length, TIER_SHORT[i], 'medal']).concat(TL_SIZES.map(z => [(S.ttWon || {})[z] || 0, `Командный ${z}на${z}`, 'medal_t' + z]));
+    const med = TIERS.map((t, i) => [S.troph.filter(x => x.n === t.name).length, TIER_SHORT[i], 'medal_' + i]).concat(TL_SIZES.map(z => [(S.ttWon || {})[z] || 0, `Командный ${z}на${z}`, 'medal_t' + z]));
     inner = `<div class="cwhead"><img class="cwlogo" src="img/tcup/logo_mo.webp" alt=""><div class="cwttl">Мировые трофеи</div></div><div class="cwgrid">${it.map(([n, img, t]) => `<div class="cwc ${n ? '' : 'off'}"><img src="${img}" alt="" onerror="this.style.visibility='hidden'"><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>
       <div class="cwttl" style="margin-top:3cqw">Медали за турниры</div><div class="cwgrid m4">${med.map(([n, t, img]) => `<div class="cwc ${n ? '' : 'off'}"><img src="img/tcup/${img}.webp" alt=""><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>`;
   } else {
