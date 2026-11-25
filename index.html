@@ -1098,6 +1098,13 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .tmmem{font-size:12.5px;gap:5px}.tmmem .ava{width:26px;height:26px;flex:0 0 auto}
 .lgpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin-top:8px}.lgpick button{padding:3px;border-radius:12px;border:2px solid var(--line);background:#000;cursor:pointer;line-height:0}.lgpick button.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,197,66,.35)}.lgpick img{width:100%;aspect-ratio:1;border-radius:8px}
 .fyteam.long b{font-size:.78em;line-height:1.05;white-space:normal}
+.swrow{display:grid;grid-template-columns:24px 26px 1fr auto;gap:8px;align-items:center;padding:6px 6px;border-bottom:1px solid #1d2540;font-size:13.5px}
+.swrow.head{grid-template-columns:24px 1fr auto;font-size:12px}.swrow.head span{padding-left:34px}
+.swrow em{font-style:normal;color:var(--dim);text-align:right}.swrow span{min-width:0;line-height:1.15;overflow-wrap:anywhere}.swrow b{white-space:nowrap}
+.swrow .tlogo.sm{width:24px;height:24px;border-radius:5px;font-size:12px}.swrow.hum{background:rgba(245,197,66,.08)}.swrow.hum span{color:var(--gold);font-weight:800}
+.swrow.z1{border-left:3px solid #22c55e}.swrow.z2{border-left:3px solid #eab308}.swrow.z3{border-left:3px solid #ef4444}
+.tmrc.out{opacity:.45}.tmout{margin-top:10px}.tmout summary{cursor:pointer;color:var(--dim);font-weight:700;padding:6px 0}
+.tmrc b{white-space:normal!important;overflow-wrap:anywhere;line-height:1.15}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -3234,7 +3241,13 @@ function tmBracket(C, plan, champ) {   // сетка команд сверху �
     return `<div class="tbh">${name[k] || k}${bo ? ` <small>Bo${bo}</small>` : ''}</div><div class="tbrow n${n}">${[...Array(n).keys()].map(i => { const m = ms[i]; return `<div class="tbp ${m && !m.done && (tmHum(C, m.a) || tmHum(C, m.b)) ? 'now' : ''}">${slot(m, 0)}${slot(m, 1)}</div>`; }).join('')}</div>`; }).join('<div class="tbarrow">▼</div>')}
     ${champ != null ? `<div class="tbarrow">▼</div><div class="tbh">Чемпион</div><div class="tbrow n1"><div class="tbp champ"><div class="tbs win ${tmHum(C, champ) ? 'me' : ''}">${tmLogo(C.teams[champ], 'sm')}<span>🏆 ${esc(C.teams[champ].name)}</span></div></div></div>` : ''}</div>`;
 }
-const tmRoster = C => `<div class="tmros">${C.teams.map((T, i) => ({ T, i })).sort((a, b) => tmHum(C, b.i) - tmHum(C, a.i) || tmRating(C, b.i) - tmRating(C, a.i)).map(({ T, i }) => `<div class="tmrc ${tmHum(C, i) ? 'hum' : ''}">${tmLogo(T)}<b>${esc(T.name)}</b>${T.mem.map(x => `<small>${flagOf(tmMemCountry(x))} ${esc(tmMemName(x))}</small>`).join('')}</div>`).join('')}</div>`;
+const tmRcard = (C, i, out) => { const T = C.teams[i]; return `<div class="tmrc ${tmHum(C, i) ? 'hum' : ''} ${out ? 'out' : ''}">${tmLogo(T)}<b>${esc(T.name)}</b>${T.mem.map(x => `<small>${flagOf(tmMemCountry(x))} ${esc(tmMemName(x))}</small>`).join('')}</div>`; };
+function tmRoster(C, alive) {   // составы: команды игроков, затем оставшиеся в турнире; выбывшие — свёрнуты
+  const ord = C.teams.map((T, i) => i).sort((a, b) => tmHum(C, b) - tmHum(C, a) || tmRating(C, b) - tmRating(C, a));
+  const inn = alive ? ord.filter(i => alive(i)) : ord, out = alive ? ord.filter(i => !alive(i)) : [];
+  return `${alive ? `<div class="dim">В турнире: ${inn.length} из ${C.teams.length}</div>` : ''}<div class="tmros">${inn.map(i => tmRcard(C, i)).join('')}</div>
+    ${out.length ? `<details class="tmout"><summary>Выбывшие команды · ${out.length}</summary><div class="tmros">${out.map(i => tmRcard(C, i, true)).join('')}</div></details>` : ''}`;
+}
 const tmMatchRow = (C, m) => { const wa = m.g.filter(x => x === m.a).length; return `<div class="tmrow ${tmHum(C, m.a) || tmHum(C, m.b) ? 'hum' : ''}"><span class="${m.done && m.w === m.a ? 'win' : ''}">${tmCell(C, m.a)}</span><b>${m.g.length ? wa + ':' + (m.g.length - wa) : 'Bo' + m.bo}</b><span class="${m.done && m.w === m.b ? 'win' : ''}">${tmCell(C, m.b)}</span></div>`; };
 
 // ---------- главная командная лига 2на2: раз в сезон, 100 команд ----------
@@ -3354,6 +3367,7 @@ function tlFinish(L) {
 const tlMine = (L, hi) => L && L.teams ? L.teams.findIndex(T => T.mem.some(x => x.h === hi)) : -1;
 const tlAlive = (L, i) => !L.M.some(m => m.done && m.w !== i && (m.a === i || m.b === i) && m.st[0] !== 'W') && !(L.top && !L.top.includes(i) && !L.pin.includes(i));
 function tlTeamOf(H) {   // команда героя на идущем командном турнире — вместо FREE AGENT
+  if (H.ttr && !H.ttr.fin) return { logo: H.ttr.teams[0].logo, name: H.ttr.teams[0].name, z: H.ttr.size };
   if (!G || !G.tlg) return null;
   for (const z of TL_SIZES) { const L = G.tlg[z]; if (!L || ['reg', 'form', 'end'].includes(L.phase)) continue; const i = tlMine(L, tlHi(H)); if (i >= 0 && tlAlive(L, i)) return { logo: L.teams[i].logo, name: L.teams[i].name, z }; }
   return null;
@@ -3408,8 +3422,8 @@ function tlBody(L, tab) {   // вкладки лиги: матчи, сетка �
     const pi = lgStage(L, 'PI');
     body = `<div class="card"><h3>Плей-офф</h3><div class="dim">Сетка заполняется после швейцарской системы. Золотым — команды игроков.</div>${tmBracket(L, [['QF', 4], ['SF', 2], ['F', 1]], L.phase === 'end' ? lgStage(L, 'F')[0].w : null)}</div>${pi.length ? `<div class="card"><h3>Плей-ин · Bo1</h3>${pi.map(m => tmMatchRow(L, m)).join('')}</div>` : ''}`;
   } else if (tab === 't') {
-    body = L.sw ? `<div class="card"><h3>Этап 2 · швейцарская система</h3><div class="dim">1–4 — в плей-офф, 5–12 — в плей-ин.</div>${tlSwiss(L).map((x, k) => `<div class="tmrow ${tmHum(L, x.i) ? 'hum' : ''} ${k < 4 ? 'z1' : k < 12 ? 'z2' : 'z3'}"><span style="display:flex;align-items:center;gap:6px;min-width:0"><em class="dim" style="font-style:normal;min-width:20px">${k + 1}.</em>${tmCell(L, x.i)}</span><b>${x.w}–${x.l}</b></div>`).join('')}</div>` : '<div class="card dim">Швейцарская система ещё не началась.</div>';
-  } else body = `<div class="card"><h3>Составы команд</h3>${tmRoster(L)}</div>`;
+    body = L.sw ? `<div class="card"><h3>Этап 2 · швейцарская система</h3><div class="dim">1–4 — в плей-офф, 5–12 — в плей-ин.</div><div class="swrow head dim"><em>#</em><span>Команда</span><b>В–П</b></div>${tlSwiss(L).map((x, k) => `<div class="swrow ${tmHum(L, x.i) ? 'hum' : ''} ${k < 4 ? 'z1' : k < 12 ? 'z2' : 'z3'}"><em>${k + 1}</em>${tmLogo(L.teams[x.i], 'sm')}<span>${esc(L.teams[x.i].name)}</span><b>${x.w}–${x.l}</b></div>`).join('')}</div>` : '<div class="card dim">Швейцарская система ещё не началась.</div>';
+  } else body = `<div class="card"><h3>Составы команд</h3>${tmRoster(L, L.phase === 'end' ? null : i => tlAlive(L, i))}</div>`;
   return body;
 }
 
@@ -3485,7 +3499,7 @@ function viewTTR() {
   const m = ttrPending(C), tab = S.tttab || 'b';
   const head = `<div class="card"><h2>${esc(C.title)} · ${esc(REGIONS[C.region].name)}</h2>${tmTabs(['b', 'r'], tab, 'tttab')}</div>`;
   const res = C.fin ? `<div class="card" style="text-align:center"><div class="dim">Победитель</div><div style="margin:8px auto">${tmLogo(C.teams[C.res], 'big')}</div><h2>${esc(C.teams[C.res].name)}</h2>${ibtn('continue', 'ttdone', '', 'Завершить')}</div>` : '';
-  const body = tab === 'r' ? `<div class="card"><h3>Составы команд</h3>${tmRoster(C)}</div>` : `<div class="card"><h3>Сетка</h3><div class="dim">Четвертьфинал и полуфинал Bo1, финал Bo3. Золотым — твоя команда.</div>${tmBracket(C, [['QF', 4], ['SF', 2], ['F', 1]], C.fin ? C.res : null)}</div>`;
+  const body = tab === 'r' ? `<div class="card"><h3>Составы команд</h3>${tmRoster(C, C.fin ? null : i => !C.M.some(m => m.done && m.w !== i && (m.a === i || m.b === i)))}</div>` : `<div class="card"><h3>Сетка</h3><div class="dim">Четвертьфинал и полуфинал Bo1, финал Bo3. Золотым — твоя команда.</div>${tmBracket(C, [['QF', 4], ['SF', 2], ['F', 1]], C.fin ? C.res : null)}</div>`;
   return wrap(head + res + (m && tab === 'b' ? tmPanel(C, m, ({ QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал' })[m.st]) : '') + body);
 }
 
