@@ -1073,7 +1073,7 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .tfrow{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:14px 0}.tfp{display:flex;flex-direction:column;align-items:center;gap:4px;background:#0f1426;border:4px solid;border-radius:14px;padding:8px;color:inherit;cursor:pointer;width:96px}.tfp .ava{width:64px;height:64px}
 .cwpanel{background-color:#0d1220;border-radius:14px}.cwin{position:absolute;inset:6cqw 5cqw;overflow:auto;display:flex;flex-direction:column;gap:2cqw;color:#e8ecf6}
 .cwttl{font-size:6cqw;font-weight:800;text-align:center;color:var(--gold)}.cwgrid{display:grid;grid-template-columns:1fr 1fr;gap:3cqw}
-.cwc{display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center}.cwc img{width:26cqw;height:26cqw;object-fit:contain}.cwc b{font-size:3.6cqw}.cwc small{font-size:3.2cqw;color:var(--gold)}.cwc.off{opacity:.35}
+.cwc{display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center}.cwc img{width:22cqw;height:22cqw;object-fit:contain}.cwgrid.m4{grid-template-columns:repeat(4,1fr);gap:1.5cqw}.cwgrid.m4 img{width:17cqw;height:17cqw}.cwgrid.m4 b{font-size:3cqw}.cwc b{font-size:3.6cqw}.cwc small{font-size:3.2cqw;color:var(--gold)}.cwc.off{opacity:.35}
 .cwcel{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:2cqw}.cwcup{width:40cqw;height:40cqw;object-fit:contain;align-self:center}
 .cwteam{display:flex;align-items:center;justify-content:center;gap:2cqw;font-size:5cqw}.cwmem{display:flex;justify-content:center;gap:4cqw;flex-wrap:wrap}.cwmem>div{display:flex;flex-direction:column;align-items:center;gap:1cqw}.cwmem .ava{width:18cqw;height:18cqw}.cwmem small{font-size:3.4cqw}
 </style></head>
@@ -3400,6 +3400,7 @@ function ttrFinish(C) {
     const H = G.players[x.h], pl = i === f.w ? 1 : i === sec ? 2 : sf.includes(i) ? 3 : 0, pz = TT_PRIZE[pl] || 0;
     let msg = `${C.title}: ` + (pl === 1 ? 'победа!' : pl === 2 ? '2 место.' : pl === 3 ? 'полуфинал.' : 'вылет в четвертьфинале.');
     if (pz) msg += ` +${earn(H, pz)} крипты.`;
+    if (pl === 1) { H.ttWon = H.ttWon || {}; H.ttWon[C.size] = (H.ttWon[C.size] || 0) + 1; msg += ' Медаль в коллекции.'; }
     if (pl === 1 && H.power < T.cap) { H.power = Math.min(T.cap, H.power + T.gain); msg += ' Сила растёт.'; }
     logTo(H, msg); histTo(H, C.region, msg);
   }));
@@ -3421,9 +3422,9 @@ function viewCupWin() {
   let inner = '';
   if (k === 'mo') {
     const it = [[S.wfWon, 'img/trophy/wf.webp', 'Чемпионат мира'], [S.wcWon, 'img/trophy/wc.webp', 'Wild Card'], [S.dhWon ? 1 : 0, 'img/trophy/dh.webp', 'Метеор Фест'], [S.eslWins, 'img/crown.webp', 'Корона Спектров']];
-    const med = TIERS.map((t, i) => [S.troph.filter(x => x.n === t.name).length, TIER_SHORT[i]]);
+    const med = TIERS.map((t, i) => [S.troph.filter(x => x.n === t.name).length, TIER_SHORT[i], 'medal']).concat(TL_SIZES.map(z => [(S.ttWon || {})[z] || 0, `Командный ${z}на${z}`, 'medal_t' + z]));
     inner = `<div class="cwttl">Мировые трофеи</div><div class="cwgrid">${it.map(([n, img, t]) => `<div class="cwc ${n ? '' : 'off'}"><img src="${img}" alt="" onerror="this.style.visibility='hidden'"><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>
-      <div class="cwttl" style="margin-top:3cqw">Медали за турниры</div><div class="cwgrid">${med.map(([n, t]) => `<div class="cwc ${n ? '' : 'off'}"><img src="img/tcup/medal.webp" alt=""><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>`;
+      <div class="cwttl" style="margin-top:3cqw">Медали за турниры</div><div class="cwgrid m4">${med.map(([n, t, img]) => `<div class="cwc ${n ? '' : 'off'}"><img src="img/tcup/${img}.webp" alt=""><b>${t}</b><small>${n ? '×' + n : 'нет'}</small></div>`).join('')}</div>`;
   } else {
     const z = +k, wins = (G.tcups && G.tcups[z] || []).filter(c => c.mem.some(x => x.h === hi)), last = (G.tcups && G.tcups[z] || [])[0], show = wins[0] || last;
     inner = `<div class="cwttl">Лига ${z}на${z}</div><img class="cwcel" src="img/tcup/celebrate_${z}.webp" alt=""><img class="cwcup" src="img/tcup/cup_${z}.webp" alt="">
