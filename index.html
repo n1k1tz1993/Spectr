@@ -1331,7 +1331,7 @@ const CONS_ICO = { gren: '🔥', batt: '🔋', rage: '😡', vamp: '🩸', crit:
 const npcKit = lvl => lvl === 'pro' ? shuffle(CONS.map(c => c.k)).slice(0, rnd(3, 5)) : lvl === 'semi' && Math.random() < 0.25 ? shuffle(CONS.map(c => c.k)).slice(0, rnd(1, 2)) : [];
 const DIRTY = { n: 'Грязные контракты', d: 'Связи в тени Бюро. Ты врываешься на чужие турниры, и никто не задаёт вопросов: никаких последствий для тебя.', cost: 3000 };
 const CONS_MAX = 10;
-const XACT = { n: 'Теневой график', d: 'Люди Бюро берут на себя твою рутину. Каждую неделю у тебя на одно действие больше — навсегда.', cost: 25000 };
+const XACT = { n: 'Лишнее действие', d: 'Люди Бюро берут на себя часть твоей рутины. +1 действие на эту неделю. Покупается раз в неделю.', cost: 2000 };
 const SOCIAL = {
   smear: { n: 'Вброс грязной инфы', d: 'Слив компромата в сеть. Медийность выбранного Спектра падает на эту и следующую неделю.', cost: 1200, v: -0.2, img: 'smear' },
   promo: { n: 'Прорекламировать', d: 'Оплаченная кампания в сети. Медийность выбранного Спектра растёт на эту и следующую неделю.', cost: 1200, v: 0.2, img: 'promo' } };
@@ -1408,7 +1408,7 @@ const carIcon = j => CARS[j].img ? `<img class="caricon" src="img/car/${CARS[j].
 // бонус даёт только то, что стоит в гараже (H.garage); смена — со следующей недели
 const garageOf = H => H.garage != null && (H.cars || []).includes(H.garage) && CARS[H.garage] ? H.garage : null;
 const carBonus = H => { const g = garageOf(H); return g == null ? 0 : CARS[g].a; };
-const maxActs = H => 3 + carBonus(H) + (H.xact ? 1 : 0);
+const maxActs = H => 3 + carBonus(H);
 const actWord = n => n === 1 ? 'действие' : n < 5 ? 'действия' : 'действий';
 const hasRoom = (H, k) => (H.rooms || []).includes(k);
 const freeBureau = H => (H.rooms || []).length > 0;   // любое купленное жильё — бюро без траты действия
@@ -4098,7 +4098,7 @@ function viewShop() {   // магазин: только названия и це
     <div class="card"><h3>Машины</h3><div class="dim">Купленный транспорт можно поставить в гараж — он в комнате. Самая дорогая машина задаёт медийность — множитель ко всей заработанной крипте. Вертолёты медийность не дают, зато в гараже добавляют действия в неделю.</div>${CAR_ORDER.map(j => [CARS[j], j]).map(([C2, j]) => (j === CAR_ORDER.find(k => CARS[k].heli) ? '<h3 style="margin-top:12px">Вертолёты</h3>' : '') + row(C2.n, C2.cost, (S.cars || []).includes(j), 'cbuy', j, C2.kind + (C2.heli ? ` · +${C2.a} действия в неделю в гараже` + (j === HELI_TOP ? ' · миссии ранга A за 1 неделю' : '') : ' · 📣 медийность ×' + (1 + mediaCar({ cars: [j] })).toFixed(2).replace('.', ',')), carIcon(j))).join('')}</div>
     <div class="card"><h3>Расходники</h3><div class="dim">Пригодятся в любом бою.</div>${CONS.map(c => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${c.k}.webp" alt=""><span><b>${esc(c.n)}</b><div class="dim" style="font-size:12px">${esc(c.d)}</div><div class="gold" style="font-size:12px">В запасе: ${consOf(S, c.k)} из ${CONS_MAX}</div></span></span>${consOf(S, c.k) >= CONS_MAX ? '' : `<button class="btn cbtn" data-a="consbuy" data-v="${c.k}" ${(S.coins || 0) < c.cost ? 'disabled' : ''}>${coinHtml(c.cost)}</button>`}</div>`).join('')}</div>
     <div class="card"><h3>Особое</h3><div class="dim">Теневые услуги Бюро.</div><div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/dirty.webp" alt=""><span><b>${DIRTY.n}</b><div class="dim" style="font-size:12px">${DIRTY.d}</div></span></span>${S.dirty ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="dbuy" ${(S.coins || 0) < DIRTY.cost ? 'disabled' : ''}>${coinHtml(DIRTY.cost)}</button>`}</div>
-      <div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/xact.webp" alt=""><span><b>${XACT.n}</b><div class="dim" style="font-size:12px">${XACT.d}</div></span></span>${S.xact ? '<span class="dim">✓ куплено</span>' : `<button class="btn cbtn" data-a="xbuy" ${(S.coins || 0) < XACT.cost ? 'disabled' : ''}>${coinHtml(XACT.cost)}</button>`}</div>
+      <div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/xact.webp" alt=""><span><b>${XACT.n}</b><div class="dim" style="font-size:12px">${XACT.d}</div></span></span>${S.xactT === S.turn ? '<span class="dim">✓ на этой неделе</span>' : `<button class="btn cbtn" data-a="xbuy" ${(S.coins || 0) < XACT.cost ? 'disabled' : ''}>${coinHtml(XACT.cost)}</button>`}</div>
       ${Object.entries(SOCIAL).map(([k, o]) => `<div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/${o.img}.webp" alt=""><span><b>${o.n}</b><div class="dim" style="font-size:12px">${o.d}</div></span></span><button class="btn cbtn" data-a="soc" data-v="${k}" ${(S.coins || 0) < o.cost ? 'disabled' : ''}>${coinHtml(o.cost)}</button></div>`).join('')}
       <div class="srow consrow"><span class="carrow"><img class="consico" src="img/shop/bet.webp" alt=""><span><b>${BET.n}</b><div class="dim" style="font-size:12px">${BET.d}</div>${(G.bets || []).filter(b => b.from === G.cur).map(b => `<div class="gold" style="font-size:12px">Ставка ${b.amt} на ${esc(G.players[b.on].nick)}</div>`).join('')}</span></span><button class="btn cbtn" data-a="bet" ${(S.coins || 0) < 1 ? 'disabled' : ''}>Открыть</button></div></div>
     <div class="card"><h3>Артефакты</h3>${ITEMS.map((it, i) => row(it.n, it.cost, own.includes(i), 'ibuy', i)).join('')}</div>`) + navBar();
@@ -4132,7 +4132,7 @@ function viewSlot() {
       ${ibtn('spin', 'spin', '', 'Крутить', '', S.actions < 1 || (S.coins || 0) < 1 || S.slotAnim)}</div>`);
 }
 const MECH = [
-  ['Неделя и действия', 'Игра идёт по неделям. Каждую неделю у тебя 3 действия: турнир, тренировка, бюро, библиотека, отдых, перелёт и события. Вертолёт в гараже и «Теневой график» добавляют действия. Когда действия кончились, нажми «Следующая неделя».'],
+  ['Неделя и действия', 'Игра идёт по неделям. Каждую неделю у тебя 3 действия: турнир, тренировка, бюро, библиотека, отдых, перелёт и события. Вертолёт в гараже добавляет действия, а в магазине можно купить лишнее действие на текущую неделю. Когда действия кончились, нажми «Следующая неделя».'],
   ['Сила', 'Сила решает исход боёв. Победы на турнирах поднимают её: турнир новичков — до 40, любительский — до 52, полупрофессиональный — до 65. После 65 сила растёт только за новые трофеи: первая победа в каждом турнире каждого региона, Wild Card и Метеор Фест. Предел силы — 81. Артефакт, бонусы недели и события временно добавляют или убавляют силу.'],
   ['Турниры', 'Местный турнир открывается в Бюро своего региона. Победа открывает следующий уровень. Призовые получают места с 1-го по 4-е. После поражения на турнире приходит дизмораль: штраф к силе до конца недели, который снимает отдых.'],
   ['Рейтинг и лиги', 'Рейтинг растёт за лестничные матчи, бои с Элитными Спектрами, Корону Спектров, миссии и подкасты сильных бойцов. Рейтинг не тратится на покупки. По рейтингу ты попадаешь в драфт профессиональных лиг: в Бюро можно выбрать команду не выше своего места. Игроки про-команды получают надбавку к призовым.'],
@@ -4141,7 +4141,7 @@ const MECH = [
   ['Крипта и медийность', 'Крипта — деньги Спектров. Её дают турниры, лиги, миссии и события. Медийность умножает всю заработанную крипту, до ×2. Её поднимают машина, интервью и подкасты, дорогие артефакты и реклама. Компромат её снижает.'],
   ['Бой', 'Бой пошаговый. Каждый ход — удар, защита, способность, Удар Цы или суперспособность (нужно 70 Цы). Защита бесплатна, даёт Цы и готовит контрудар. Расходники работают один раз за бой и запрещены в матчах лиги.'],
   ['Миссии', 'Миссии берут в Бюро. Ранг C длится 1 неделю, B — 2, A — 3. Можно идти одному или втроём с игроками своего региона. Шанс успеха зависит от средней силы отряда. За любую миссию даётся рейтинг.'],
-  ['Теневые услуги', 'В магазине в разделе «Особое»: грязные контракты для вторжений без последствий, лишнее действие в неделю, вброс компромата и реклама любому Спектру, ставки на победу Спектра в турнире. В Бюро стоит игровой автомат.']
+  ['Теневые услуги', 'В магазине в разделе «Особое»: грязные контракты для вторжений без последствий, лишнее действие на текущую неделю, вброс компромата и реклама любому Спектру, ставки на победу Спектра в турнире. В Бюро стоит игровой автомат.']
 ];
 function viewMech() {
   return wrap(`<div class="card" style="text-align:center"><img class="libhero" src="img/library.webp" alt=""><h2>Механики игры</h2><div class="dim">Как устроен мир Спектров и что дают победы.</div></div>
@@ -4877,7 +4877,7 @@ function act(a, v) {
       S.roomPic = 2; logMsg(`Куплено: ${CARS[j].n}.${S.garage === j ? ' Стоит в гараже.' : ' Поставить в гараж можно в комнате.'}`); break; }
     case 'gsel': { const j = +v; if (!(S.cars || []).includes(j) || S.garage === j) return; S.garage = j; logMsg(`В гараже теперь ${CARS[j].n}.`); break; }
     case 'shop': S.view = 'shop'; break;
-    case 'xbuy': if (S.xact || (S.coins || 0) < XACT.cost) return; S.coins -= XACT.cost; S.xact = true; S.actions++; S.weekMax = maxActs(S); logMsg('Куплено: ' + XACT.n + '. +1 действие каждую неделю.'); break;
+    case 'xbuy': if (S.xactT === S.turn || (S.coins || 0) < XACT.cost) return; S.coins -= XACT.cost; S.xactT = S.turn; S.actions++; logMsg('Куплено: ' + XACT.n + '. +1 действие на эту неделю.'); break;
     case 'soc': if (!SOCIAL[v]) return; S.soc = v; S.view = 'soc'; break;
     case 'socgo': { const o = SOCIAL[S.soc], P = G.players[+v]; if (!o || !P || (S.coins || 0) < o.cost) return; S.coins -= o.cost;
       P.mfx = (P.mfx || []).filter(e => e.to >= P.turn); P.mfx.push({ v: o.v, to: P.turn + 1 });
