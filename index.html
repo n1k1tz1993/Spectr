@@ -4010,7 +4010,7 @@ function bossAct(a) {
 const bossCard = (k, small, v) => { const b = bossOf(k, v); return `<div class="bossc ${small ? 'sm' : ''}"><img src="img/boss/${b.k}.webp" alt=""><div><div class="bosst">BOSS · ${b.t}</div><b>${b.n}</b><div class="dim">${b.d}</div></div></div>`; };
 function viewCafe() {
   const L = cafeList(S.region).map(k => FOOD.find(f => f.k === k));
-  return wrap(`<div class="card"><img src="img/cafe.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
+  return wrap(`<div class="card"><img src="img/${S.cafePic ? 'cafe_1' : 'cafe'}.webp" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block">
       <h2 style="margin-top:10px">Кафе Бюро · ${esc(REGIONS[S.region].name)}</h2><div class="dim">Сытный обед даёт бонус к силе на один следующий бой и складывается со всеми другими бонусами. От еды действует только самое сытное блюдо. Меню меняется каждую неделю. Покупка не тратит действие.</div>
       ${S.food ? `<div class="bonus nt" style="margin-top:8px">🍽 Ты пообедал: ${esc(S.foodN || 'блюдо')} — бонус на следующий бой</div>` : ''}</div>
     ${L.map(f => { const c = foodCost(f), worse = (S.food || 0) >= f.v;
@@ -5553,7 +5553,7 @@ function act(a, v) {
     case 'mstart': misStart(+v); break;
     case 'bfight': case 'bsim': bossAct(a); break;
     case 'bdone': S.view = 'mres'; break;
-    case 'cafe': S.view = 'cafe'; break;
+    case 'cafe': S.cafePic = rnd(0, 1); S.view = 'cafe'; break;
     case 'eat': { const f = FOOD.find(x => x.k === v); if (!f || !cafeList(S.region).includes(v)) return; const c = foodCost(f); if ((S.coins || 0) < c) return; S.coins -= c;
       if (f.v > (S.food || 0)) { S.food = f.v; S.foodN = f.n; } logMsg(`Кафе: ${f.n}. Бонус на следующий бой.`); break; }
     case 'mbeast': { const M = S.mis; if (!M || M.beast !== 1) return; const p = Math.max(1, effPower() - gameBonus(S) - rnd(BEAST.gapLo, BEAST.gapHi)), bk = M.bk != null ? M.bk : rnd(0, BEASTS.length - 1);
