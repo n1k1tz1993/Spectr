@@ -1588,7 +1588,7 @@ const SEMI = [['Rift Foxes', 'semi_0'], ['Neon Rooks', 'semi_1'], ['Iron Moths',
   ['Cascade Circuit', 'us_6'], ['Mile High Talons', 'us_7'], ['Crescent Hex', 'us_8'], ['Varsity Union', 'us_9'], ['Sentinel Command', 'us_10'], ['Detroit Overdrive', 'us_11']];
 const SEMI_TEAMS = SEMI.map(t => t[0]);
 // сгенерированные команды без спонсора: свои названия и 9 логотипов img/team/gen_*.webp; игрок без спонсора может собрать свою
-const GEN_LOGOS = 9;
+const GEN_LOGOS = 6;
 const GEN_TEAMS = ['Midnight Ramen', 'Couch Potato Elite', 'Lagging Legends', 'The Last Respawn', 'Snack Attack', 'Coffee & Chaos', 'Pixel Pigeons', 'Wasabi Warriors', 'Sleepy Sharks', 'No Plan Squad',
   'Grandma\'s Revenge', 'Tilted Towers', 'Bad Wi-Fi Club', 'Banana Republic', 'Ctrl Alt Defeat', 'Zero Chill', 'Sweaty Palms', 'Taco Tuesday', 'Lucky Socks', 'Panic Button',
   'Night Owls', 'Blue Harbor', 'Silver Line', 'North Wind', 'Copper Fox', 'Stone Garden', 'Red Lantern', 'Quiet Storm', 'Iron Bridge', 'Open Sky',
@@ -3445,10 +3445,10 @@ function viewTTour() {
       ${logoPick('ttlogo', S.ttLogo != null ? S.ttLogo : S.myTeam ? S.myTeam.l : null)}</div>
     ${ibtn('tstart', 'ttstart', '', 'Начать турнир', '', S.actions < 1)}`);
 }
-const logoPick = (act, sel) => `<div class="lgpick">${[...Array(GEN_LOGOS).keys()].map(k => `<button class="${k === sel ? 'on' : ''}" data-a="${act}" data-v="${k}" aria-label="Логотип ${k + 1}"><img src="img/team/gen_${k}.webp" alt=""></button>`).join('')}</div>`;
+const logoPick = (act, sel) => `<div class="lgpick">${[...Array(GEN_LOGOS).keys()].map(k => `<button class="${sel != null && k === sel % GEN_LOGOS ? 'on' : ''}" data-a="${act}" data-v="${k}" aria-label="Логотип ${k + 1}"><img src="img/team/gen_${k}.webp" alt=""></button>`).join('')}</div>`;
 function viewMyTeam() {   // своя команда: для игрока без спонсора — видна в шапке, в боях и на командных турнирах
   const T = S.myTeam || {}, sel = S.mtL != null ? S.mtL : T.l;
-  return wrap(`<div class="card" style="text-align:center">${sel != null ? `<img class="tlogo big" src="img/team/gen_${sel}.webp" alt="">` : ''}<h2>${esc(T.n || 'Своя команда')}</h2>
+  return wrap(`<div class="card" style="text-align:center">${sel != null ? `<img class="tlogo big" src="img/team/${genLogo(sel)}.webp" alt="">` : ''}<h2>${esc(T.n || 'Своя команда')}</h2>
       <div class="dim">Без спонсора ты выступаешь за свою команду: название и логотип видны в шапке вместо FREE AGENT, в боях, в сетках и на командных турнирах. Профкоманда и полупро-контракт важнее — пока они есть, показываются они.</div></div>
     <div class="card"><h3>Название</h3><input id="mtname" maxlength="24" placeholder="Например: Midnight Ramen" value="${esc(S.mtN != null ? S.mtN : T.n || '')}"><h3 style="margin-top:12px">Логотип</h3>${logoPick('mtlogo', sel)}
       <div class="dim" style="margin-top:6px">Свободные названия для вдохновения: ${shuffle(GEN_TEAMS.slice()).slice(0, 4).map(esc).join(', ')}.</div></div>
