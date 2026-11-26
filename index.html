@@ -2387,6 +2387,31 @@ function bureauFight(kind) {
 }
 
 
+// ---------- Дуэль: вызов игрока сессии; на рейтинг — как лестничный матч (Эло, крипта победителю), товарищеская — без последствий ----------
+function duelStart(h, rated) {
+  const P = G.players[h]; if (!P || h === G.cur || P.mis || !spend()) return;
+  const opp = withMeta(fighter(P.nick, heroPower(P), P.rating, false, P.ability, P.face), P.country, fightTeam(P, h)); opp.H = null; opp.kit = npcKit('semi');
+  const title = rated ? 'Дуэль на рейтинг' : 'Товарищеская дуэль';
+  logTo(P, `${S.nick} вызвал тебя на ${rated ? 'дуэль на рейтинг' : 'товарищескую дуэль'}.`);
+  startFight(title, opp, won => {
+    if (rated) {
+      const E = 1 / (1 + Math.pow(10, (P.rating - S.rating) / 400)), d = Math.round(LADDER_K * ((won ? 1 : 0) - E)) || (won ? 1 : -1);
+      S.rating = Math.max(0, S.rating + d); P.rating = Math.max(0, P.rating - d);
+      const c = won ? earn(S, LADDER_COINS) : earn(P, LADDER_COINS);
+      logMsg(`${title} против ${P.nick}: ${won ? 'победа' : 'поражение'} (${d > 0 ? '+' : ''}${d} рейтинга${won ? `, +${c} крипты` : ''}).`);
+      logTo(P, `${title} с ${S.nick}: ${won ? 'поражение' : 'победа'} (${-d > 0 ? '+' : ''}${-d} рейтинга${won ? '' : `, +${c} крипты`}).`);
+      histAdd(`${title} · ${P.nick} · ${won ? 'победа' : 'поражение'} · ${d > 0 ? '+' : ''}${d}`); histTo(P, P.region, `${title} · ${S.nick} · ${won ? 'поражение' : 'победа'} · ${-d > 0 ? '+' : ''}${-d}`);
+    } else { logMsg(`${title} против ${P.nick}: ${won ? 'победа' : 'поражение'}. Без последствий.`); logTo(P, `${title} с ${S.nick}: ${won ? 'поражение' : 'победа'}.`); }
+    S.view = 'bureau';
+  });
+}
+function viewDuel() {
+  const L = G.players.map((H, h) => h).filter(h => h !== G.cur), sel = S.duelOn != null && L.includes(S.duelOn) && !G.players[S.duelOn].mis ? S.duelOn : null;
+  return wrap(`<div class="card" style="text-align:center"><h2>Дуэль</h2><div class="dim">Вызови игрока сессии на поединок. Бой стоит 1 действие только тебе: за соперника дерётся его тень с его силой и способностью. На рейтинг — как лестничный матч: рейтинг меняется у обоих, победитель получает крипту. Товарищеская — без последствий.</div></div>
+    <div class="card"><h3>Кого вызвать?</h3>${L.length ? `<div class="invrow">${L.map(h => { const H = G.players[h]; return `<button class="invp ${sel === h ? 'on' : ''}" data-a="duelpick" data-v="${h}" ${H.mis ? 'disabled style="opacity:.45"' : ''}><span class="ava">${faceImg(H.face)}</span>${esc(H.nick)}<br><small>${H.mis ? 'на миссии' : `${esc(REGIONS[H.region].name)} · ${H.rating}`}</small></button>`; }).join('')}</div>` : '<div class="dim">В сессии нет других игроков.</div>'}</div>
+    ${sel != null ? `<div class="card"><div style="text-align:center;margin-bottom:6px">Соперник: <b>${esc(G.players[sel].nick)}</b> · рейтинг ${G.players[sel].rating}</div><div class="bstack">${ibtn('duelr', 'duelgo', '1', 'На рейтинг', '', S.actions < 1)}${ibtn('duelf', 'duelgo', '0', 'Товарищеская', '', S.actions < 1)}</div></div>` : ''}`);
+}
+
 // ---------- Корона Спектров (бывш. ESL ONE): с силы 50, свой состав — Элитные Спектры любого региона, игроки, добор сгенерированными (сила ≤50) ----------
 const ESL_MIN_POWER = 50, ESL_SIZES = { 8: 'se8', 12: 'g12', 16: 'g16', 20: 'sw20' };
 const eslElite = key => { const [r, k] = key.split(':').map(Number); return Object.assign({ r }, lgPool(r)[k]); };
@@ -4175,7 +4200,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { cafe: ['Кафе', 'toBureau'], mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { duel: ['Дуэль', 'toBureau'], cafe: ['Кафе', 'toBureau'], mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub">${t[1] ? `<button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button>` : ''}<h1>${t[0]}</h1></div>` : ''; };
@@ -4811,7 +4836,7 @@ function viewBureau() {   // слева — бюро и услуги, справ
     <div class="card"><img class="scene" src="img/${['bureau', 'bureau_1', 'bureau_2'][S.bpic | 0]}.webp" alt="Бюро Спектров">
       <div class="dim" style="margin-top:8px">Всемирная организация Спектров: турниры, поединки и рейтинговая система.</div></div>
     <div class="card"><h2>Услуги бюро</h2>${none ? '<div class="dim" style="margin:-4px 0 8px;font-size:13px">Действия на неделю закончились.</div>' : ''}<div class="bstack">
-      ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром'], ['ttour', '', 's_ttour', 'Региональные командные турниры']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}
+      ${[['tour', '', 's_tour', 'Местный турнир'], ['fight', 'ladder', 's_ladder', 'Лестничный матч'], ['fight', 'pro', 's_pro', 'Бой с Элитным Спектром'], ...(G.players.length > 1 ? [['duel', '', 's_duel', 'Дуэль']] : []), ['ttour', '', 's_ttour', 'Региональные командные турниры']].map(([a, v, img, t]) => `<button class="imgbtn" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${none ? 'disabled' : ''} aria-label="${t}"><img src="img/nav/${img}.webp" alt=""></button>`).join('')}
       ${esl ? `<button class="imgbtn" data-a="esl" ${none ? 'disabled' : ''} aria-label="Корона Спектров"><img src="img/nav/crown.webp" alt=""></button>` : '<div class="imgbtn locked" aria-label="Корона Спектров закрыта"><img src="img/nav/s_crown_lock.webp" alt=""></div>'}
       <button class="imgbtn" data-a="missions" aria-label="Миссии Бюро"><img src="img/nav/missions.webp" alt=""></button>
       <button class="imgbtn" data-a="cafe" aria-label="Кафе"><img src="img/nav/cafe.webp" alt=""></button>
@@ -5280,7 +5305,7 @@ function viewLTurn() {   // ход лиг: объявление и матчи и
     <button class="imgbtn" data-a="lplay" aria-label="В бой"><img src="img/nav/fight.webp" alt=""></button>${AUTOB ? ibtn('lgsim', 'lsim', '', 'Досчитать матч') : ''}</div>
     ${L.title ? '' : lgCardHtml(L.r).replace(/data-a="l(table|hist)"/g, 'data-a="noop" disabled')}`;
 }
-const VIEWS = { cafe: viewCafe, mboss: viewMboss, myteam: viewMyTeam, tleague: viewTLeague, ttour: viewTTour, ttr: viewTTR, cupwin: viewCupWin, soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
+const VIEWS = { duel: viewDuel, cafe: viewCafe, mboss: viewMboss, myteam: viewMyTeam, tleague: viewTLeague, ttour: viewTTour, ttr: viewTTR, cupwin: viewCupWin, soc: viewSocial, bet: viewBet, slot: viewSlot, mech: viewMech, missions: viewMissions, mwait: viewMwait, mres: viewMres, mclaim: viewMclaim, mail: viewMail, parcel: viewParcel, skill: viewSkill, club: viewClub, offer: viewOffer, notice: viewNotice, cup: viewCup, vic: viewVic, spar: viewSpar, iv: viewIv, fame: viewFame, cardres: viewCardRes, more: viewMore, coll: viewColl, weeks: viewWeeks, wf: viewWF, wc: viewWC, teams: viewTeams, inv: viewInv, shop: viewShop, dossier: viewDossier, esl: viewEsl, ltable: viewLTable, lhist: viewLHist, trun: viewTRun, fight: viewFight, league: viewLeague, main: viewMain, card: viewCard, lib: viewLib, rest: viewRest, tour: viewTour, bureau: viewBureau, flight: viewFlight };
 let lastView = null;
 function render() {
   if (!F || !F.done) document.querySelectorAll('.fwin').forEach(e => e.remove());   // окно победителя живёт только на экране законченного боя
@@ -5558,6 +5583,9 @@ function act(a, v) {
     case 'mstart': misStart(+v); break;
     case 'bfight': case 'bsim': bossAct(a); break;
     case 'bdone': S.view = 'mres'; break;
+    case 'duel': S.duelOn = null; S.view = 'duel'; break;
+    case 'duelpick': S.duelOn = +v; break;
+    case 'duelgo': if (S.duelOn != null) duelStart(S.duelOn, v === '1'); break;
     case 'cafe': S.cafePic = rnd(0, 1); S.view = 'cafe'; break;
     case 'eat': { const f = FOOD.find(x => x.k === v); if (!f || !cafeList(S.region).includes(v)) return; const c = foodCost(f); if ((S.coins || 0) < c) return; S.coins -= c;
       if (f.v > (S.food || 0)) { S.food = f.v; S.foodN = f.n; } logMsg(`Кафе: ${f.n}. Бонус на следующий бой.`); break; }
