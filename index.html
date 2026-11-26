@@ -2351,11 +2351,11 @@ function contractStart() {   // турнир на 16 по контракту п�
   logMsg('Контракт: ты выступаешь за ' + SEMI_TEAMS[my] + '.');
   tStart({ kind: 'contract', tier: null, region: S.region, team: my, teams }, 'g16', ps);
 }
-const LADDER_PRO_R = 2000, LADDER_SEMI_P = 0.3;   // с 2000 рейтинга — только профи; ниже ~30% соперников на полупро-контракте
+const LADDER_PRO_R = 2000, LADDER_SEMI_P = 0.3, LADDER_HUM_P = 0.05;   // 5% — соперником выпадает игрок сессии   // с 2000 рейтинга — только профи; ниже ~30% соперников на полупро-контракте
 function bureauFight(kind) {
   if (!spend()) return;
   const title = kind === 'ladder' ? 'Лестничный матч' : 'Бой с Элитным Спектром';
-  let opp, name;
+  let opp, name, ladderHum = null;
   if (kind === 'ladder' && S.rating >= LADDER_PRO_R) {   // 2000+: только профессионалы с командой, ближайшие по рейтингу
     const r0 = S.region, L0 = G.leagues && G.leagues[r0], tm = {};
     if (L0 && L0.teams) L0.teams.forEach(T => { if (T.f && !T.semi) tm[T.f.name] = { logo: T.logo, name: T.name }; });   // сезон идёт — нынешние профкоманды
@@ -2364,6 +2364,9 @@ function bureauFight(kind) {
     const near = pool.filter(f => Math.abs(f.rating - S.rating) <= 200), list = near.length ? near : pool.slice().sort((a, b) => Math.abs(a.rating - S.rating) - Math.abs(b.rating - S.rating)).slice(0, 3);
     const f = list[rnd(0, list.length - 1)];
     name = f.name; opp = withMeta(fighter(f.name, f.p, f.rating, false, f.abil, f.face), f.country, tm[f.name]); opp.kit = npcKit('pro');
+  } else if (kind === 'ladder' && (() => { const hs = G.players.map((H, h) => h).filter(h => h !== G.cur && !G.players[h].mis && Math.abs(G.players[h].rating - S.rating) <= 200); if (!hs.length || Math.random() >= LADDER_HUM_P) return false; ladderHum = hs[rnd(0, hs.length - 1)]; return true; })()) {   // редкость: соперником выпадает другой игрок сессии с подходящим рейтингом
+    const P = G.players[ladderHum]; name = P.nick; opp = withMeta(fighter(P.nick, heroPower(P), P.rating, false, P.ability, P.face), P.country, fightTeam(P, ladderHum)); opp.kit = npcKit('semi');
+    logTo(P, `${S.nick} попал на тебя в лестничном матче!`);
   } else if (kind === 'ladder') {   // соперник по твоему рейтингу ±200; сила 10–55; иногда — боец на полупро-контракте
     const p = Math.max(LADDER_MIN, Math.min(LADDER_MAX, Math.round((S.rating + rnd(-200, 200)) / 30)));
     const g = genSpectre(S.region, takenSet([S.nick]), p); name = g.name;
@@ -2380,6 +2383,7 @@ function bureauFight(kind) {
     if (kind === 'ladder') S.ladderGames = (S.ladderGames || 0) + 1;
     S.rating = Math.max(0, S.rating + d);
     if (won) earn(S, kind === 'ladder' ? LADDER_COINS : ELITE_COINS);
+    if (ladderHum != null) { const P = G.players[ladderHum], dP = Math.round(LADDER_K * ((won ? 0 : 1) - (1 - E))) || (won ? -1 : 1); P.rating = Math.max(0, P.rating + dP); if (!won) earn(P, LADDER_COINS); logTo(P, `Лестничный матч с ${S.nick}: ${won ? 'поражение' : 'победа'} (${dP > 0 ? '+' : ''}${dP} рейтинга${won ? '' : `, +${LADDER_COINS} крипты`}).`); }
     histAdd(title + ' · ' + (won ? 'победа' : 'поражение') + ' · ' + (d > 0 ? '+' : '') + d);
     logMsg(title + ' против ' + name + ': ' + (won ? 'победа' : 'поражение') + ' (' + (d > 0 ? '+' : '') + d + ' рейтинга' + (won ? `, +${kind === 'ladder' ? LADDER_COINS : ELITE_COINS} крипты` : '') + ').');
     S.view = 'bureau';
