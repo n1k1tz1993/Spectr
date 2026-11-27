@@ -479,7 +479,7 @@ html.land .fza b{font-size:14px}
 .nav .nvb{all:unset;position:relative;cursor:pointer;display:block;line-height:0;transition:transform .12s,filter .15s;filter:brightness(.82) saturate(.9)}
 .nav .nvb img{width:100%;height:auto;display:block}
 .nav .nv-room,.nav .nv-map{width:calc(50% - 9px)}
-.nav .nv-more{width:calc(50% - 4px)}.nav .nv-shop{width:calc(50% - 4px)}.nav .nv-shop .nvtx{font-size:clamp(14px,4vw,18px)}
+.nav .nv-more,.nav .nv-char{width:calc(50% - 4px)}.nav .nv-shop{width:calc(50% - 4px)}.nav .nv-shop .nvtx{font-size:clamp(14px,4vw,18px)}
 .nav .nvb.on{filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) brightness(1.08)}
 .nav .nvb:active{transform:scale(.97)}
 .nav .nvb:disabled{filter:grayscale(1) brightness(.55);cursor:default}
@@ -1116,6 +1116,13 @@ html.land .pr-menu{max-height:92vh;max-width:820px}html.land .pr-acts{grid-templ
 .bstack{display:flex;flex-direction:column;gap:14px}.bstack>.imgbtn,.bstack>button,.bstack>div{margin:0!important}
 .dstack{--g:18px}.dstack>.imgbtn{margin-top:var(--g)}   /* рамки кнопок — на равном расстоянии; голова «торчащих» кнопок заходит в зазор */
 .dstack>.imgbtn.over{margin-top:var(--g)}.dstack>.imgbtn.over:first-child{margin-top:calc(4.2% + 6px)}.dstack>.imgbtn.over img{margin-top:-4.2%}
+.chtop{display:flex;gap:14px;align-items:center}.chava{width:110px!important;height:110px!important;border-radius:16px!important}.chinfo h2{margin:0 0 6px}.chinfo .rt.big img{width:34px;height:34px}.chinfo .rt.big b{font-size:26px}
+.chst{display:grid;grid-template-columns:1fr 64px 64px 52px;gap:6px;align-items:center;padding:7px 2px;border-bottom:1px solid #1d2540;font-size:14.5px}.chst b,.chst em{text-align:center;font-style:normal}.chst.head{margin-top:12px;font-size:12px}.chst.head b{color:var(--dim);font-weight:600}.chst em{color:var(--gold);font-weight:700}
+.chmini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;text-align:center}.chmini>div{background:#0f1426;border:1px solid #1d2540;border-radius:10px;padding:8px 4px}.chmini b{display:block;font-size:20px;color:var(--gold)}.chmini small{color:var(--dim);font-size:11px}
+.dhg .dhl{font-size:12px;font-weight:800;color:var(--cyan);margin:8px 0 4px}.dhg .dhl.lo{color:#FF8FB0}.dhg .dhl.fin{color:var(--gold)}
+.dhr{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dhr.one{grid-template-columns:minmax(0,1fr);margin-top:6px}
+.dhm{border:1px solid var(--line);border-radius:10px;background:var(--nest);overflow:hidden;min-width:0}.dhm.me{border-color:var(--gold)}.dhm small{display:block;font-size:10.5px;color:var(--dim);padding:3px 7px 0}
+.dhs{display:flex;align-items:center;gap:6px;padding:4px 7px;font-size:12.5px}.dhs span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dhs.win{background:rgba(101,217,121,.14)}.dhs.win b{color:var(--good)}.dhs.lose{opacity:.6}
 </style></head>
 <body><div id="stage"><div id="app"></div></div><button id="orient" type="button" aria-label="Повернуть экран" title="Повернуть экран">⟳</button>
 <script>
@@ -1646,6 +1653,8 @@ const effSum = (H, withGame) => { let pos = 0, neg = 0; for (const e of H.effect
 const heroPower = H => H.power + itemBonus(H) + effSum(H, true) + (H.food || 0) - (H.jetlag ? 5 : 0);
 const gameBonus = H => effSum(H, true) - effSum(H, false) + (H.food || 0);   // прибавка от бонусов «на следующий бой» (с учётом потолка)
 const useGame = f => { if (f && f.H) { f.H.effects = f.H.effects.filter(e => !e.game); if (f.H.food) { f.H.food = 0; f.H.foodN = null; } } };   // бой сыгран — бонус на бой израсходован
+function stAdd(H, k, won) { if (!H) return; H.st = H.st || {}; const v = H.st[k] = H.st[k] || [0, 0]; v[won ? 0 : 1]++; }   // статистика: бои и серии Bo3/Bo5
+function stSeries(m, fa, fb) { if (!m.done || (m.bo !== 3 && m.bo !== 5)) return; const k = 'bo' + m.bo; if (fa && fa.H) stAdd(fa.H, k, m.w === m.a); if (fb && fb.H) stAdd(fb.H, k, m.w === m.b); }
 const heroF = (H, f) => Object.defineProperty(f, 'H', { value: H, enumerable: false });   // ссылка на героя (не сохраняется)
 const effPower = () => heroPower(S);
 const addEffTo = (H, v, d) => { if (d === 'game') { H.effects.push({ v, game: true }); return; } const from = d === 'next' ? H.turn + 1 : H.turn; H.effects.push({ v, from, to: d === 'two' ? from + 1 : from }); };
@@ -3623,13 +3632,13 @@ function tZone(R, id, pos, direct, upTo) {
 const ZONE_LEGEND = '<div class="zleg"><span class="z1">прошёл дальше</span><span class="z2">плей-ин</span><span class="z3">выбыл</span></div>';
 const KO_PLAN = { n16: [['R16', 8], ['QF', 4], ['SF', 2], ['F', 1]], se16: [['R16', 8], ['QF', 4], ['SF', 2], ['F', 1]], se8: [['QF', 4], ['SF', 2], ['F', 1]], g16: [['QF', 4], ['SF', 2], ['F', 1]], dh32: [['QF', 4], ['SF', 2], ['F', 1]], g12: [['DEC', 2], ['SF', 2], ['F', 1]], sw20: [['PI', 2], ['SF', 2], ['F', 1]] };   // раунды плей-офф каждого формата
 const FMT = {
-  se16: { n: 16, name: 'Бойцовский клуб', desc: '16 бойцов, сетка Bo3, финал Bo5. Победитель становится претендентом и в конце недели проводит титульный бой Bo3 с чемпионом.' },
-  n16: { n: 16, name: 'Турнир новичков', desc: '16 бойцов, стандартная сетка: все бои Bo1, финал Bo3.' },
-  se8: { n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
-  g12: { n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
-  g16: { n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
-  dh32: { n: 32, name: 'Метеор Фест', desc: '32 бойца, 8 групп по 4. В группе двойное выбывание (бои Bo1), выходит только победитель группы. Плей-офф Bo3, финал Bo5.' },
-  sw20: { n: 20, name: 'Турнир на 20 бойцов', desc: 'Швейцарская система, 5 раундов Bo1. Двое лучших — сразу в полуфинал, 3–6 места играют плей-ин Bo3. Полуфинал и финал Bo5.' }
+  se16: { s: '16 бойцов · сетка Bo3 · финал Bo5', n: 16, name: 'Бойцовский клуб', desc: '16 бойцов, сетка Bo3, финал Bo5. Победитель становится претендентом и в конце недели проводит титульный бой Bo3 с чемпионом.' },
+  n16: { s: '16 бойцов · сетка Bo1 · финал Bo3', n: 16, name: 'Турнир новичков', desc: '16 бойцов, стандартная сетка: все бои Bo1, финал Bo3.' },
+  se8: { s: '8 бойцов · сетка Bo3 · финал Bo5', n: 8, name: 'Турнир на 8 бойцов', desc: 'Стандартная сетка: до финала Bo3, финал Bo5.' },
+  g12: { s: '2 группы по 6 · каждый с каждым Bo2 · плей-офф', n: 12, name: 'Турнир на 12 бойцов', desc: '2 группы по 6, каждый с каждым Bo2: победа 3, ничья 1, поражение 0. 1-е место — сразу в плей-офф, 2-е и 3-е играют Bo5 за выход. Полуфинал и финал Bo5.' },
+  g16: { s: '4 группы по 4 · плей-офф Bo3 · финал Bo5', n: 16, name: 'Турнир на 16 бойцов', desc: '4 группы по 4, два круга по одному бою Bo1. Выходят двое лучших, спор решает один бой. Плей-офф Bo3, финал Bo5.' },
+  dh32: { s: '8 групп по 4 · верхняя и нижняя сетка Bo1 · плей-офф Bo3 · финал Bo5', n: 32, name: 'Метеор Фест', desc: '32 бойца, 8 групп по 4. В группе двойное выбывание (бои Bo1), выходит только победитель группы. Плей-офф Bo3, финал Bo5.' },
+  sw20: { s: 'швейцарка, 5 раундов Bo1 · плей-ин и плей-офф', n: 20, name: 'Турнир на 20 бойцов', desc: 'Швейцарская система, 5 раундов Bo1. Двое лучших — сразу в полуфинал, 3–6 места играют плей-ин Bo3. Полуфинал и финал Bo5.' }
 };
 const STAGE_NAMES = { R16: '1/8 финала', TF: 'Титульный бой', QF: 'Четвертьфинал', SF: 'Полуфинал', F: 'Финал', GS: 'Групповой этап', DEC: 'Серия за выход из группы', PI: 'Плей-ин' };
 const stageName = k => ({ DH1: 'Группы · первый бой', DH2: 'Группы · верхняя и нижняя сетка', DH3: 'Группы · финал нижней сетки', DH4: 'Группы · финал группы' })[k] || STAGE_NAMES[k] || (k.startsWith('SW') ? 'Швейцарская система · раунд ' + k.slice(2) : k.startsWith('TB') ? 'Решающие бои' : k);
@@ -4204,7 +4213,7 @@ const topBar = () => {   // шапка по макету: портрет, ник
 };
 
 // строка раздела под шапкой: стрелка назад и название экрана (заменяет нижние кнопки «Назад»)
-const VIEW_TITLE = { duel: ['Дуэль', 'toBureau'], cafe: ['Кафе', 'toBureau'], mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Ещё', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
+const VIEW_TITLE = { duel: ['Дуэль', 'toBureau'], cafe: ['Кафе', 'toBureau'], mboss: ['Миссия ранга S', ''], myteam: ['Своя команда', 'more'], tleague: ['Командные лиги', 'toBureau'], ttour: ['Командный турнир', 'toBureau'], ttr: ['Командный турнир', ''], soc: ['Особое', 'shop'], bet: ['Ставка', 'shop'], slot: ['Игровой автомат', 'toBureau'], mech: ['Механики игры', 'libback'], missions: ['Миссии', 'toBureau'], mwait: ['Миссия', ''], mres: ['Миссия', ''], mclaim: ['Миссия', ''], mail: ['Почта Спектров', 'back'], parcel: ['Посылка', 'back'], club: ['Бойцовский клуб', 'back'], card: ['Действие', 'back'], cardres: ['Итог', 'cardback'], more: ['Персонаж', 'back'], coll: ['Коллекция', 'more'], cup: ['Трофей', 'coll'], fame: ['Зал славы', 'fameback'], lib: ['Библиотека', 'back'], dossier: ['Досье Элитных Спектров', 'back'], teams: ['Команды лиг', 'back'], rest: ['Отдых', 'back'],
   bureau: ['Бюро', 'back'], tour: ['Турниры', 'toBureau'], esl: ['Корона Спектров', 'toBureau'], wc: ['Wild Card', 'toBureau'], wf: ['Чемпионат мира', 'toBureau'],
   ltable: ['Таблица лиги', 'lback'], lhist: ['История лиги', 'lback'], flight: ['Перелёт', 'back'], shop: ['Магазин', 'back'], inv: ['Инвентарь', 'more'], weeks: ['История недель', 'more'] };
 const subBar = () => { const t = VIEW_TITLE[S.view]; return t ? `<div class="sub">${t[1] ? `<button class="subback" data-a="${t[1]}" aria-label="Назад"><img src="img/back.webp" alt=""></button>` : ''}<h1>${t[0]}</h1></div>` : ''; };
@@ -4257,7 +4266,7 @@ function mapHtml() {
     const [x0, y0, x1, y1] = m.box, [px, py] = m.pin;
     return `<div class="mbox ${i === S.region ? 'cur' : ''}" data-a="league" data-v="${i}" style="left:${pc(x0, MAPW)};top:${pc(y0, MAPH)};width:${pc(x1 - x0, MAPW)};height:${pc(y1 - y0, MAPH)}"><img src="img/logo_${i}.webp" alt=""><span><b>${MAP_SHORT[i]}</b><i>${esc(REGIONS[i].name)}</i></span></div>
       <div class="mpin" data-a="league" data-v="${i}" style="left:${pc(px, MAPW)};top:${pc(py, MAPH)}"></div>`;
-  }).join('')}${MAPCUPS.map(([k, t, d], j) => `<button class="mcup" data-a="cupwin" data-v="${k}" aria-label="${t}" style="left:${pc(38 + j * 234, MAPW)};top:${pc(780, MAPH)};width:${pc(222, MAPW)};height:${pc(149, MAPH)};background-image:url(img/nav/mapf_${k}.webp)"><img src="img/nav/cup_${k}.webp" alt=""><span><b>${t}</b><i>${d}</i></span></button>`).join('')}</div></div>`;
+  }).join('')}${MAPCUPS.map(([k, t, d], j) => `<button class="mcup" data-a="cupwin" data-v="${k}" aria-label="${t}" style="left:${pc(38 + j * 290, MAPW)};top:${pc(780, MAPH)};width:${pc(276, MAPW)};height:${pc(149, MAPH)};background-image:url(img/nav/mapf_${k}.webp)"><img src="img/nav/cup_${k}.webp" alt=""><span><b>${t}</b><i>${d}</i></span></button>`).join('')}</div></div>`;
 }
 function viewLeague() {
   const r = S.sel, P = PANELS[r];
@@ -4275,10 +4284,10 @@ function viewLeague() {
 }
 // нижнее меню главных разделов (в альбомном — боковая панель): Карта · Бюро · Комната · Ещё
 function navBar() {
-  const cur = S.view === 'shop' ? 'shop' : ['more', 'inv', 'coll', 'weeks', 'fame'].includes(S.view) ? 'more' : S.inRoom ? 'room' : 'map';
+  const cur = S.view === 'shop' ? 'shop' : ['more', 'inv', 'coll', 'weeks', 'fame', 'myteam'].includes(S.view) ? 'char' : S.inRoom ? 'room' : 'map';
   const nb = (id, a, v, label, extra, dis) => `<button class="nvb nv-${id} ${cur === id ? 'on' : ''}" data-a="${a}" ${v ? `data-v="${v}"` : ''} ${dis ? 'disabled' : ''} aria-label="${label}"><img src="img/nav/${id}.webp" alt="">${extra ? `<small>${extra}</small>` : ''}</button>`;
   // кнопки-плашки: 1-й ряд — Комната | Карта (крупные), 2-й — Бюро слева, Магазин, Ещё справа
-  return `<nav class="nav"><div class="nvr2">${nb('shop', 'shop', '', 'Магазин')}${nb('more', 'nav', 'more', 'Ещё')}</div></nav>`;   // Комната/Карта — под картинкой, Бюро — в повседневных действиях
+  return `<nav class="nav"><div class="nvr2">${nb('shop', 'shop', '', 'Магазин')}${nb('char', 'nav', 'more', 'Персонаж')}</div></nav>`;   // Комната/Карта — под картинкой, Бюро — в повседневных действиях
 }
 function viewMain() {
   const done = S.actions <= 0;
@@ -4315,7 +4324,13 @@ function viewMain() {
 }
 function viewMore() {   // «Ещё»: библиотека, магазин, инвентарь, коллекция, история, настройки
   const it = (a, t, d, dis) => `<button class="btn morei" data-a="${a}" ${dis ? 'disabled' : ''}><b>${t}</b><span class="dim">${d}</span></button>`;
-  return wrap(`<div class="card">
+  const st = S.st || {}, row = (t, k) => { const [w, l] = st[k] || [0, 0], n = w + l; return `<div class="chst"><span>${t}</span><b class="plus">${w}</b><b class="minus">${l}</b><em>${n ? Math.round(w / n * 100) + '%' : '—'}</em></div>`; };
+  const tm = heroTeam(S, heroIdx(S)) || fightTeam(S, heroIdx(S)), tr = (S.troph || []).length + (S.wcWon || 0) + (S.wfWon || 0) + (S.dhWon ? 1 : 0) + (S.eslWins || 0) + Object.values(S.tcup || {}).reduce((a, x) => a + x, 0);
+  return wrap(`<div class="card chcard"><div class="chtop"><span class="ava chava">${faceImg(S.face)}</span>
+      <div class="chinfo"><h2>${flagOf(S.country)} ${esc(S.nick)}</h2>${rateHtml(S.rating, 'big')}<div class="dim">${esc(leagueOf(S.rating).n)} · ${esc(REGIONS[S.region].name)}${tm ? ` · ${esc(tm.name)}` : ' · Free Agent'}</div></div></div>
+      <div class="chst head dim"><span>Статистика</span><b>Победы</b><b>Пораж.</b><em>%</em></div>${row('Бои', 'f')}${row('Серии Bo3', 'bo3')}${row('Серии Bo5', 'bo5')}
+      <div class="chmini"><div><b>${tr}</b><small>трофеев</small></div><div><b>${S.ladderGames || 0}</b><small>лестничных матчей</small></div><div><b>${(S.turn || 0) + 1}</b><small>неделя карьеры</small></div></div></div>
+    <div class="card">
       ${['inv', 'fame', 'coll', 'weeks'].map(k => `<button class="imgbtn" data-a="${k}" aria-label="${{ inv: 'Инвентарь', fame: 'Зал славы', coll: 'Коллекция', weeks: 'История недель' }[k]}"><img src="img/nav/${k}.webp" alt=""></button>`).join('')}
     </div>
     <div class="card"><h2>Своя команда</h2><div class="dim">${S.myTeam ? `Ты выступаешь за <b>${esc(S.myTeam.n)}</b>.` : 'Создай команду: название и логотип видны вместо FREE AGENT.'}</div>${ibtn('myteam', 'myteam', '', 'Своя команда')}</div>
@@ -5131,7 +5146,7 @@ function viewTRun() {
   const tab = S.ttab || (R.groups || R.fmt === 'sw20' || R.fmt === 'dh32' ? 'groups' : 'bracket');
   let h = `<div class="card thead">${R.kind === 'club' ? `<h2>Бойцовский клуб · ${CLUB[R.belt].n}</h2><div class="gold">Чемпион: ${esc(beltName(holderEntry(R.belt)))} · победитель турнира — претендент</div>` : R.kind === 'fest' ? `${evtImg({ t: 'Фестиваль Спектров', k: 'fest' })}<h2>Фестиваль Спектров</h2><div class="gold">${esc(R.city || '')}</div>` : R.kind === 'contract' ? `<div class="ctteams">${R.teams.map(t => `<img src="img/team/${SEMI[t][1]}.webp" alt="${SEMI_TEAMS[t]}" class="${t === R.team ? 'my' : ''}">`).join('')}</div><h2>Турнир по контракту</h2><div class="gold">Ты играешь за ${SEMI_TEAMS[R.team]}</div>` : R.kind === 'dh' ? `<img class="scene" src="img/dreamhack.webp" alt="Метеор Фест"><h2>Метеор Фест</h2>${R.city ? `<div class="gold">${esc(R.city)}</div>` : ''}<p class="dim" style="margin:6px 0 0">${esc(descOf({ k: 'dh', city: R.city }))}</p>` : R.kind === 'esl' ? '<img class="esllogo" src="img/crown.webp" alt=""><h2>Корона Спектров · ' + f.name.replace('Турнир на ', '') + '</h2>' : `<img class="scene" src="img/tier_${R.tier}.webp" alt=""><h2>${R.tier === 2 ? 'Турнир на 32 бойца' : f.name}</h2>`}
     ${hums.filter(x => x.team != null).map(x => `<div class="semipick">${teamTag(x)}<span>${hums.length > 1 ? esc(x.name) + ' выступает' : 'Ты выступаешь'} за <b>${esc(SEMI_TEAMS[x.team])}</b> · бонус к силе</span></div>`).join('')}
-    ${R.tier === 2 ? '<div class="dim" style="margin-top:6px">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>' : ''}
+    ${f && f.s ? `<div class="dim" style="margin-top:6px">${f.s}</div>` : ''}${R.tier === 2 ? `<div class="dim">${new Set(R.ps.filter(x => x.team != null).map(x => x.team)).size} полупрофессиональных команд выставили по бойцу.</div>` : ''}
     <div style="margin-top:8px">Стадия: <b>${R.done ? 'турнир завершён' : stageName(R.stage)}</b></div>
     <details class="rules"><summary>Правила</summary><div class="dim">${R.tier === 2 ? '32 бойца: 5–10 полупрофессиональных команд и свободные бойцы. 8 групп по 4, двойное выбывание Bo1, выходит победитель группы. Плей-офф Bo3, финал Bo5.' : f.desc}</div>${R.intro ? '' : prizeRulesHtml(R)}</details></div>`;
   let side = '';
@@ -5153,6 +5168,17 @@ function viewTRun() {
   const lead = h; h = '';
   if (R.groups && R.fmt === 'g12') for (const g of ['A', 'B']) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>О</td><td>В-Н-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr class="${tZone(R, r.id, i, 1, 3)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.pts}</td><td>${r.w}-${r.d}-${r.l}</td></tr>`).join('')}</table></div>`;
   if (R.groups && R.fmt === 'g16') for (const g of GL) h += `<div class="card"><h3>Группа ${g}</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td></tr>${tTable(R, R.groups[g], 'GS').map((r, i) => `<tr class="${tZone(R, r.id, i, 2, 2)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td></tr>`).join('')}</table></div>`;
+  if (R.fmt === 'dh32' && R.M.some(m => m.st === 'DH1')) {   // группы Метеор-формата: верхняя и нижняя сетка
+    const gm = (k, g) => R.M.filter(m => m.st === k && m.grp === g);
+    const box = (m, cap) => { if (!m) return `<div class="dhm tbd"><small>${cap}</small><div class="dhs">—</div><div class="dhs">—</div></div>`; const [wa, wb] = sc(m);
+      return `<div class="dhm ${isHum(R, m.a) || isHum(R, m.b) ? 'me' : ''}"><small>${cap}</small><div class="dhs ${m.done && m.w === m.a ? 'win' : m.done ? 'lose' : ''}"><span>${nm(m.a)}</span><b>${m.g.length ? wa : ''}</b></div><div class="dhs ${m.done && m.w === m.b ? 'win' : m.done ? 'lose' : ''}"><span>${nm(m.b)}</span><b>${m.g.length ? wb : ''}</b></div></div>`; };
+    const mine = DHG.filter(g => R.M.some(m => m.grp === g && (isHum(R, m.a) || isHum(R, m.b)))), ord = mine.concat(DHG.filter(g => !mine.includes(g)));
+    h += ord.map(g => { const d1 = gm('DH1', g), d2 = gm('DH2', g), up = d2.find(m => m.up), lo = d2.find(m => !m.up), d3 = gm('DH3', g)[0], d4 = gm('DH4', g)[0], win = d4 && d4.done ? d4.w : null;
+      return `<div class="card dhg"><h3>Группа ${g}${win != null ? ` · <span class="plus" style="font-size:.8em">выходит ${nm(win)}</span>` : ''}</h3>
+        <div class="dhl">Верхняя сетка</div><div class="dhr">${box(d1[0], 'Бой 1')}${box(d1[1], 'Бой 2')}</div><div class="dhr one">${box(up, 'Победители')}</div>
+        <div class="dhl lo">Нижняя сетка</div><div class="dhr">${box(lo, 'Проигравшие · вылет')}${box(d3, 'Финал нижней')}</div>
+        <div class="dhl fin">Финал группы</div><div class="dhr one">${box(d4, 'Победитель верхней против победителя нижней')}</div></div>`; }).join('');
+  }
   if (R.fmt === 'sw20') h += `<div class="card"><h3>Швейцарская система</h3><table class="tbl"><tr class="dim"><td>#</td><td>Боец</td><td>В-П</td><td>Бх</td></tr>${tSwiss(R).map((r, i) => `<tr class="${tZone(R, r.id, i, 2, 6)}"><td>${i + 1}</td><td>${nm(r.id)}</td><td>${r.w}-${r.l}</td><td>${r.bh}</td></tr>`).join('')}</table></div>`;
   if (h) h += ZONE_LEGEND;
   const myGroup = R.M.filter(m => (m.st === 'GS' || m.st.startsWith('SW') || m.st.startsWith('DH')) && (isHum(R, m.a) || isHum(R, m.b)) && m.done);
@@ -5414,7 +5440,7 @@ function act(a, v) {
     case 'lplay': {
       const L = lgQ(G.lq[0]), m = lgPending(L); if (!m) return;
       const L1 = lgHum(L, m.a) ? m.a : m.b, R1 = L1 === m.a ? m.b : m.a;
-      startFightAB(`Лига ${LSHORT[L.r]} · ${LG_STAGE[m.st]} · бой ${m.g.length + 1}`, lgFighter(L, L1), lgFighter(L, R1), won => { tGame(m, won ? L1 : R1); lgAfterGame(L, m); });
+      startFightAB(`Лига ${LSHORT[L.r]} · ${LG_STAGE[m.st]} · бой ${m.g.length + 1}`, ...(() => { const fa = lgFighter(L, L1), fb = lgFighter(L, R1); return [fa, fb, won => { tGame(m, won ? L1 : R1); stSeries(m, m.a === L1 ? fa : fb, m.a === L1 ? fb : fa); lgAfterGame(L, m); }]; })());
       break;
     }
     case 'lsim': { if (!AUTOB) return; const L = lgQ(G.lq[0]), m = lgPending(L); if (!m) return; lgSimMatch(L, m); lgAfterGame(L, m); break; }
@@ -5467,7 +5493,7 @@ function act(a, v) {
     case 'tplay': {   // живой бой: игрок слева; если встретились два игрока — оба живые
       const R = S.trun, m = R && tMine(R); if (!m) return;
       const L = isHum(R, m.a) ? m.a : m.b, Rr = L === m.a ? m.b : m.a;
-      startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, tFighter(R, L), tFighter(R, Rr), won => { tGame(m, won || R.intro ? L : Rr); tRun(R, false); S.view = 'trun'; });
+      startFightAB(`${stageName(R.stage)} · бой ${m.g.length + 1} · Bo${m.bo}`, ...(() => { const fa = tFighter(R, L), fb = tFighter(R, Rr); return [fa, fb, won => { tGame(m, won || R.intro ? L : Rr); stSeries(m, m.a === L ? fa : fb, m.a === L ? fb : fa); tRun(R, false); S.view = 'trun'; }]; })());
       break;
     }
     case 'tinvade': { const h = +v, a2 = S.tourInvade = S.tourInvade || []; const at = a2.indexOf(h); if (at >= 0) a2.splice(at, 1); else a2.push(h); break; }
@@ -5484,7 +5510,7 @@ function act(a, v) {
     case 'fitem': if (F && F.await && tbUseItem(F[F.cur], v)) { save(); render(); } return;
     case 'fact': { if (!F || !F.await) return; const x = F[F.cur]; if (v === 'abil' && !canAbil(x) || v === 'def' && x.qi < TB.qiDef || v === 'ult' && !canUlt(x) || v === 'qi' && !canQi(x)) return; tbAction(x, v); return; }
     case 'fauto': if (!AUTOB) return; if (F && F.await) { tbLog(`${F[F.cur].name}: автоход.`, 'nt'); F.await = false; tbAI(F[F.cur]); } return;
-    case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; useGame(F.a); useGame(F.b); F = null; cb(won); break; }
+    case 'fend': { if (!F || !F.done) return; const cb = F.onEnd, won = F.won; if (F.a.H) stAdd(F.a.H, 'f', won); if (F.b.H && F.b.H !== F.a.H) stAdd(F.b.H, 'f', !won); useGame(F.a); useGame(F.b); F = null; cb(won); break; }
     case 'bureau': S.bpic = rnd(0, 2); if (freeBureau(S)) S.view = 'bureau'; else if (spend()) { clearJet(); S.view = 'bureau'; } break;   // картинка Бюро — случайная из трёх   // своё жильё: бюро рядом, действие не тратится
     case 'toBureau': S.view = 'bureau'; break;
     case 'inv': S.view = 'inv'; S.renaming = null; break;
